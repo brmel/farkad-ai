@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "farkad-ai"
+version = "0.1.0"
+description = "Autonomous, multimodal structured extraction and health logging pipeline"
+readme = "README.md"
+requires-python = ">=3.13"
+license = "Apache-2.0"
+dependencies = [
+    "pydantic>=2.9,<3",
+    "google-genai==2.14.0",
+]
+
+[project.scripts]
+farkad-ai = "farkad_ai.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["farkad_ai"]
+
+[tool.hatch.build.targets.wheel.sources]
+"farkad_ai" = "farkad_ai"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/farkad_ai",
+    "/README.md",
+    "/LICENSE",
+]

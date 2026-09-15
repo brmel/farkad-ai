@@ -1,0 +1,15 @@
+Extract every {title} entry from the log below, and nothing else.
+
+{guidance}
+
+Return one entry per distinct thing the user logged. Leave a field out rather than
+inventing a value for it; a missing field is honest, a guessed one is not.
+
+A word the user actually said is not a guess. Read it onto the field's own scale: a
+field described as 1 poor to 5 excellent has a value for "badly", and a stated size or
+intensity changes the amount you would otherwise have assumed — "a big glass" is more
+than a glass. Omitting is for what the user left unsaid, not for what they said without
+a number.
+
+Worked examples:
+{examples}
