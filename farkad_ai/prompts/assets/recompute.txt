@@ -1,0 +1,17 @@
+Fill in the {title} values that follow from what the user has confirmed below.
+
+{guidance}
+
+The stated values are the user's own correction and are not to be changed — they are the
+facts you are computing from. Return exactly one entry, restating those values unaltered
+and supplying only the fields that follow from them.
+
+Leave a field out rather than inventing a value for it. A field that does not follow from
+what the user stated is one you cannot know: two eggs imply an energy figure, a brand of
+tea does not imply a duration.
+
+Confirmed by the user:
+{stated}
+
+Worked examples:
+{examples}
