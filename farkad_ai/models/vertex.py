@@ -3,9 +3,18 @@ from __future__ import annotations
 import time
 from collections.abc import Callable, Mapping
 
-from google import genai
-from google.genai import types
-from google.genai.errors import APIError
+try:
+    from google import genai
+    from google.genai import types
+    from google.genai.errors import APIError
+
+    _GENAI_AVAILABLE = True
+except ImportError:
+    genai = None  # type: ignore[assignment]
+    types = None  # type: ignore[assignment]
+    APIError = Exception  # type: ignore[assignment,misc]
+    _GENAI_AVAILABLE = False
+
 from pydantic import BaseModel, ValidationError
 
 from farkad_ai.models.port import ModelPort
@@ -38,6 +47,10 @@ class VertexModel(ModelPort):
         model_resolver: Callable[[ModelTier], str] | None = None,
         thinking_budget: Callable[[ModelTier], int] | None = None,
     ) -> None:
+        if not _GENAI_AVAILABLE:
+            raise RuntimeError(
+                "google-genai is required to use VertexModel. Install with: pip install 'farkad-ai[google]'"
+            )
         self._client = client
         self._resolver = model_resolver or (lambda tier: DEFAULT_MODELS[tier])
         self._thinking = thinking_budget or (lambda tier: DEFAULT_THINKING.get(tier, 0))

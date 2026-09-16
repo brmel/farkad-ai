@@ -4,15 +4,66 @@ build-backend = "hatchling.build"
 
 [project]
 name = "farkad-ai"
-version = "0.1.0"
-description = "Autonomous, multimodal structured extraction and health logging pipeline"
+version = "0.2.0"
+description = "Provider-agnostic, multimodal two-pass structured extraction engine"
 readme = "README.md"
 requires-python = ">=3.13"
 license = "Apache-2.0"
+authors = [
+    { name = "Farkad Team", email = "engineering@farkad.health" },
+]
+keywords = [
+    "ai",
+    "health",
+    "multimodal",
+    "structured-extraction",
+    "routing",
+    "clean-architecture",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Healthcare Industry",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
 dependencies = [
     "pydantic>=2.9,<3",
-    "google-genai==2.14.0",
 ]
+
+[project.optional-dependencies]
+google = [
+    "google-genai>=2.14.0",
+]
+anthropic = [
+    "anthropic>=0.40.0",
+]
+openai = [
+    "openai>=1.50.0",
+]
+all-providers = [
+    "farkad-ai[google,anthropic,openai]",
+]
+eval = [
+    "tabulate>=0.9.0",
+]
+dev = [
+    "mypy>=1.13.0",
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+    "ruff>=0.8.0",
+]
+all = [
+    "farkad-ai[all-providers,dev,eval]",
+]
+
+[project.urls]
+Homepage = "https://farkad.health"
+Repository = "https://github.com/brmel/farkad-ai"
+Issues = "https://github.com/brmel/farkad-ai/issues"
+Documentation = "https://github.com/brmel/farkad-ai#readme"
 
 [project.scripts]
 farkad-ai = "farkad_ai.cli:main"
@@ -29,3 +80,15 @@ include = [
     "/README.md",
     "/LICENSE",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+packages = ["farkad_ai"]

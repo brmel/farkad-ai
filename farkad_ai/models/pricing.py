@@ -96,6 +96,26 @@ PRICES: Mapping[str, TokenPrice] = MappingProxyType(
             audio_input_usd_per_million=Decimal("1.50"),
             output_usd_per_million=Decimal("9.00"),
         ),
+        "claude-3-5-haiku-20241022": TokenPrice(
+            input_usd_per_million=Decimal("0.80"),
+            audio_input_usd_per_million=Decimal("0.80"),
+            output_usd_per_million=Decimal("4.00"),
+        ),
+        "claude-3-5-sonnet-20241022": TokenPrice(
+            input_usd_per_million=Decimal("3.00"),
+            audio_input_usd_per_million=Decimal("3.00"),
+            output_usd_per_million=Decimal("15.00"),
+        ),
+        "gpt-4o-mini": TokenPrice(
+            input_usd_per_million=Decimal("0.15"),
+            audio_input_usd_per_million=Decimal("0.15"),
+            output_usd_per_million=Decimal("0.60"),
+        ),
+        "gpt-4o": TokenPrice(
+            input_usd_per_million=Decimal("2.50"),
+            audio_input_usd_per_million=Decimal("2.50"),
+            output_usd_per_million=Decimal("10.00"),
+        ),
     }
 )
 
