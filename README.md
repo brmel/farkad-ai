@@ -89,42 +89,65 @@ The baseline architecture separates high-level classification from low-level sch
 
 ### 1. Installation
 
+Install the base package (zero vendor lock-in):
 ```bash
 pip install farkad-ai
 ```
 
-Or clone for local development and experimentation:
-
+Or install with your preferred model provider SDK:
 ```bash
-git clone https://github.com/brmel/farkad-ai.git
-cd farkad-ai
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e .
+# Google GenAI (Gemini 2.5 Flash / Flash-Lite / Pro)
+pip install "farkad-ai[google]"
+
+# Anthropic (Claude 3.5 Sonnet / Claude 3.5 Haiku)
+pip install "farkad-ai[anthropic]"
+
+# OpenAI (GPT-4o / GPT-4o-mini)
+pip install "farkad-ai[openai]"
+
+# All providers + dev & eval tools
+pip install "farkad-ai[all]"
 ```
 
-### 2. Running a Pipeline
+### 2. Multi-Provider Architecture
+
+Switch providers seamlessly through the unified `ModelPort` interface:
 
 ```python
 import asyncio
+from pathlib import Path
 from farkad_ai import (
+    AnthropicModel,
     CaptureRequest,
     Logged,
     NothingToLog,
+    OpenAIModel,
+    RecordedModel,
+    TraceObserver,
     VertexModel,
     build_pipeline,
 )
+
+# Pick your provider — the pipeline and domain remain identical:
+# 1. Google Gemini
 from google import genai
+model = VertexModel(genai.Client())
+
+# 2. Anthropic Claude
+# import anthropic
+# model = AnthropicModel(anthropic.AsyncAnthropic())
+
+# 3. OpenAI GPT
+# import openai
+# model = OpenAIModel(openai.AsyncOpenAI())
+
+# 4. Deterministic Offline Replay (zero network, zero API keys)
+# model = RecordedModel(Path("./fixtures"))
 
 async def main():
-    # 1. Connect your model provider (or use RecordedModel for offline tests)
-    client = genai.Client()
-    model = VertexModel(client)
+    observer = TraceObserver()
+    pipeline = build_pipeline(model, registry=my_registry, extractor=my_extractor, observer=observer)
 
-    # 2. Build the pipeline with your registry and specialist extractor
-    pipeline = build_pipeline(model, registry=my_registry, extractor=my_extractor)
-
-    # 3. Process natural human input
     request = CaptureRequest(
         profile=my_user_profile,
         text="Drank 500ml water and ran 5k this morning at 8am",
@@ -134,10 +157,11 @@ async def main():
     match outcome:
         case Logged(routes=routes, extracted=entries):
             print(f"Routes identified: {routes}")
-            for entry in entries:
-                print(f"Extracted [{entry['pillar']}]: {entry['data']}")
         case NothingToLog(reason=reason):
             print(f"Filtered: {reason}")
+
+    # Inspect intermediate pipeline state without domain pollution:
+    print(f"Lifecycle events captured: {len(observer.events)}")
 
 if __name__ == "__main__":
     asyncio.run(main())
@@ -145,15 +169,21 @@ if __name__ == "__main__":
 
 ---
 
-## Offline Deterministic Benchmark Harness
+## Command Line & Offline Evaluation Harness
 
-You don't need an API key or cloud budget to experiment with prompts or evaluate routing accuracy. Use the recorded fixture replay engine:
+`farkad-ai` includes a full CLI suite for inspection, live testing, and benchmark evaluation:
 
 ```bash
-# Test routing against pre-recorded golden fixtures
-farkad-ai route --text "Ate an apple and slept 8 hours" --fixtures ./fixtures
+# Inspect all supported model tiers and live pricing
+farkad-ai models
 
-# Run full evaluation scoring (accuracy, token counts, latency, cost in cents)
+# Inspect active prompt templates and cryptographic version hashes
+farkad-ai prompts
+
+# Test intent routing against recorded fixtures or live providers
+farkad-ai route --text "Ate 2 eggs and slept 8 hours" --fixtures ./fixtures
+
+# Run deterministic evaluation scoring across capture datasets
 farkad-ai eval --fixtures ./fixtures
 ```
 

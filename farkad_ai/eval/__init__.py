@@ -1,5 +1,4 @@
-from __future__ import annotations
-
+from farkad_ai.eval.replay import replay_fixtures, score_fixture_case
 from farkad_ai.eval.scoring import (
     CaptureScore,
     FieldScore,
@@ -13,5 +12,7 @@ __all__ = [
     "FieldScore",
     "RunScore",
     "matches",
+    "replay_fixtures",
     "score_capture",
+    "score_fixture_case",
 ]
