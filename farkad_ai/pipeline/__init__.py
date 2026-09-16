@@ -1,6 +1,4 @@
 from farkad_ai.pipeline.observer import (
-    CacheHit,
-    CacheMiss,
     ExtractionCompleted,
     ExtractionStarted,
     NullObserver,
@@ -26,8 +24,6 @@ from farkad_ai.pipeline.types import (
 
 __all__ = [
     "Attempt",
-    "CacheHit",
-    "CacheMiss",
     "CaptureOutcome",
     "CapturePipelinePort",
     "CaptureProfileProtocol",

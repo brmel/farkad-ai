@@ -4,20 +4,14 @@ from pathlib import Path
 
 import pytest
 
-from farkad_ai.models.cache import CachedModel
 from farkad_ai.models.factory import ProviderName, create_model
 from farkad_ai.models.recorded import RecordedModel
 
 FIXTURES = Path(__file__).resolve().parents[2] / "backend" / "tests" / "fixtures" / "model"
 
 
-def test_factory_creates_cached_recorded_model() -> None:
-    model = create_model(ProviderName.recorded, fixtures_dir=FIXTURES, cached=True)
-    assert isinstance(model, CachedModel)
-
-
-def test_factory_creates_uncached_recorded_model() -> None:
-    model = create_model(ProviderName.recorded, fixtures_dir=FIXTURES, cached=False)
+def test_factory_creates_recorded_model() -> None:
+    model = create_model(ProviderName.recorded, fixtures_dir=FIXTURES)
     assert isinstance(model, RecordedModel)
 
 
