@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Protocol
 
+from farkad_ai.types import PipelineStep
+
 if TYPE_CHECKING:
     from farkad_ai.pipeline.specialists import Attempt
     from farkad_ai.routing.router import RoutingOutcome
@@ -30,7 +32,21 @@ class ExtractionCompleted:
     attempt: Attempt
 
 
-type PipelineEvent = RouteStarted | RouteCompleted | ExtractionStarted | ExtractionCompleted
+@dataclass(frozen=True, slots=True)
+class CacheHit:
+    key: str
+    step: PipelineStep
+
+
+@dataclass(frozen=True, slots=True)
+class CacheMiss:
+    key: str
+    step: PipelineStep
+
+
+type PipelineEvent = (
+    RouteStarted | RouteCompleted | ExtractionStarted | ExtractionCompleted | CacheHit | CacheMiss
+)
 
 
 class PipelineObserver(Protocol):
@@ -54,3 +70,9 @@ class TraceObserver:
 
     def extractions(self) -> tuple[ExtractionCompleted, ...]:
         return tuple(e for e in self.events if isinstance(e, ExtractionCompleted))
+
+    def cache_hits(self) -> tuple[CacheHit, ...]:
+        return tuple(e for e in self.events if isinstance(e, CacheHit))
+
+    def cache_misses(self) -> tuple[CacheMiss, ...]:
+        return tuple(e for e in self.events if isinstance(e, CacheMiss))
