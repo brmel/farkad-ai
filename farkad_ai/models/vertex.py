@@ -84,6 +84,7 @@ class VertexModel(ModelPort):
                 model=model,
                 contents=parts(prompt),
                 config=types.GenerateContentConfig(
+                    system_instruction=prompt.instructions,
                     response_mime_type="application/json",
                     response_schema=schema,
                     thinking_config=types.ThinkingConfig(thinking_budget=self._thinking(tier)),
@@ -116,13 +117,14 @@ def parsed_as[T: BaseModel](
 def parts(prompt: Prompt) -> types.ContentListUnion:
     spoken = [types.Part.from_text(text=prompt.utterance)] if prompt.utterance else []
     sent: list[types.PartUnion] = [
-        types.Part.from_text(text=prompt.instructions),
         *spoken,
         *(
             types.Part.from_bytes(data=blob.data, mime_type=blob.content_type)
             for blob in prompt.media
         ),
     ]
+    if not sent:
+        sent.append(types.Part.from_text(text="Input."))
     return sent
 
 
