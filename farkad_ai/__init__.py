@@ -14,8 +14,10 @@ from farkad_ai.models import (
     RecordedModel,
     RecordingModel,
     TokenPrice,
+    UnpricedModelError,
     VertexModel,
     price_of,
+    retiring_within,
 )
 from farkad_ai.pipeline import (
     Attempt,
@@ -107,12 +109,14 @@ __all__ = [
     "TrackingProfileProtocol",
     "TwoPassPipeline",
     "Unavailability",
+    "UnpricedModelError",
     "Usage",
     "VertexModel",
     "build_pipeline",
     "extract_each",
     "price_of",
     "prompt",
+    "retiring_within",
     "routing_instructions",
     "score_capture",
 ]
