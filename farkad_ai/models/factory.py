@@ -6,7 +6,6 @@ from enum import StrEnum
 from pathlib import Path
 
 from farkad_ai.models.anthropic import AnthropicModel
-from farkad_ai.models.cache import CachedModel
 from farkad_ai.models.openai import OpenAIModel
 from farkad_ai.models.port import ModelPort
 from farkad_ai.models.recorded import RecordedModel
@@ -87,12 +86,10 @@ def create_model(
     project: str | None = None,
     location: str | None = None,
     fixtures_dir: Path | None = None,
-    cached: bool = True,
-    cache_capacity: int = 256,
     model_resolver: Callable[[ModelTier], str] | None = None,
 ) -> ModelPort:
     resolved_provider = ProviderName(provider)
-    raw = _build_raw_model(
+    return _build_raw_model(
         resolved_provider,
         api_key=api_key,
         project=project,
@@ -100,4 +97,3 @@ def create_model(
         fixtures_dir=fixtures_dir,
         model_resolver=model_resolver,
     )
-    return CachedModel(raw, capacity=cache_capacity) if cached else raw

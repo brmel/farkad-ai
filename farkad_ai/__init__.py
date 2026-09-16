@@ -18,7 +18,6 @@ from farkad_ai.memory import (
 )
 from farkad_ai.models import (
     AnthropicModel,
-    CachedModel,
     InputModality,
     ModelPort,
     OpenAIModel,
@@ -32,8 +31,6 @@ from farkad_ai.models import (
 )
 from farkad_ai.pipeline import (
     Attempt,
-    CacheHit,
-    CacheMiss,
     CaptureOutcome,
     CapturePipelinePort,
     CaptureProfileProtocol,
@@ -87,9 +84,6 @@ from farkad_ai.types import (
 __all__ = [
     "AnthropicModel",
     "Attempt",
-    "CacheHit",
-    "CacheMiss",
-    "CachedModel",
     "CaptureOutcome",
     "CapturePipelinePort",
     "CaptureProfileProtocol",
