@@ -85,3 +85,81 @@ def test_as_prompt_context_budget_truncation() -> None:
     memory = UserMemory(items=items)
     context = memory.as_prompt_context(max_characters=60)
     assert len(context) <= 60
+
+
+def test_memory_primitive_roundtrip() -> None:
+    from farkad_ai.memory import memory_from_primitive, memory_to_primitive
+
+    mem1 = MemoryItem(id="m1", category=MemoryCategory.dietary, content="Keto diet")
+    mem2 = MemoryItem(
+        id="m2", category=MemoryCategory.routine, content="Morning run", enabled=False
+    )
+    original = UserMemory(items=(mem1, mem2))
+
+    primitives = memory_to_primitive(original)
+    restored = memory_from_primitive(primitives)
+
+    assert len(restored.items) == 2
+    assert restored.items[0].id == "m1"
+    assert restored.items[0].category == MemoryCategory.dietary
+    assert restored.items[0].content == "Keto diet"
+    assert restored.items[0].enabled is True
+    assert restored.items[1].enabled is False
+
+
+def test_user_memory_toggle_and_merge() -> None:
+    mem1 = MemoryItem(id="m1", category=MemoryCategory.dietary, content="Keto diet")
+    memory = UserMemory(items=(mem1,))
+
+    toggled = memory.toggle_item("m1", False)
+    assert toggled.items[0].enabled is False
+
+    new_items = (
+        MemoryItem(id="m2", category=MemoryCategory.dietary, content="keto diet"),  # duplicate
+        MemoryItem(id="m3", category=MemoryCategory.preference, content="Decaf coffee"),
+    )
+    merged = memory.merge_new(new_items)
+    assert len(merged.items) == 2
+    assert merged.items[1].content == "Decaf coffee"
+
+
+@pytest.mark.anyio
+async def test_memory_inferrer_extracts_habits() -> None:
+    from decimal import Decimal
+    from pydantic import BaseModel
+    from farkad_ai.memory import InferredMemories, MemoryCandidate, MemoryInferrer
+    from farkad_ai.types import Completion, ModelTier, PipelineStep, Prompt, Usage
+
+    class FakeMemoryModel:
+        async def complete[T: BaseModel](
+            self, prompt: Prompt, *, schema: type[T], tier: ModelTier
+        ) -> Completion[T]:
+            assert schema is InferredMemories
+            assert tier == ModelTier.fast
+            data = InferredMemories(
+                memories=[
+                    MemoryCandidate(category="dietary", content="Allergic to peanuts"),
+                    MemoryCandidate(category="preference", content="Drinks oat milk"),
+                ]
+            )
+            return Completion(
+                value=data,  # type: ignore[arg-type]
+                usage=Usage(
+                    step=PipelineStep.extraction,
+                    model="test-fast",
+                    prompt_version="v1",
+                    input_tokens=10,
+                    output_tokens=5,
+                    latency_ms=50,
+                    cost_cents=Decimal("0.001"),
+                ),
+            )
+
+    inferrer = MemoryInferrer(FakeMemoryModel())
+    existing = UserMemory(
+        items=(MemoryItem(id="e1", category=MemoryCategory.dietary, content="Allergic to peanuts"),)
+    )
+    inferred = await inferrer.infer("I drink oat milk and I cannot eat peanuts", existing)
+    assert len(inferred) == 1
+    assert inferred[0].category == MemoryCategory.preference
+    assert inferred[0].content == "Drinks oat milk"
