@@ -1,20 +1,29 @@
 # Contributing to farkad-ai
 
-Thank you for your interest in contributing to `farkad-ai`! We welcome contributions from the community to improve multimodal extraction, prompt engineering, evaluation benchmarks, and model provider integrations.
+`farkad-ai` is an open-source testbed and benchmarking laboratory for **agentic workflows, multimodal extraction, prompt engineering, and model evaluation**.
+
+We actively encourage feedback, architectural discussions, failure-case reports, and pull requests!
 
 ---
 
-## Code of Conduct
+## Areas Where We Need Your Ideas & Feedback
 
-We are committed to providing a welcoming, inclusive, and harassment-free experience for everyone. Please be respectful, constructive, and considerate in all interactions.
+1. **Agentic Paradigms & Tool Calling**:
+   - Model Context Protocol (MCP) integrations.
+   - Dynamic agent skills vs. hardcoded specialist pipelines.
+   - Dynamic tool calling vs. constrained schema generation.
+2. **Model Providers & SDKs**:
+   - Adapters for Anthropic Claude, OpenAI, DeepSeek, Mistral, and local Ollama/vLLM.
+3. **Multilingual & Multimodal Routing**:
+   - Edge cases with dialect switching, mixed languages, background audio noise, and complex photo recognition.
+4. **Evaluation Benchmarks**:
+   - Edge-case golden fixtures that push models to their hallucination limits.
 
 ---
 
-## Development Setup
+## Getting Started
 
-`farkad-ai` requires Python 3.13+ and uses modern Python packaging (`hatchling` / `uv` / standard virtual environments).
-
-### 1. Clone and Set Up
+### 1. Fork & Setup
 
 ```bash
 git clone https://github.com/brmel/farkad-ai.git
@@ -22,56 +31,34 @@ cd farkad-ai
 
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -e ".[dev]"   # or pip install -e . pytest ruff mypy
+pip install -e .
+pip install pytest ruff mypy
 ```
 
-### 2. Run Tests & Lints
+### 2. Verify Changes Locally
+
+Before submitting code, run the suite (all offline, no API spend or cloud credentials needed):
 
 ```bash
-pytest
 ruff check .
 ruff format --check .
 mypy farkad_ai
+pytest
 ```
 
-All tests are completely offline and deterministic—no cloud credentials or API keys are required.
+---
+
+## Guidelines
+
+- **Clean Protocols**: All new components should implement clear `typing.Protocol` interfaces so the core stays decoupled from vendor SDKs.
+- **Zero Cloud Coupling**: Do not introduce database dependencies (e.g. Firebase, Postgres) or user identity systems. Keep the package pure computation and reasoning.
+- **Empirical Evaluation**: Whenever proposing a prompt change or new workflow pattern, share benchmark results comparing accuracy, latency, and token cost.
 
 ---
 
-## Design Principles
+## Submitting Pull Requests & Discussions
 
-When contributing code, please keep the following architecture principles in mind:
+- **Proposals & Architecture Ideas**: Open a thread in [GitHub Discussions](https://github.com/brmel/farkad-ai/discussions) to brainstorm before writing large chunks of code.
+- **Pull Requests**: Keep PRs focused, include unit tests or golden fixture additions, and ensure all CI checks pass.
 
-1. **Deterministic & Static**:
-   - Favor structural pattern matching (`match / case`) and strict types over runtime `isinstance` or dynamic property lookups.
-   - All public interfaces are declared via strict `typing.Protocol`.
-2. **Provider Agnostic**:
-   - Core routing, extraction, and pipeline logic must not depend on any specific LLM SDK. All providers implement `ModelPort`.
-3. **No Private State**:
-   - `farkad-ai` is completely decoupled from databases, cloud services, user management, and billing. Avoid introducing cloud or framework dependencies.
-4. **Golden Replayability**:
-   - Prompt and model changes should be verified with the evaluation suite (`farkad-ai eval` / committed fixtures).
-
----
-
-## Submitting Pull Requests
-
-1. **Fork the repository** and create a feature branch from `main`:
-   ```bash
-   git checkout -b feature/your-improvement
-   ```
-2. **Make your changes** following the code standards above.
-3. **Add tests** covering the new behavior or edge cases.
-4. **Ensure all checks pass**:
-   ```bash
-   ruff check . && ruff format --check . && mypy farkad_ai && pytest
-   ```
-5. **Open a Pull Request**:
-   - Provide a clear, concise description of the motivation and changes.
-   - Reference any related issues.
-
----
-
-## Security
-
-If you discover a security vulnerability, please follow our [Security Policy](SECURITY.md) and do not open a public issue.
+Thank you for helping build a more transparent, accurate, and cost-effective AI extraction engine!

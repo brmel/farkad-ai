@@ -1,49 +1,112 @@
+<div align="center">
+
 # farkad-ai
 
-[![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](pyproject.toml)
-[![Type Checked: mypy](https://img.shields.io/badge/mypy-checked-blue)](pyproject.toml)
-[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
+**An open experimentation lab and benchmark harness for agentic workflows, multi-pass reasoning, and multimodal structured extraction.**
 
-Autonomous, multimodal structured extraction and health logging pipeline.
+[![Try the Live Demo](https://img.shields.io/badge/Live%20Demo-farkad.web.app-brightgreen?style=for-the-badge&logo=googlechrome)](https://farkad.web.app)
+[![GitHub Discussions](https://img.shields.io/badge/Discussions-Join%20Feedback-blueviolet?style=for-the-badge&logo=github)](https://github.com/brmel/farkad-ai/discussions)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue?style=for-the-badge)](LICENSE)
+[![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue?style=for-the-badge&logo=python)](pyproject.toml)
 
-Inspired by open-source algorithms and protocol architectures like **Twitter/X Algorithm** and **Telegram TDLib**, `farkad-ai` decouples the core artificial intelligence intelligence, routing decisions, prompt evaluation, and schema extraction engine from proprietary infrastructure, databases, and billing.
+<br/>
 
----
+[**Try Live Demo**](https://farkad.web.app) • [**Why This Exists**](#why-this-open-repo-exists) • [**Workflows We Test**](#agentic-workflows--best-practices-under-test) • [**Quickstart**](#quickstart) • [**Give Feedback**](#give-feedback--collaborate)
 
-## Highlights
-
-- 🎯 **Two-Pass AI Loop**: Deterministic Pass 1 router for intent, language, and pillar routing, followed by concurrent Pass 2 specialists for granular schema extraction.
-- 🔌 **Provider Agnostic (`ModelPort`)**: Clean protocol interface supporting Google Gemini, Anthropic Claude, OpenAI, and custom or local models.
-- ⚡ **Zero Cloud Dependencies**: Runs completely self-contained with pure Pydantic schemas and standard library typing.
-- 🧪 **Offline Deterministic Replay**: Test and evaluate the full pipeline offline with `RecordedModel` without API keys, tokens, or network I/O.
-- 📊 **Benchmarking Harness**: Measure extraction accuracy, token counts, latency, and exact cost in cents.
+</div>
 
 ---
 
-## Installation
+## Try It Live
 
-```bash
-pip install farkad-ai
+Before running code, you can test the extraction engine directly in your browser:
+
+👉 **[farkad.web.app](https://farkad.web.app)**
+
+Speak or type multi-intent queries (e.g. *"Drank two glasses of water, slept 7 hours, and took 200mg magnesium"*). Watch how the prompt and model routing handles ambiguity, temporal anchors, and strict numeric schemas in real-time.
+
+---
+
+## Why This Open Repo Exists
+
+Most production AI pipelines struggle with a common reality: **ambiguous, multi-intent real-world human input**. When someone talks or types naturally, they mix modalities, switch languages mid-sentence, use relative times ("yesterday afternoon"), and report across several domains at once.
+
+We created `farkad-ai` as an **open playground and benchmark** to test every modern agentic pattern, tool mechanism, and model capability against real extraction challenges.
+
+Our goal is not to lock in a single rigid architecture, but to **empirically compare workflows and keep only the ones that yield the highest accuracy at the lowest latency and cost**.
+
+---
+
+## Agentic Workflows & Best Practices Under Test
+
+We actively benchmark and iterate on these techniques in this repository:
+
+| Pattern / Paradigm | What We Experiment With | Current Status |
+| :--- | :--- | :--- |
+| **Multi-Pass Pipelines** | Pass 1 Router (intent, language, scope) + concurrent Pass 2 Specialists | Maintained baseline |
+| **Model Context Protocol (MCP)** | Decoupled tool servers for external registries and knowledge lookups | In design / prototyping |
+| **Agent Skills & Workflows** | Modular specialized subagents invoked dynamically per domain | Active exploration |
+| **Tool Calling vs. Structured Outputs** | Comparing vendor tool-calling protocols vs. strict schema completion | Continuously measured |
+| **Model Agnosticism** | Seamless switching: Gemini 2.5 Flash/Pro, Claude 3.5 Sonnet, GPT-4o, local Ollama | Abstracted via `ModelPort` |
+| **Deterministic Golden Evals** | Offline fixture replay scoring tolerance, field drift, and token pricing | Built into CLI |
+
+---
+
+## Architecture: The Two-Pass Seam
+
+The baseline architecture separates high-level classification from low-level schema extraction:
+
+```
+                  User Speech / Text / Image
+                              │
+                              ▼
+        ┌───────────────────────────────────────────┐
+        │        Pass 1: Intent & Route Router      │
+        │   - Evaluates health/domain relevance     │
+        │   - Discovers temporal anchors / clocks   │
+        │   - Emits target specialist routes        │
+        └─────────────────────┬─────────────────────┘
+                              │
+             ┌────────────────┴────────────────┐
+             ▼                                 ▼
+   ┌───────────────────┐             ┌───────────────────┐
+   │ Pass 2 Specialist │             │ Pass 2 Specialist │
+   │ (e.g. Nutrition)  │             │   (e.g. Sleep)    │
+   │ Strict Pydantic   │             │ Strict Pydantic   │
+   └─────────┬─────────┘             └─────────┬─────────┘
+             │                                 │
+             └────────────────┬────────────────┘
+                              ▼
+                     Validated Extraction
 ```
 
-Or from source:
-
-```bash
-git clone https://github.com/brmel/farkad-ai.git
-cd farkad-ai
-pip install -e .
-```
+- **Zero Cloud State**: Pure Python protocols. No coupling to Firestore, Postgres, Redis, or proprietary databases.
+- **Provider Agnostic**: The engine interacts solely with `ModelPort` protocols.
 
 ---
 
 ## Quickstart
 
-### 1. Simple Two-Pass Pipeline
+### 1. Installation
+
+```bash
+pip install farkad-ai
+```
+
+Or clone for local development and experimentation:
+
+```bash
+git clone https://github.com/brmel/farkad-ai.git
+cd farkad-ai
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+```
+
+### 2. Running a Pipeline
 
 ```python
 import asyncio
-from google import genai
 from farkad_ai import (
     CaptureRequest,
     Logged,
@@ -51,23 +114,20 @@ from farkad_ai import (
     VertexModel,
     build_pipeline,
 )
+from google import genai
 
 async def main():
-    # 1. Connect model provider (or use RecordedModel for offline/test environments)
+    # 1. Connect your model provider (or use RecordedModel for offline tests)
     client = genai.Client()
     model = VertexModel(client)
 
-    # 2. Build pipeline with your registry and specialist extractor
-    pipeline = build_pipeline(
-        model=model,
-        registry=my_pillar_registry,
-        extractor=my_specialist_extractor,
-    )
+    # 2. Build the pipeline with your registry and specialist extractor
+    pipeline = build_pipeline(model, registry=my_registry, extractor=my_extractor)
 
-    # 3. Process spoken or typed input
+    # 3. Process natural human input
     request = CaptureRequest(
         profile=my_user_profile,
-        text="I drank 500ml of water after my 5k run",
+        text="Drank 500ml water and ran 5k this morning at 8am",
     )
     outcome = await pipeline.run(request)
 
@@ -77,7 +137,7 @@ async def main():
             for entry in entries:
                 print(f"Extracted [{entry['pillar']}]: {entry['data']}")
         case NothingToLog(reason=reason):
-            print(f"No health actions identified: {reason}")
+            print(f"Filtered: {reason}")
 
 if __name__ == "__main__":
     asyncio.run(main())
@@ -85,71 +145,33 @@ if __name__ == "__main__":
 
 ---
 
-## Architecture
+## Offline Deterministic Benchmark Harness
 
-```
-User Input (Audio / Text / Image)
-            │
-            ▼
-┌───────────────────────────────────────┐
-│     Pass 1: Intent & Route Router     │
-│  - Health relevance check             │
-│  - Stated time & temporal anchors     │
-│  - Target specialist pillars (sleep,  │
-│    water, nutrition, vitals, etc.)    │
-└───────────────────┬───────────────────┘
-                    │
-                    ▼
-┌───────────────────────────────────────┐
-│     Pass 2: Specialist Extractors     │
-│  - Concurrent execution per pillar    │
-│  - Strict Pydantic schema validation  │
-│  - Unit conversion & range guards     │
-└───────────────────┬───────────────────┘
-                    │
-                    ▼
-           Validated Extraction
-```
-
----
-
-## Core Protocols & Extension Points
-
-Every component in `farkad-ai` is exposed via clean Python protocols in [`types.py`](farkad_ai/types.py), [`models/port.py`](farkad_ai/models/port.py), and [`extraction/port.py`](farkad_ai/extraction/port.py):
-
-| Protocol | Purpose | Key Method / Properties |
-| :--- | :--- | :--- |
-| `ModelPort` | Pluggable LLM interface | `complete(prompt, schema, tier) -> Completion` |
-| `PillarRegistryProtocol` | Available domain/pillar definitions | `all_descriptors()`, `names()`, `spec_for()` |
-| `PillarExtractionPort` | Pass 2 specialist extraction logic | `extract(context) -> ExtractionResult` |
-| `CaptureProfileProtocol` | Per-user tracking restrictions | `restrict(routes)`, `config_for(pillar)` |
-| `PillarConfigProtocol` | Config and validation boundaries per pillar | `pillar` |
-
----
-
-## Offline Testing & CLI
-
-`farkad-ai` includes a CLI for offline testing and benchmarking against pre-recorded fixtures:
+You don't need an API key or cloud budget to experiment with prompts or evaluate routing accuracy. Use the recorded fixture replay engine:
 
 ```bash
-# Route a test utterance against recorded responses
+# Test routing against pre-recorded golden fixtures
 farkad-ai route --text "Ate an apple and slept 8 hours" --fixtures ./fixtures
 
-# Run the full deterministic evaluation benchmark
+# Run full evaluation scoring (accuracy, token counts, latency, cost in cents)
 farkad-ai eval --fixtures ./fixtures
 ```
 
 ---
 
-## Contributing
+## Give Feedback & Collaborate
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for local setup, testing workflows, and coding standards.
+We actively want your perspective, challenge, and ideas:
+
+- 💬 **Join Discussions**: Have an agentic pattern, prompt framework, or MCP tool idea? Start a thread on [GitHub Discussions](https://github.com/brmel/farkad-ai/discussions).
+- 🐛 **Open Issues & Proposals**: Found a failure mode where schemas hallucinate or router misses intent? [Open an issue](https://github.com/brmel/farkad-ai/issues).
+- 🛠️ **Contribute**: Check out [CONTRIBUTING.md](CONTRIBUTING.md) to add new model adapters, specialist extractors, or evaluation datasets.
 
 ---
 
 ## Security
 
-Please report security issues and vulnerabilities responsibly by following [SECURITY.md](SECURITY.md). Do not report vulnerabilities through public issues.
+Please report vulnerabilities responsibly following our [Security Policy](SECURITY.md).
 
 ---
 
