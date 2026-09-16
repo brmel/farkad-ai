@@ -8,6 +8,7 @@ from farkad_ai.extraction import (
     PillarConfigProtocol,
     PillarExtractionPort,
 )
+from farkad_ai.memory import MemoryCategory, MemoryItem, UserMemory
 from farkad_ai.models import (
     AnthropicModel,
     CachedModel,
@@ -100,6 +101,8 @@ __all__ = [
     "Logged",
     "MediaBlob",
     "MediaType",
+    "MemoryCategory",
+    "MemoryItem",
     "ModelPort",
     "ModelTier",
     "ModelUnavailableError",
@@ -137,6 +140,7 @@ __all__ = [
     "Unavailability",
     "UnpricedModelError",
     "Usage",
+    "UserMemory",
     "VertexModel",
     "build_pipeline",
     "extract_each",
