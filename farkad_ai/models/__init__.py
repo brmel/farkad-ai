@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from farkad_ai.models.anthropic import AnthropicModel
+from farkad_ai.models.cache import CachedModel, cache_key_of
 from farkad_ai.models.openai import OpenAIModel
 from farkad_ai.models.port import ModelPort
 from farkad_ai.models.pricing import (
@@ -15,6 +16,7 @@ from farkad_ai.models.vertex import VertexModel
 
 __all__ = [
     "AnthropicModel",
+    "CachedModel",
     "InputModality",
     "ModelPort",
     "OpenAIModel",
@@ -23,6 +25,7 @@ __all__ = [
     "TokenPrice",
     "UnpricedModelError",
     "VertexModel",
+    "cache_key_of",
     "price_of",
     "retiring_within",
 ]
