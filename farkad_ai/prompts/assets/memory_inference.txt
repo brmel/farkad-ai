@@ -1,0 +1,7 @@
+Analyze the user utterance. If it mentions recurring personal habits, dietary restrictions,
+routines, medical constraints, or preferences to remember for the future, extract them.
+If it is only a single one-time log (e.g. 'I ate 2 eggs', 'ran 5km'), return an empty list [].
+Categories must be one of: 'dietary', 'routine', 'preference', 'medical', 'general'.
+
+Return JSON only in the following format:
+[{"category": "dietary", "content": "Allergic to peanuts"}]

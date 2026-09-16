@@ -8,7 +8,14 @@ from farkad_ai.extraction import (
     PillarConfigProtocol,
     PillarExtractionPort,
 )
-from farkad_ai.memory import MemoryCategory, MemoryItem, UserMemory
+from farkad_ai.memory import (
+    MemoryCategory,
+    MemoryInferrer,
+    MemoryItem,
+    UserMemory,
+    memory_from_primitive,
+    memory_to_primitive,
+)
 from farkad_ai.models import (
     AnthropicModel,
     CachedModel,
@@ -102,6 +109,7 @@ __all__ = [
     "MediaBlob",
     "MediaType",
     "MemoryCategory",
+    "MemoryInferrer",
     "MemoryItem",
     "ModelPort",
     "ModelTier",
@@ -145,6 +153,8 @@ __all__ = [
     "build_pipeline",
     "extract_each",
     "list_prompts",
+    "memory_from_primitive",
+    "memory_to_primitive",
     "price_of",
     "prompt",
     "retiring_within",
