@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from farkad_ai.extraction.adaptive import AdaptiveExtractor
 from farkad_ai.extraction.port import (
     ExtractionContext,
     ExtractionResult,
@@ -9,6 +10,7 @@ from farkad_ai.extraction.port import (
 )
 
 __all__ = [
+    "AdaptiveExtractor",
     "ExtractionContext",
     "ExtractionResult",
     "Finding",

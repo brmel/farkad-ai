@@ -7,7 +7,7 @@ from importlib.resources import files
 from pathlib import Path
 
 VERSION_LENGTH = 12
-KNOWN_PROMPTS: tuple[str, ...] = ("pass_one", "extraction", "recompute", "demo")
+KNOWN_PROMPTS: tuple[str, ...] = ("pass_one", "extraction", "recompute", "demo", "memory_inference")
 
 
 @dataclass(frozen=True, slots=True)

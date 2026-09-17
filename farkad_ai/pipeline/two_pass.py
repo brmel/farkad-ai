@@ -70,6 +70,7 @@ class TwoPassPipeline(CapturePipelinePort):
             routed.transcript,
             request.profile,
             media=request.media,
+            memory_context=request.memory_context,
         )
         extracted: list[PillarEntries] = []
         refused: list[PillarRefused] = []
