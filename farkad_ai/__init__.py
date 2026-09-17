@@ -8,6 +8,14 @@ from farkad_ai.extraction import (
     PillarConfigProtocol,
     PillarExtractionPort,
 )
+from farkad_ai.memory import (
+    MemoryCategory,
+    MemoryInferrer,
+    MemoryItem,
+    UserMemory,
+    memory_from_primitive,
+    memory_to_primitive,
+)
 from farkad_ai.models import (
     AnthropicModel,
     InputModality,
@@ -94,6 +102,9 @@ __all__ = [
     "Logged",
     "MediaBlob",
     "MediaType",
+    "MemoryCategory",
+    "MemoryInferrer",
+    "MemoryItem",
     "ModelPort",
     "ModelTier",
     "ModelUnavailableError",
@@ -131,10 +142,13 @@ __all__ = [
     "Unavailability",
     "UnpricedModelError",
     "Usage",
+    "UserMemory",
     "VertexModel",
     "build_pipeline",
     "extract_each",
     "list_prompts",
+    "memory_from_primitive",
+    "memory_to_primitive",
     "price_of",
     "prompt",
     "retiring_within",

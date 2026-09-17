@@ -25,6 +25,7 @@ class CaptureRequest:
     profile: CaptureProfileProtocol
     text: str = ""
     media: tuple[MediaBlob, ...] = ()
+    memory_context: str = ""
 
 
 @dataclass(frozen=True, slots=True)
