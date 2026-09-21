@@ -4,6 +4,7 @@ from decimal import Decimal
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+
 from farkad_ai.extraction.port import (
     ExtractionResult,
     Finding,

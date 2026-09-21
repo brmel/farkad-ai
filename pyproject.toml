@@ -88,6 +88,11 @@ testpaths = ["tests"]
 line-length = 100
 target-version = "py313"
 
+# The same set the monorepo selects, so `make check` there and this repository's CI measure one
+# standard. Without it a standalone checkout lints by whatever ruff's default is that month.
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "SIM", "RUF"]
+
 [tool.mypy]
 python_version = "3.13"
 strict = true

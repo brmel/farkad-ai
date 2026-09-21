@@ -15,15 +15,19 @@ class HealthFact(BaseModel):
 
 
 def test_missing_anthropic_dependency_raises_clear_error() -> None:
-    with patch("farkad_ai.models.anthropic._ANTHROPIC_AVAILABLE", False):
-        with pytest.raises(RuntimeError, match="anthropic is required"):
-            AnthropicModel(Mock())
+    with (
+        patch("farkad_ai.models.anthropic._ANTHROPIC_AVAILABLE", False),
+        pytest.raises(RuntimeError, match="anthropic is required"),
+    ):
+        AnthropicModel(Mock())
 
 
 def test_missing_openai_dependency_raises_clear_error() -> None:
-    with patch("farkad_ai.models.openai._OPENAI_AVAILABLE", False):
-        with pytest.raises(RuntimeError, match="openai is required"):
-            OpenAIModel(Mock())
+    with (
+        patch("farkad_ai.models.openai._OPENAI_AVAILABLE", False),
+        pytest.raises(RuntimeError, match="openai is required"),
+    ):
+        OpenAIModel(Mock())
 
 
 @pytest.mark.anyio

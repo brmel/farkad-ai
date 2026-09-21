@@ -126,7 +126,9 @@ def test_user_memory_toggle_and_merge() -> None:
 @pytest.mark.anyio
 async def test_memory_inferrer_extracts_habits() -> None:
     from decimal import Decimal
+
     from pydantic import BaseModel
+
     from farkad_ai.memory import InferredMemories, MemoryCandidate, MemoryInferrer
     from farkad_ai.types import Completion, ModelTier, PipelineStep, Prompt, Usage
 

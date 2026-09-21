@@ -7,8 +7,8 @@ from typing import Any
 
 try:
     import openai  # type: ignore[import-not-found]
-    from openai import AsyncOpenAI
     from openai import APIError as OpenAIAPIError
+    from openai import AsyncOpenAI
 
     _OPENAI_AVAILABLE = True
 except ImportError:
@@ -45,7 +45,8 @@ class OpenAIModel(ModelPort):
     ) -> None:
         if not _OPENAI_AVAILABLE:
             raise RuntimeError(
-                "openai is required to use OpenAIModel. Install with: pip install 'farkad-ai[openai]'"
+                "openai is required to use OpenAIModel. "
+                "Install with: pip install 'farkad-ai[openai]'"
             )
         self._client = client
         self._resolver = model_resolver or (lambda tier: DEFAULT_OPENAI_MODELS[tier])

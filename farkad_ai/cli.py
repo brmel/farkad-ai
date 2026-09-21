@@ -123,16 +123,19 @@ def resolve_model(args: argparse.Namespace) -> ModelPort:
             return RecordedModel(Path(fixtures))
         case "google":
             from google import genai
+
             from farkad_ai.models.vertex import VertexModel
 
             return VertexModel(genai.Client())
         case "anthropic":
             import anthropic  # type: ignore[import-not-found]
+
             from farkad_ai.models.anthropic import AnthropicModel
 
             return AnthropicModel(anthropic.AsyncAnthropic())
         case "openai":
             import openai  # type: ignore[import-not-found]
+
             from farkad_ai.models.openai import OpenAIModel
 
             return OpenAIModel(openai.AsyncOpenAI())
@@ -204,7 +207,8 @@ def handle_models(args: argparse.Namespace) -> int:
     for name, price in sorted(PRICES.items()):
         retires = str(price.retires_on) if price.retires_on else "None"
         sys.stdout.write(
-            f"{name:<30} {str(price.input_usd_per_million):<12} {str(price.output_usd_per_million):<12} {retires:<12}\n"
+            f"{name:<30} {price.input_usd_per_million!s:<12} "
+            f"{price.output_usd_per_million!s:<12} {retires:<12}\n"
         )
     return 0
 
