@@ -6,6 +6,7 @@ from farkad_ai.extraction.port import (
     PillarExtractionPort,
 )
 from farkad_ai.logging import get_logger
+from farkad_ai.types import ModelUnavailableError, Unavailability
 
 _log = get_logger(__name__)
 
@@ -22,13 +23,16 @@ class AdaptiveExtractor(PillarExtractionPort):
     async def extract(self, context: ExtractionContext) -> ExtractionResult:
         try:
             return await self._fast.extract(context)
-        except Exception as error:
+        except ModelUnavailableError as refusal:
+            # A quota, a key or an outage refuses both tiers; only a schema escalates.
+            if refusal.because is not Unavailability.output_did_not_parse:
+                raise
             _log.info(
                 "extraction_tier_escalated",
                 extra={
                     "extra_fields": {
                         "pillar": context.config.pillar,
-                        "reason": str(error),
+                        "model": refusal.model,
                     }
                 },
             )

@@ -1,0 +1,819 @@
+{
+  "measured_on": "2026-08-04",
+  "why": "Seventeen sentences in English, French and Arabic, plus one in each that must route to nothing — 54 cases (#354). Seven are single-pillar, one per registered pillar, so no pillar is scored on another's evidence. Ten are mixed, and each is a way the split can go wrong rather than another compound sentence: a quantity sitting beside the pillar it does not belong to, one time governing two clauses and stated once, two pillars sharing one object, a clause that belongs to nothing beside one that does, and three pillars at once. The same expectations are asserted in all three languages because meaning travels as an id: 'cardio' is 'cardio' whatever the sentence was in, and a case that scored in English only proved the router understands English. Nothing asserts free text — `item` is stored in the user's own words (D79), so 'eggs' and 'two eggs' are both right and a case naming one asserts a phrasing. Fields nobody asserts are not scored: a null the spec permits is not an error, and neither is a judgement call — eggs are 'meat' to the model and 'other' to the person who wrote the case, and the vocabulary supports both. The one thing deliberately left unasserted is the clock on 'this morning I ran and ate two eggs': the model answers 09:00:00 exactly, which is an invention rather than something the sentence said, and pinning either that or its absence would be asserting a preference. It is reported on #354 instead.",
+  "cases": [
+    {
+      "utterance": "I drank 500 ml of water",
+      "routes": [
+        "water"
+      ],
+      "expected": {
+        "water": [
+          {
+            "amount": 500.0,
+            "category": "water"
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "j'ai bu 500 ml d'eau",
+      "routes": [
+        "water"
+      ],
+      "expected": {
+        "water": [
+          {
+            "amount": 500.0,
+            "category": "water"
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "شربت 500 مل من الماء",
+      "routes": [
+        "water"
+      ],
+      "expected": {
+        "water": [
+          {
+            "amount": 500.0,
+            "category": "water"
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "I ate two eggs",
+      "routes": [
+        "food"
+      ],
+      "expected": {
+        "food": []
+      }
+    },
+    {
+      "utterance": "j'ai mangé deux œufs",
+      "routes": [
+        "food"
+      ],
+      "expected": {
+        "food": []
+      }
+    },
+    {
+      "utterance": "أكلت بيضتين",
+      "routes": [
+        "food"
+      ],
+      "expected": {
+        "food": []
+      }
+    },
+    {
+      "utterance": "I ran 5 kilometres",
+      "routes": [
+        "exercise"
+      ],
+      "expected": {
+        "exercise": [
+          {
+            "category": "cardio",
+            "distance": 5000.0
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "j'ai couru 5 kilomètres",
+      "routes": [
+        "exercise"
+      ],
+      "expected": {
+        "exercise": [
+          {
+            "category": "cardio",
+            "distance": 5000.0
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "ركضت 5 كيلومترات",
+      "routes": [
+        "exercise"
+      ],
+      "expected": {
+        "exercise": [
+          {
+            "category": "cardio",
+            "distance": 5000.0
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "I slept seven hours",
+      "routes": [
+        "sleep"
+      ],
+      "expected": {
+        "sleep": [
+          {
+            "duration": 420.0,
+            "category": "night"
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "j'ai dormi sept heures",
+      "routes": [
+        "sleep"
+      ],
+      "expected": {
+        "sleep": [
+          {
+            "duration": 420.0,
+            "category": "night"
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "نمت سبع ساعات",
+      "routes": [
+        "sleep"
+      ],
+      "expected": {
+        "sleep": [
+          {
+            "duration": 420.0,
+            "category": "night"
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "I took 2000 IU of vitamin D",
+      "routes": [
+        "supplements"
+      ],
+      "expected": {
+        "supplements": [
+          {
+            "category": "vitamin"
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "j'ai pris 2000 UI de vitamine D",
+      "routes": [
+        "supplements"
+      ],
+      "expected": {
+        "supplements": [
+          {
+            "category": "vitamin"
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "أخذت 2000 وحدة من فيتامين د",
+      "routes": [
+        "supplements"
+      ],
+      "expected": {
+        "supplements": [
+          {
+            "category": "vitamin"
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "I took 500 mg of paracetamol",
+      "routes": [
+        "drugs"
+      ],
+      "expected": {
+        "drugs": [
+          {
+            "dose": 0.5,
+            "category": "painkiller"
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "j'ai pris 500 mg de paracétamol",
+      "routes": [
+        "drugs"
+      ],
+      "expected": {
+        "drugs": [
+          {
+            "dose": 0.5,
+            "category": "painkiller"
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "أخذت 500 ملغ من الباراسيتامول",
+      "routes": [
+        "drugs"
+      ],
+      "expected": {
+        "drugs": [
+          {
+            "dose": 0.5,
+            "category": "painkiller"
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "twenty minutes in the sauna",
+      "routes": [
+        "recovery"
+      ],
+      "expected": {
+        "recovery": [
+          {
+            "category": "sauna",
+            "duration": 20.0
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "vingt minutes au sauna",
+      "routes": [
+        "recovery"
+      ],
+      "expected": {
+        "recovery": [
+          {
+            "category": "sauna",
+            "duration": 20.0
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "عشرون دقيقة في الساونا",
+      "routes": [
+        "recovery"
+      ],
+      "expected": {
+        "recovery": [
+          {
+            "category": "sauna",
+            "duration": 20.0
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "I ran 5k and drank 500 ml of water after",
+      "routes": [
+        "exercise",
+        "water"
+      ],
+      "expected": {
+        "exercise": [
+          {
+            "category": "cardio",
+            "distance": 5000.0
+          }
+        ],
+        "water": [
+          {
+            "amount": 500.0,
+            "category": "water"
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "j'ai couru 5 km et bu 500 ml d'eau après",
+      "routes": [
+        "exercise",
+        "water"
+      ],
+      "expected": {
+        "exercise": [
+          {
+            "category": "cardio",
+            "distance": 5000.0
+          }
+        ],
+        "water": [
+          {
+            "amount": 500.0,
+            "category": "water"
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "ركضت 5 كيلومترات وشربت 500 مل من الماء بعدها",
+      "routes": [
+        "exercise",
+        "water"
+      ],
+      "expected": {
+        "exercise": [
+          {
+            "category": "cardio",
+            "distance": 5000.0
+          }
+        ],
+        "water": [
+          {
+            "amount": 500.0,
+            "category": "water"
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "this morning I ran and ate two eggs",
+      "routes": [
+        "exercise",
+        "food"
+      ],
+      "expected": {
+        "exercise": [
+          {
+            "category": "cardio"
+          }
+        ],
+        "food": []
+      }
+    },
+    {
+      "utterance": "ce matin j'ai couru et mangé deux œufs",
+      "routes": [
+        "exercise",
+        "food"
+      ],
+      "expected": {
+        "exercise": [
+          {
+            "category": "cardio"
+          }
+        ],
+        "food": []
+      }
+    },
+    {
+      "utterance": "هذا الصباح ركضت وأكلت بيضتين",
+      "routes": [
+        "exercise",
+        "food"
+      ],
+      "expected": {
+        "exercise": [
+          {
+            "category": "cardio"
+          }
+        ],
+        "food": []
+      }
+    },
+    {
+      "utterance": "a banana after the gym",
+      "routes": [
+        "exercise",
+        "food"
+      ],
+      "expected": {
+        "food": [
+          {
+            "food_group": "fruit"
+          }
+        ],
+        "exercise": []
+      }
+    },
+    {
+      "utterance": "une banane après la salle",
+      "routes": [
+        "exercise",
+        "food"
+      ],
+      "expected": {
+        "food": [
+          {
+            "food_group": "fruit"
+          }
+        ],
+        "exercise": []
+      }
+    },
+    {
+      "utterance": "موزة بعد النادي",
+      "routes": [
+        "exercise",
+        "food"
+      ],
+      "expected": {
+        "food": [
+          {
+            "food_group": "fruit"
+          }
+        ],
+        "exercise": []
+      }
+    },
+    {
+      "utterance": "I drank a glass of water, and the weather is terrible today",
+      "routes": [
+        "water"
+      ],
+      "expected": {
+        "water": [
+          {
+            "category": "water"
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "j'ai bu un verre d'eau, et il fait un temps horrible aujourd'hui",
+      "routes": [
+        "water"
+      ],
+      "expected": {
+        "water": [
+          {
+            "category": "water"
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "شربت كأس ماء، والطقس فظيع اليوم",
+      "routes": [
+        "water"
+      ],
+      "expected": {
+        "water": [
+          {
+            "category": "water"
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "two eggs, a glass of water and a twenty minute walk",
+      "routes": [
+        "exercise",
+        "food",
+        "water"
+      ],
+      "expected": {
+        "food": [],
+        "water": [
+          {
+            "category": "water"
+          }
+        ],
+        "exercise": [
+          {
+            "category": "walk",
+            "duration": 20.0
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "deux œufs, un verre d'eau et une marche de vingt minutes",
+      "routes": [
+        "exercise",
+        "food",
+        "water"
+      ],
+      "expected": {
+        "food": [],
+        "water": [
+          {
+            "category": "water"
+          }
+        ],
+        "exercise": [
+          {
+            "category": "walk",
+            "duration": 20.0
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "بيضتان وكأس ماء ومشي عشرين دقيقة",
+      "routes": [
+        "exercise",
+        "food",
+        "water"
+      ],
+      "expected": {
+        "food": [],
+        "water": [
+          {
+            "category": "water"
+          }
+        ],
+        "exercise": [
+          {
+            "category": "walk",
+            "duration": 20.0
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "I drank 500 ml of water and slept seven hours",
+      "routes": [
+        "sleep",
+        "water"
+      ],
+      "expected": {
+        "water": [
+          {
+            "amount": 500.0,
+            "category": "water"
+          }
+        ],
+        "sleep": [
+          {
+            "duration": 420.0,
+            "category": "night"
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "j'ai bu 500 ml d'eau et dormi sept heures",
+      "routes": [
+        "sleep",
+        "water"
+      ],
+      "expected": {
+        "water": [
+          {
+            "amount": 500.0,
+            "category": "water"
+          }
+        ],
+        "sleep": [
+          {
+            "duration": 420.0,
+            "category": "night"
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "شربت 500 مل من الماء ونمت سبع ساعات",
+      "routes": [
+        "sleep",
+        "water"
+      ],
+      "expected": {
+        "water": [
+          {
+            "amount": 500.0,
+            "category": "water"
+          }
+        ],
+        "sleep": [
+          {
+            "duration": 420.0,
+            "category": "night"
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "two eggs and a coffee",
+      "routes": [
+        "food",
+        "water"
+      ],
+      "expected": {
+        "food": [],
+        "water": [
+          {
+            "category": "coffee"
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "deux œufs et un café",
+      "routes": [
+        "food",
+        "water"
+      ],
+      "expected": {
+        "food": [],
+        "water": [
+          {
+            "category": "coffee"
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "بيضتان وقهوة",
+      "routes": [
+        "food",
+        "water"
+      ],
+      "expected": {
+        "food": [],
+        "water": [
+          {
+            "category": "coffee"
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "took 500mg of paracetamol and went to bed at eleven",
+      "routes": [
+        "drugs",
+        "sleep"
+      ],
+      "expected": {
+        "drugs": [
+          {
+            "dose": 0.5,
+            "category": "painkiller"
+          }
+        ],
+        "sleep": []
+      }
+    },
+    {
+      "utterance": "j'ai pris 500 mg de paracétamol et je me suis couché à onze heures",
+      "routes": [
+        "drugs",
+        "sleep"
+      ],
+      "expected": {
+        "drugs": [
+          {
+            "dose": 0.5,
+            "category": "painkiller"
+          }
+        ],
+        "sleep": []
+      }
+    },
+    {
+      "utterance": "أخذت 500 ملغ باراسيتامول وذهبت إلى الفراش في الحادية عشرة",
+      "routes": [
+        "drugs",
+        "sleep"
+      ],
+      "expected": {
+        "drugs": [
+          {
+            "dose": 0.5,
+            "category": "painkiller"
+          }
+        ],
+        "sleep": []
+      }
+    },
+    {
+      "utterance": "I ran 5k then twenty minutes in the sauna",
+      "routes": [
+        "exercise",
+        "recovery"
+      ],
+      "expected": {
+        "exercise": [
+          {
+            "category": "cardio",
+            "distance": 5000.0
+          }
+        ],
+        "recovery": [
+          {
+            "category": "sauna",
+            "duration": 20.0
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "j'ai couru 5 km puis vingt minutes au sauna",
+      "routes": [
+        "exercise",
+        "recovery"
+      ],
+      "expected": {
+        "exercise": [
+          {
+            "category": "cardio",
+            "distance": 5000.0
+          }
+        ],
+        "recovery": [
+          {
+            "category": "sauna",
+            "duration": 20.0
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "ركضت 5 كيلومترات ثم عشرين دقيقة في الساونا",
+      "routes": [
+        "exercise",
+        "recovery"
+      ],
+      "expected": {
+        "exercise": [
+          {
+            "category": "cardio",
+            "distance": 5000.0
+          }
+        ],
+        "recovery": [
+          {
+            "category": "sauna",
+            "duration": 20.0
+          }
+        ]
+      }
+    },
+    {
+      "utterance": "creatine, 5 grams, with two eggs",
+      "routes": [
+        "food",
+        "supplements"
+      ],
+      "expected": {
+        "supplements": [
+          {
+            "dose": 5.0,
+            "category": "performance"
+          }
+        ],
+        "food": []
+      }
+    },
+    {
+      "utterance": "créatine, 5 grammes, avec deux œufs",
+      "routes": [
+        "food",
+        "supplements"
+      ],
+      "expected": {
+        "supplements": [
+          {
+            "dose": 5.0,
+            "category": "performance"
+          }
+        ],
+        "food": []
+      }
+    },
+    {
+      "utterance": "كرياتين، 5 غرامات، مع بيضتين",
+      "routes": [
+        "food",
+        "supplements"
+      ],
+      "expected": {
+        "supplements": [
+          {
+            "dose": 5.0,
+            "category": "performance"
+          }
+        ],
+        "food": []
+      }
+    },
+    {
+      "utterance": "what's the weather",
+      "routes": []
+    },
+    {
+      "utterance": "quel temps fait-il",
+      "routes": []
+    },
+    {
+      "utterance": "ما هو الطقس",
+      "routes": []
+    }
+  ]
+}

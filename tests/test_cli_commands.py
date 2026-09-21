@@ -2,12 +2,9 @@ from io import StringIO
 from pathlib import Path
 from unittest.mock import patch
 
-import pytest
 from farkad_ai.cli import main
 
-GOLD_PATH = (
-    Path(__file__).resolve().parents[2] / "backend" / "tests" / "fixtures" / "eval" / "gold.json"
-)
+GOLD_PATH = Path(__file__).resolve().parent / "fixtures" / "gold.json"
 
 
 def test_cli_models_prints_all_providers() -> None:
@@ -42,8 +39,7 @@ def test_cli_eval_reports_error_on_missing_dir() -> None:
 
 
 def test_cli_eval_passes_on_gold_fixtures() -> None:
-    if not GOLD_PATH.exists():
-        pytest.skip(f"Gold fixtures not found at {GOLD_PATH}")
+    assert GOLD_PATH.exists()
     stdout = StringIO()
     with patch("sys.stdout", stdout):
         code = main(["eval", "--fixtures", str(GOLD_PATH)])

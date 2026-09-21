@@ -44,10 +44,8 @@ We actively benchmark and iterate on these techniques in this repository:
 | Pattern / Paradigm | What We Experiment With | Current Status |
 | :--- | :--- | :--- |
 | **Multi-Pass Pipelines** | Pass 1 Router (intent, language, scope) + concurrent Pass 2 Specialists | Maintained baseline |
-| **Model Context Protocol (MCP)** | Decoupled tool servers for external registries and knowledge lookups | In design / prototyping |
-| **Agent Skills & Workflows** | Modular specialized subagents invoked dynamically per domain | Active exploration |
-| **Tool Calling vs. Structured Outputs** | Comparing vendor tool-calling protocols vs. strict schema completion | Continuously measured |
-| **Model Agnosticism** | Seamless switching: Gemini 2.5 Flash/Pro, Claude 3.5 Sonnet, GPT-4o, local Ollama | Abstracted via `ModelPort` |
+| **Model Agnosticism** | One `ModelPort`, four adapters: Vertex (Gemini), Anthropic, OpenAI, and a recorded-fixture adapter for offline runs | Implemented |
+| **Provider Fallback** | A chain that moves to the next adapter when one is unavailable | Implemented |
 | **Deterministic Golden Evals** | Offline fixture replay scoring tolerance, field drift, and token pricing | Built into CLI |
 
 ---
