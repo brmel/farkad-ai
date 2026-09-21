@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 license = "Apache-2.0"
 authors = [
-    { name = "Farkad Team", email = "engineering@farkad.health" },
+    { name = "Farkad", email = "mellah.brahim.redouane@gmail.com" },
 ]
 keywords = [
     "ai",
@@ -60,7 +60,7 @@ all = [
 ]
 
 [project.urls]
-Homepage = "https://farkad.health"
+Homepage = "https://farkad.web.app"
 Repository = "https://github.com/brmel/farkad-ai"
 Issues = "https://github.com/brmel/farkad-ai/issues"
 Documentation = "https://github.com/brmel/farkad-ai#readme"

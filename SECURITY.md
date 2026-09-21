@@ -6,8 +6,8 @@ We release security updates and bug fixes for the latest active version of `fark
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 0.1.x   | :white_check_mark: |
-| < 0.1   | :x:                |
+| 0.2.x   | :white_check_mark: |
+| < 0.2   | :x:                |
 
 ## Reporting a Vulnerability
 
@@ -19,7 +19,7 @@ The Farkad team takes security seriously. If you discover a vulnerability or sec
 
 Instead, report security issues through:
 1. **GitHub Security Advisory**: Use the "Report a vulnerability" button under the **Security** tab of the GitHub repository.
-2. **Email**: Send details of the issue to `security@farkad.com`.
+2. **Email**: Send details of the issue to `mellah.brahim.redouane@gmail.com`.
 
 ### What to Include
 

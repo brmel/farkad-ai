@@ -10,7 +10,13 @@ from farkad_ai.extraction.port import (
     ExtractionResult,
     PillarExtractionPort,
 )
-from farkad_ai.types import PipelineStep, Usage
+from farkad_ai.types import (
+    ModelTier,
+    ModelUnavailableError,
+    PipelineStep,
+    Unavailability,
+    Usage,
+)
 
 
 class DummyPillarConfig:
@@ -42,13 +48,14 @@ class SuccessfulExtractor(PillarExtractionPort):
         )
 
 
-class FailingExtractor(PillarExtractionPort):
-    def __init__(self) -> None:
+class RefusingExtractor(PillarExtractionPort):
+    def __init__(self, because: Unavailability) -> None:
+        self.because = because
         self.calls = 0
 
     async def extract(self, context: ExtractionContext) -> ExtractionResult:
         self.calls += 1
-        raise ValueError("failed schema parsing")
+        raise ModelUnavailableError(ModelTier.fast, "model-fast", self.because, "detail")
 
 
 @pytest.mark.anyio
@@ -65,8 +72,8 @@ async def test_adaptive_extractor_uses_fast_when_successful() -> None:
 
 
 @pytest.mark.anyio
-async def test_adaptive_extractor_escalates_to_standard_on_failure() -> None:
-    fast = FailingExtractor()
+async def test_an_answer_that_did_not_parse_escalates_to_standard() -> None:
+    fast = RefusingExtractor(Unavailability.output_did_not_parse)
     standard = SuccessfulExtractor("standard")
     extractor = AdaptiveExtractor(fast, standard)
     ctx = ExtractionContext(config=DummyPillarConfig(), transcript="two eggs")
@@ -78,13 +85,27 @@ async def test_adaptive_extractor_escalates_to_standard_on_failure() -> None:
 
 
 @pytest.mark.anyio
-async def test_adaptive_extractor_raises_when_both_fail() -> None:
-    fast = FailingExtractor()
-    standard = FailingExtractor()
+async def test_a_refusal_neither_tier_can_answer_is_never_paid_for_twice() -> None:
+    for because in (Unavailability.provider_refused, Unavailability.usage_not_reported):
+        fast = RefusingExtractor(because)
+        standard = SuccessfulExtractor("standard")
+        extractor = AdaptiveExtractor(fast, standard)
+        ctx = ExtractionContext(config=DummyPillarConfig(), transcript="two eggs")
+
+        with pytest.raises(ModelUnavailableError):
+            await extractor.extract(ctx)
+        assert fast.calls == 1
+        assert standard.calls == 0
+
+
+@pytest.mark.anyio
+async def test_adaptive_extractor_raises_when_both_tiers_cannot_parse() -> None:
+    fast = RefusingExtractor(Unavailability.output_did_not_parse)
+    standard = RefusingExtractor(Unavailability.output_did_not_parse)
     extractor = AdaptiveExtractor(fast, standard)
     ctx = ExtractionContext(config=DummyPillarConfig(), transcript="two eggs")
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ModelUnavailableError):
         await extractor.extract(ctx)
     assert fast.calls == 1
     assert standard.calls == 1
