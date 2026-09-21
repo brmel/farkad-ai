@@ -50,9 +50,10 @@ eval = [
     "tabulate>=0.9.0",
 ]
 dev = [
+    # anyio, not pytest-asyncio: every async test here is marked `@pytest.mark.anyio`.
+    "anyio>=4.0.0",
     "mypy>=1.13.0",
     "pytest>=8.0.0",
-    "pytest-asyncio>=0.24.0",
     "ruff>=0.8.0",
 ]
 all = [
@@ -97,3 +98,11 @@ select = ["E", "F", "I", "N", "UP", "B", "SIM", "RUF"]
 python_version = "3.13"
 strict = true
 packages = ["farkad_ai"]
+# An optional adapter must typecheck with its SDK installed and without it. The ignore that the
+# fallback assignment needs in the first state is redundant in the second, and no single file
+# satisfies both, so the check that would flip between them is off here and only here.
+warn_unused_ignores = false
+
+[[tool.mypy.overrides]]
+module = ["google.*", "anthropic.*", "openai.*"]
+ignore_missing_imports = true
