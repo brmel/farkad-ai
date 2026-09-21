@@ -7,8 +7,8 @@ from typing import Any
 
 try:
     import anthropic  # type: ignore[import-not-found]
-    from anthropic import AsyncAnthropic
     from anthropic import APIError as AnthropicAPIError
+    from anthropic import AsyncAnthropic
 
     _ANTHROPIC_AVAILABLE = True
 except ImportError:
@@ -45,7 +45,8 @@ class AnthropicModel(ModelPort):
     ) -> None:
         if not _ANTHROPIC_AVAILABLE:
             raise RuntimeError(
-                "anthropic is required to use AnthropicModel. Install with: pip install 'farkad-ai[anthropic]'"
+                "anthropic is required to use AnthropicModel. "
+                "Install with: pip install 'farkad-ai[anthropic]'"
             )
         self._client = client
         self._resolver = model_resolver or (lambda tier: DEFAULT_ANTHROPIC_MODELS[tier])

@@ -49,7 +49,8 @@ class VertexModel(ModelPort):
     ) -> None:
         if not _GENAI_AVAILABLE:
             raise RuntimeError(
-                "google-genai is required to use VertexModel. Install with: pip install 'farkad-ai[google]'"
+                "google-genai is required to use VertexModel. "
+                "Install with: pip install 'farkad-ai[google]'"
             )
         self._client = client
         self._resolver = model_resolver or (lambda tier: DEFAULT_MODELS[tier])

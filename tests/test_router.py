@@ -4,6 +4,7 @@ from decimal import Decimal
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+
 from farkad_ai.models.port import ModelPort
 from farkad_ai.routing.pass_one import PassOne, PillarSpecProtocol, TimeHint
 from farkad_ai.routing.router import NotApplicable, Routed, Router
