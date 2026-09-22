@@ -132,8 +132,7 @@ def price_of(model: str) -> TokenPrice:
     return PRICES[model]
 
 
-# Window shortened from 30 to 14 days per ROADMAP Phase 0 (#388) while successor evaluation runs.
-NOTICE = timedelta(days=14)
+NOTICE = timedelta(days=30)
 
 
 def retiring_within(notice: timedelta, today: date) -> tuple[str, ...]:

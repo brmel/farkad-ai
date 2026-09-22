@@ -1,5 +1,8 @@
 # This repository is published, so a vulnerable pin here is a vulnerable pin in whatever
 # installs `farkad-ai`. One grouped pull request per ecosystem per week.
+# Majors stay out of the group so one blocked major cannot hold back safe minors:
+# typescript 7 is unusable while typescript-eslint peers `<6.1.0`, and it took an
+# eslint patch down with it.
 version: 2
 updates:
   - package-ecosystem: pip
@@ -9,7 +12,10 @@ updates:
     groups:
       python:
         patterns: ['*']
+        update-types: ['minor', 'patch']
     open-pull-requests-limit: 2
+    cooldown:
+      default-days: 7
 
   - package-ecosystem: github-actions
     directory: '/'
@@ -18,4 +24,7 @@ updates:
     groups:
       actions:
         patterns: ['*']
+        update-types: ['minor', 'patch']
     open-pull-requests-limit: 1
+    cooldown:
+      default-days: 7
