@@ -2,7 +2,7 @@
 
 # farkad-ai
 
-**An open experimentation lab and benchmark harness for agentic workflows, multi-pass reasoning, and multimodal structured extraction.**
+**A health tracker you talk to. Say what you ate, drank and did in one sentence, and it turns that into structured entries you can correct.**
 
 [![Try the Live Demo](https://img.shields.io/badge/Live%20Demo-farkad.web.app-brightgreen?style=for-the-badge&logo=googlechrome)](https://farkad.web.app)
 [![GitHub Discussions](https://img.shields.io/badge/Discussions-Join%20Feedback-blueviolet?style=for-the-badge&logo=github)](https://github.com/brmel/farkad-ai/discussions)
@@ -11,7 +11,7 @@
 
 <br/>
 
-[**Try Live Demo**](https://farkad.web.app) • [**Why This Exists**](#why-this-open-repo-exists) • [**Workflows We Test**](#agentic-workflows--best-practices-under-test) • [**Quickstart**](#quickstart) • [**Give Feedback**](#give-feedback--collaborate)
+[**Try Live Demo**](https://farkad.web.app) • [**Why This Exists**](#why-this-repository-is-open) • [**What I test**](#what-i-test) • [**Quickstart**](#quickstart) • [**Give Feedback**](#give-feedback--collaborate)
 
 </div>
 
@@ -23,25 +23,25 @@ Before running code, you can test the extraction engine directly in your browser
 
 👉 **[farkad.web.app](https://farkad.web.app)**
 
-Speak or type multi-intent queries (e.g. *"Drank two glasses of water, slept 7 hours, and took 200mg magnesium"*). Watch how the prompt and model routing handles ambiguity, temporal anchors, and strict numeric schemas in real-time.
+Say or type a whole day in one sentence — *"Drank two glasses of water, slept 7 hours, and took 200mg magnesium"* — and watch it come back as separate, editable entries. That sentence covers three different areas, uses a relative time, and carries a dose that has to survive as a number.
 
 ---
 
-## Why This Open Repo Exists
+## Why this repository is open
 
 Most production AI pipelines struggle with a common reality: **ambiguous, multi-intent real-world human input**. When someone talks or types naturally, they mix modalities, switch languages mid-sentence, use relative times ("yesterday afternoon"), and report across several domains at once.
 
-We created `farkad-ai` as an **open playground and benchmark** to test every modern agentic pattern, tool mechanism, and model capability against real extraction challenges.
+I opened `farkad-ai` so the extraction engine can be read and argued with. It is the part of the product where being wrong is invisible, so it is the part worth showing.
 
-Our goal is not to lock in a single rigid architecture, but to **empirically compare workflows and keep only the ones that yield the highest accuracy at the lowest latency and cost**.
+I am not defending one architecture. I measure the approaches against recorded cases and keep whichever is most accurate for the latency and cost it needs.
 
 ---
 
-## Agentic Workflows & Best Practices Under Test
+## What I test
 
-We actively benchmark and iterate on these techniques in this repository:
+These are the techniques I measure here, and where each one currently stands:
 
-| Pattern / Paradigm | What We Experiment With | Current Status |
+| Technique | What I try | Where it stands |
 | :--- | :--- | :--- |
 | **Multi-Pass Pipelines** | Pass 1 Router (intent, language, scope) + concurrent Pass 2 Specialists | Maintained baseline |
 | **Model Agnosticism** | One `ModelPort`, four adapters: Vertex (Gemini), Anthropic, OpenAI, and a recorded-fixture adapter for offline runs | Implemented |
@@ -109,7 +109,7 @@ pip install "farkad-ai[all]"
 
 ### 2. Multi-Provider Architecture
 
-Switch providers seamlessly through the unified `ModelPort` interface:
+Every provider sits behind one `ModelPort` interface, so switching is configuration:
 
 ```python
 import asyncio
@@ -167,7 +167,7 @@ if __name__ == "__main__":
 
 ---
 
-## Command Line & Offline Evaluation Harness
+## Command line and offline evaluation
 
 `farkad-ai` includes a full CLI suite for inspection, live testing, and benchmark evaluation:
 
@@ -189,7 +189,7 @@ farkad-ai eval --fixtures ./fixtures
 
 ## Give Feedback & Collaborate
 
-We actively want your perspective, challenge, and ideas:
+I would like your perspective, and your disagreement:
 
 - 💬 **Join Discussions**: Have an agentic pattern, prompt framework, or MCP tool idea? Start a thread on [GitHub Discussions](https://github.com/brmel/farkad-ai/discussions).
 - 🐛 **Open Issues & Proposals**: Found a failure mode where schemas hallucinate or router misses intent? [Open an issue](https://github.com/brmel/farkad-ai/issues).
@@ -199,7 +199,7 @@ We actively want your perspective, challenge, and ideas:
 
 ## Security
 
-Please report vulnerabilities responsibly following our [Security Policy](SECURITY.md).
+Please report vulnerabilities responsibly following my [Security Policy](SECURITY.md).
 
 ---
 
