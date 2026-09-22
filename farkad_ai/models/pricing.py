@@ -60,7 +60,7 @@ class TokenPrice:
                 return self.audio_input_usd_per_million
 
 
-RETIREMENT_OF_2_5 = date(2027, 10, 16)
+RETIREMENT_OF_2_5 = date(2026, 10, 16)
 
 PRICES: Mapping[str, TokenPrice] = MappingProxyType(
     {
