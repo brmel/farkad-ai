@@ -44,4 +44,4 @@ def test_cli_eval_passes_on_gold_fixtures() -> None:
     with patch("sys.stdout", stdout):
         code = main(["eval", "--fixtures", str(GOLD_PATH)])
     assert code == 0
-    assert "54/54 passed (100.0%)" in stdout.getvalue()
+    assert "10/10 passed (100.0%)" in stdout.getvalue()

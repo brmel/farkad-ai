@@ -60,7 +60,7 @@ class TokenPrice:
                 return self.audio_input_usd_per_million
 
 
-RETIREMENT_OF_2_5 = date(2026, 10, 16)
+RETIREMENT_OF_2_5 = date(2026, 10, 20)
 
 PRICES: Mapping[str, TokenPrice] = MappingProxyType(
     {
@@ -85,16 +85,19 @@ PRICES: Mapping[str, TokenPrice] = MappingProxyType(
             input_usd_per_million=Decimal("0.25"),
             audio_input_usd_per_million=Decimal("0.50"),
             output_usd_per_million=Decimal("1.50"),
+            retires_on=date(2027, 5, 7),
         ),
         "gemini-3.5-flash-lite": TokenPrice(
             input_usd_per_million=Decimal("0.30"),
             audio_input_usd_per_million=Decimal("0.30"),
             output_usd_per_million=Decimal("2.50"),
+            retires_on=date(2027, 7, 21),
         ),
         "gemini-3.5-flash": TokenPrice(
             input_usd_per_million=Decimal("1.50"),
             audio_input_usd_per_million=Decimal("1.50"),
             output_usd_per_million=Decimal("9.00"),
+            retires_on=date(2027, 5, 19),
         ),
         "claude-3-5-haiku-20241022": TokenPrice(
             input_usd_per_million=Decimal("0.80"),
