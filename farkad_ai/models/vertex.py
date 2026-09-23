@@ -86,6 +86,7 @@ class VertexModel(ModelPort):
                 contents=parts(prompt),
                 config=types.GenerateContentConfig(
                     system_instruction=prompt.instructions,
+                    automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
                     response_mime_type="application/json",
                     response_schema=schema,
                     thinking_config=types.ThinkingConfig(thinking_budget=self._thinking(tier)),
