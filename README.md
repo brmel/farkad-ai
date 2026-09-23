@@ -129,6 +129,7 @@ from farkad_ai import (
 # Pick your provider — the pipeline and domain remain identical:
 # 1. Google Gemini
 from google import genai
+
 model = VertexModel(genai.Client())
 
 # 2. Anthropic Claude
@@ -142,9 +143,12 @@ model = VertexModel(genai.Client())
 # 4. Deterministic Offline Replay (zero network, zero API keys)
 # model = RecordedModel(Path("./fixtures"))
 
+
 async def main():
     observer = TraceObserver()
-    pipeline = build_pipeline(model, registry=my_registry, extractor=my_extractor, observer=observer)
+    pipeline = build_pipeline(
+        model, registry=my_registry, extractor=my_extractor, observer=observer
+    )
 
     request = CaptureRequest(
         profile=my_user_profile,
@@ -160,6 +164,7 @@ async def main():
 
     # Inspect intermediate pipeline state without domain pollution:
     print(f"Lifecycle events captured: {len(observer.events)}")
+
 
 if __name__ == "__main__":
     asyncio.run(main())
