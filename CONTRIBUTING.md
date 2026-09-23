@@ -13,7 +13,7 @@ We actively encourage feedback, architectural discussions, failure-case reports,
    - Dynamic agent skills vs. hardcoded specialist pipelines.
    - Dynamic tool calling vs. constrained schema generation.
 2. **Model Providers & SDKs**:
-   - Adapters for Anthropic Claude, OpenAI, DeepSeek, Mistral, and local Ollama/vLLM.
+   - Adapters for DeepSeek, Mistral, and local Ollama/vLLM, beside the existing Gemini, Claude and OpenAI ones.
 3. **Multilingual & Multimodal Routing**:
    - Edge cases with dialect switching, mixed languages, background audio noise, and complex photo recognition.
 4. **Evaluation Benchmarks**:

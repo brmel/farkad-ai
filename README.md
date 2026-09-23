@@ -94,13 +94,13 @@ pip install farkad-ai
 
 Or install with your preferred model provider SDK:
 ```bash
-# Google GenAI (Gemini 2.5 Flash / Flash-Lite / Pro)
+# Google Gemini, through Vertex AI or the Gemini API
 pip install "farkad-ai[google]"
 
-# Anthropic (Claude 3.5 Sonnet / Claude 3.5 Haiku)
+# Anthropic Claude
 pip install "farkad-ai[anthropic]"
 
-# OpenAI (GPT-4o / GPT-4o-mini)
+# OpenAI
 pip install "farkad-ai[openai]"
 
 # All providers + dev & eval tools
