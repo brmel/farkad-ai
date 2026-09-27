@@ -62,63 +62,30 @@ class TokenPrice:
 
 RETIREMENT_OF_2_5 = date(2026, 10, 20)
 
+
+def _price(
+    in_usd: str, out_usd: str, audio: str | None = None, retires: date | None = None
+) -> TokenPrice:
+    return TokenPrice(
+        input_usd_per_million=Decimal(in_usd),
+        audio_input_usd_per_million=Decimal(audio if audio is not None else in_usd),
+        output_usd_per_million=Decimal(out_usd),
+        retires_on=retires,
+    )
+
+
 PRICES: Mapping[str, TokenPrice] = MappingProxyType(
     {
-        "gemini-2.5-flash-lite": TokenPrice(
-            input_usd_per_million=Decimal("0.10"),
-            audio_input_usd_per_million=Decimal("0.30"),
-            output_usd_per_million=Decimal("0.40"),
-            retires_on=RETIREMENT_OF_2_5,
-        ),
-        "gemini-2.5-flash": TokenPrice(
-            input_usd_per_million=Decimal("0.30"),
-            audio_input_usd_per_million=Decimal("1.00"),
-            output_usd_per_million=Decimal("2.50"),
-            retires_on=RETIREMENT_OF_2_5,
-        ),
-        "gemini-3.6-flash": TokenPrice(
-            input_usd_per_million=Decimal("1.50"),
-            audio_input_usd_per_million=Decimal("1.50"),
-            output_usd_per_million=Decimal("7.50"),
-        ),
-        "gemini-3.1-flash-lite": TokenPrice(
-            input_usd_per_million=Decimal("0.25"),
-            audio_input_usd_per_million=Decimal("0.50"),
-            output_usd_per_million=Decimal("1.50"),
-            retires_on=date(2027, 5, 7),
-        ),
-        "gemini-3.5-flash-lite": TokenPrice(
-            input_usd_per_million=Decimal("0.30"),
-            audio_input_usd_per_million=Decimal("0.30"),
-            output_usd_per_million=Decimal("2.50"),
-            retires_on=date(2027, 7, 21),
-        ),
-        "gemini-3.5-flash": TokenPrice(
-            input_usd_per_million=Decimal("1.50"),
-            audio_input_usd_per_million=Decimal("1.50"),
-            output_usd_per_million=Decimal("9.00"),
-            retires_on=date(2027, 5, 19),
-        ),
-        "claude-3-5-haiku-20241022": TokenPrice(
-            input_usd_per_million=Decimal("0.80"),
-            audio_input_usd_per_million=Decimal("0.80"),
-            output_usd_per_million=Decimal("4.00"),
-        ),
-        "claude-3-5-sonnet-20241022": TokenPrice(
-            input_usd_per_million=Decimal("3.00"),
-            audio_input_usd_per_million=Decimal("3.00"),
-            output_usd_per_million=Decimal("15.00"),
-        ),
-        "gpt-4o-mini": TokenPrice(
-            input_usd_per_million=Decimal("0.15"),
-            audio_input_usd_per_million=Decimal("0.15"),
-            output_usd_per_million=Decimal("0.60"),
-        ),
-        "gpt-4o": TokenPrice(
-            input_usd_per_million=Decimal("2.50"),
-            audio_input_usd_per_million=Decimal("2.50"),
-            output_usd_per_million=Decimal("10.00"),
-        ),
+        "gemini-2.5-flash-lite": _price("0.10", "0.40", audio="0.30", retires=RETIREMENT_OF_2_5),
+        "gemini-2.5-flash": _price("0.30", "2.50", audio="1.00", retires=RETIREMENT_OF_2_5),
+        "gemini-3.6-flash": _price("1.50", "7.50"),
+        "gemini-3.1-flash-lite": _price("0.25", "1.50", audio="0.50", retires=date(2027, 5, 7)),
+        "gemini-3.5-flash-lite": _price("0.30", "2.50", retires=date(2027, 7, 21)),
+        "gemini-3.5-flash": _price("1.50", "9.00", retires=date(2027, 5, 19)),
+        "claude-3-5-haiku-20241022": _price("0.80", "4.00"),
+        "claude-3-5-sonnet-20241022": _price("3.00", "15.00"),
+        "gpt-4o-mini": _price("0.15", "0.60"),
+        "gpt-4o": _price("2.50", "10.00"),
     }
 )
 
