@@ -1,14 +1,15 @@
 from __future__ import annotations
 
+import logging
+
 from farkad_ai.extraction.port import (
     ExtractionContext,
     ExtractionResult,
     PillarExtractionPort,
 )
-from farkad_ai.logging import get_logger
 from farkad_ai.types import ModelUnavailableError, Unavailability
 
-_log = get_logger(__name__)
+_log = logging.getLogger(__name__)
 
 
 class AdaptiveExtractor(PillarExtractionPort):
@@ -29,11 +30,6 @@ class AdaptiveExtractor(PillarExtractionPort):
                 raise
             _log.info(
                 "extraction_tier_escalated",
-                extra={
-                    "extra_fields": {
-                        "pillar": context.config.pillar,
-                        "model": refusal.model,
-                    }
-                },
+                extra={"pillar": context.config.pillar, "model": refusal.model},
             )
             return await self._standard.extract(context)

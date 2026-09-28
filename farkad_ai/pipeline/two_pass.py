@@ -48,7 +48,12 @@ class TwoPassPipeline(CapturePipelinePort):
 
     async def run(self, request: CaptureRequest) -> CaptureOutcome:
         self._observer.on_event(RouteStarted(utterance=request.text, has_media=bool(request.media)))
-        routed = await self._router.route(request.profile, text=request.text, media=request.media)
+        routed = await self._router.route(
+            request.profile,
+            text=request.text,
+            media=request.media,
+            briefing=request.briefing,
+        )
         self._observer.on_event(RouteCompleted(outcome=routed))
         match routed:
             case NotApplicable():
@@ -70,7 +75,7 @@ class TwoPassPipeline(CapturePipelinePort):
             routed.transcript,
             request.profile,
             media=request.media,
-            memory_context=request.memory_context,
+            briefing=request.briefing,
         )
         extracted: list[PillarEntries] = []
         refused: list[PillarRefused] = []

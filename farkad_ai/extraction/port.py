@@ -22,7 +22,7 @@ class ExtractionContext:
     config: PillarConfigProtocol
     transcript: str
     media: tuple[MediaBlob, ...] = ()
-    memory_context: str = ""
+    briefing: str = ""
 
 
 @dataclass(frozen=True, slots=True)

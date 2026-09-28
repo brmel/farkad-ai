@@ -7,7 +7,14 @@ from importlib.resources import files
 from pathlib import Path
 
 VERSION_LENGTH = 12
-KNOWN_PROMPTS: tuple[str, ...] = ("pass_one", "extraction", "recompute", "demo", "memory_inference")
+KNOWN_PROMPTS: tuple[str, ...] = (
+    "pass_one",
+    "extraction",
+    "recompute",
+    "demo",
+    "memory_inference",
+    "photo",
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -41,3 +48,8 @@ def prompt(name: str) -> PromptAsset:
 
 def list_prompts() -> tuple[PromptAsset, ...]:
     return tuple(prompt(name) for name in KNOWN_PROMPTS)
+
+
+def briefed(instructions: str, briefing: str) -> str:
+    """Unchanged when there is nothing to add, so a recording made without it still replays."""
+    return f"{instructions}\n\n{briefing}" if briefing else instructions

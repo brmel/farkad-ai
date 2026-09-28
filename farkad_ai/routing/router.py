@@ -5,6 +5,7 @@ from enum import StrEnum
 from typing import Protocol
 
 from farkad_ai.models.port import ModelPort
+from farkad_ai.prompts import briefed
 from farkad_ai.routing.pass_one import (
     INSTRUCTIONS,
     PassOne,
@@ -57,10 +58,11 @@ class Router:
         *,
         text: str = "",
         media: tuple[MediaBlob, ...] = (),
+        briefing: str = "",
     ) -> RoutingOutcome:
         prompt = Prompt(
             step=PipelineStep.routing,
-            instructions=self._instructions,
+            instructions=briefed(self._instructions, briefing),
             instructions_version=INSTRUCTIONS.version,
             utterance=text,
             media=media,

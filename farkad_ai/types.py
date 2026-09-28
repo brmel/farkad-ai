@@ -13,6 +13,7 @@ class PipelineStep(StrEnum):
     recompute = "recompute"
     demo = "demo"
     vision = "vision"
+    memory = "memory"
 
 
 class ModelTier(StrEnum):

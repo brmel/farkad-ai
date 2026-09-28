@@ -23,6 +23,8 @@ from farkad_ai.models.port import ModelPort
 from farkad_ai.models.pricing import modality_of, price_of
 from farkad_ai.types import (
     Completion,
+    MediaBlob,
+    MediaType,
     ModelTier,
     ModelUnavailableError,
     Prompt,
@@ -85,7 +87,7 @@ class AnthropicModel(ModelPort):
                 "input_schema": schema.model_json_schema(),
             }
         ]
-        messages = build_anthropic_messages(prompt)
+        messages = build_anthropic_messages(prompt, tier=tier, model=model)
         try:
             return await self._client.messages.create(
                 model=model,
@@ -104,13 +106,20 @@ class AnthropicModel(ModelPort):
             ) from error
 
 
-def build_anthropic_messages(prompt: Prompt) -> list[dict[str, Any]]:
+def build_anthropic_messages(
+    prompt: Prompt, *, tier: ModelTier, model: str
+) -> list[dict[str, Any]]:
     content: list[dict[str, Any]] = []
     if prompt.utterance:
         content.append({"type": "text", "text": prompt.utterance})
-    for blob in prompt.media:
-        content.append(
-            {
+    content.extend(image_block(blob, tier=tier, model=model) for blob in prompt.media)
+    return [{"role": "user", "content": content or [{"type": "text", "text": "Process input."}]}]
+
+
+def image_block(blob: MediaBlob, *, tier: ModelTier, model: str) -> dict[str, Any]:
+    match blob.content_type:
+        case MediaType.image_jpeg | MediaType.image_png:
+            return {
                 "type": "image",
                 "source": {
                     "type": "base64",
@@ -118,14 +127,16 @@ def build_anthropic_messages(prompt: Prompt) -> list[dict[str, Any]]:
                     "data": base64.b64encode(blob.data).decode("ascii"),
                 },
             }
-        )
-    return [{"role": "user", "content": content or [{"type": "text", "text": "Process input."}]}]
+        case MediaType.audio_aac:
+            raise ModelUnavailableError(
+                tier, model, Unavailability.provider_refused, "audio input unsupported"
+            )
 
 
 def extract_tool_result[T: BaseModel](
     schema: type[T], response: Any, *, tier: ModelTier, model: str
 ) -> T:
-    tool_blocks = [b for b in response.content if getattr(b, "type", None) == "tool_use"]
+    tool_blocks = [block for block in response.content if block.type == "tool_use"]
     if not tool_blocks:
         raise ModelUnavailableError(
             tier, model, Unavailability.output_did_not_parse, "no tool_use block in response"
@@ -146,13 +157,12 @@ def usage_from_anthropic(
     model: str,
     latency_ms: int,
 ) -> Usage:
-    usage = getattr(response, "usage", None)
-    if usage is None:
+    if response.usage is None:
         raise ModelUnavailableError(
             tier, model, Unavailability.usage_not_reported, "no usage object in response"
         )
-    input_tokens = getattr(usage, "input_tokens", 0)
-    output_tokens = getattr(usage, "output_tokens", 0)
+    input_tokens = response.usage.input_tokens
+    output_tokens = response.usage.output_tokens
     return Usage(
         step=prompt.step,
         model=model,

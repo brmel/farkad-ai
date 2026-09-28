@@ -5,6 +5,8 @@ import logging
 import sys
 from typing import Any
 
+LOGGED_FIELDS = frozenset({"pillar", "model", "primary_model", "because", "tier", "step"})
+
 
 class JsonFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
@@ -14,13 +16,8 @@ class JsonFormatter(logging.Formatter):
             "logger": record.name,
             "message": record.getMessage(),
         }
-        if hasattr(record, "extra_fields") and isinstance(record.extra_fields, dict):
-            payload.update(record.extra_fields)
+        payload.update((key, value) for key, value in vars(record).items() if key in LOGGED_FIELDS)
         return json.dumps(payload)
-
-
-def get_logger(name: str = "farkad_ai") -> logging.Logger:
-    return logging.getLogger(name)
 
 
 def configure_logging(level: int = logging.INFO, *, json_format: bool = False) -> None:
