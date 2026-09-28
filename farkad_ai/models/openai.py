@@ -23,6 +23,8 @@ from farkad_ai.models.port import ModelPort
 from farkad_ai.models.pricing import modality_of, price_of
 from farkad_ai.types import (
     Completion,
+    MediaBlob,
+    MediaType,
     ModelTier,
     ModelUnavailableError,
     Prompt,
@@ -77,7 +79,7 @@ class OpenAIModel(ModelPort):
         model: str,
         tier: ModelTier,
     ) -> Any:
-        messages = build_openai_messages(prompt)
+        messages = build_openai_messages(prompt, tier=tier, model=model)
         try:
             return await self._client.beta.chat.completions.parse(
                 model=model,
@@ -93,37 +95,43 @@ class OpenAIModel(ModelPort):
             ) from error
 
 
-def build_openai_messages(prompt: Prompt) -> list[dict[str, Any]]:
+def build_openai_messages(prompt: Prompt, *, tier: ModelTier, model: str) -> list[dict[str, Any]]:
     system_message = {"role": "system", "content": prompt.instructions}
     user_parts: list[dict[str, Any]] = []
     if prompt.utterance:
         user_parts.append({"type": "text", "text": prompt.utterance})
-    for blob in prompt.media:
-        encoded = base64.b64encode(blob.data).decode("ascii")
-        user_parts.append(
-            {
+    user_parts.extend(image_part(blob, tier=tier, model=model) for blob in prompt.media)
+    user_message = {"role": "user", "content": user_parts or [{"type": "text", "text": "Input."}]}
+    return [system_message, user_message]
+
+
+def image_part(blob: MediaBlob, *, tier: ModelTier, model: str) -> dict[str, Any]:
+    match blob.content_type:
+        case MediaType.image_jpeg | MediaType.image_png:
+            encoded = base64.b64encode(blob.data).decode("ascii")
+            return {
                 "type": "image_url",
                 "image_url": {"url": f"data:{blob.content_type.value};base64,{encoded}"},
             }
-        )
-    user_message = {"role": "user", "content": user_parts or [{"type": "text", "text": "Input."}]}
-    return [system_message, user_message]
+        case MediaType.audio_aac:
+            raise ModelUnavailableError(
+                tier, model, Unavailability.provider_refused, "audio input unsupported"
+            )
 
 
 def extract_parsed_choice[T: BaseModel](
     schema: type[T], response: Any, *, tier: ModelTier, model: str
 ) -> T:
-    choices = getattr(response, "choices", [])
-    if not choices:
+    if not response.choices:
         raise ModelUnavailableError(
             tier, model, Unavailability.output_did_not_parse, "no choices in response"
         )
-    message = choices[0].message
-    if getattr(message, "refusal", None):
+    message = response.choices[0].message
+    if message.refusal:
         raise ModelUnavailableError(
             tier, model, Unavailability.provider_refused, f"refusal: {message.refusal}"
         )
-    parsed = getattr(message, "parsed", None)
+    parsed = message.parsed
     if parsed is None:
         raise ModelUnavailableError(
             tier, model, Unavailability.output_did_not_parse, "no parsed object in message"
@@ -144,13 +152,12 @@ def usage_from_openai(
     model: str,
     latency_ms: int,
 ) -> Usage:
-    usage = getattr(response, "usage", None)
-    if usage is None:
+    if response.usage is None:
         raise ModelUnavailableError(
             tier, model, Unavailability.usage_not_reported, "no usage in response"
         )
-    input_tokens = getattr(usage, "prompt_tokens", 0)
-    output_tokens = getattr(usage, "completion_tokens", 0)
+    input_tokens = response.usage.prompt_tokens
+    output_tokens = response.usage.completion_tokens
     return Usage(
         step=prompt.step,
         model=model,

@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Protocol
+
+from farkad_ai.types import MediaType, Prompt
 
 CENTS_PER_DOLLAR = Decimal(100)
 TOKENS_PER_UNIT = Decimal(1_000_000)
@@ -18,18 +19,8 @@ class InputModality(StrEnum):
     image = "image"
 
 
-class MediaBlobProtocol(Protocol):
-    @property
-    def content_type(self) -> str: ...
-
-
-class PromptMediaProtocol(Protocol):
-    @property
-    def media(self) -> Sequence[MediaBlobProtocol]: ...
-
-
-def modality_of(prompt: PromptMediaProtocol) -> InputModality:
-    if any(blob.content_type == "audio/aac" for blob in prompt.media):
+def modality_of(prompt: Prompt) -> InputModality:
+    if any(blob.content_type is MediaType.audio_aac for blob in prompt.media):
         return InputModality.audio
     if prompt.media:
         return InputModality.image

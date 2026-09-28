@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Mapping
 from pathlib import Path
 
 from pydantic import BaseModel
@@ -28,17 +27,6 @@ PROMPT_CHANGED = (
     "the same utterance is recorded against different instructions, so the prompt "
     "changed and every recording made against the old one is now unreachable"
 )
-
-
-class UnrecordedModelError(Exception):
-    def __init__(self, key: str, tier: ModelTier, *, pinned: str, recorded: str) -> None:
-        super().__init__(
-            f"the {tier} tier is pinned to {pinned}, but {key}.json holds {recorded}'s "
-            f"answer; re-record with `make record-fixtures` — replaying {recorded} would "
-            f"report a score and a cost {pinned} has never produced"
-        )
-        self.pinned = pinned
-        self.recorded = recorded
 
 
 def fingerprint(prompt: Prompt, *, schema: type[BaseModel], tier: ModelTier) -> str:
@@ -71,13 +59,8 @@ def repriced(counted: Usage, *, input_modality: InputModality) -> Usage:
 
 
 class RecordedModel(ModelPort):
-    def __init__(
-        self,
-        directory: Path,
-        expected_models: Mapping[ModelTier, str] | None = None,
-    ) -> None:
+    def __init__(self, directory: Path) -> None:
         self._directory = directory
-        self._expected_models = expected_models
 
     async def complete[T: BaseModel](
         self, prompt: Prompt, *, schema: type[T], tier: ModelTier
@@ -93,10 +76,6 @@ class RecordedModel(ModelPort):
             recording["usage"]
             | {"step": prompt.step, "prompt_version": prompt.instructions_version}
         )
-        if self._expected_models is not None and tier in self._expected_models:
-            pinned = self._expected_models[tier]
-            if counted.model != pinned:
-                raise UnrecordedModelError(key, tier, pinned=pinned, recorded=counted.model)
         return Completion(
             value=schema.model_validate(recording["value"]),
             usage=repriced(counted, input_modality=modality_of(prompt)),

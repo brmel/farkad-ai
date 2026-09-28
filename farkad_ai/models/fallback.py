@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import logging
+
 from pydantic import BaseModel
 
-from farkad_ai.logging import get_logger
 from farkad_ai.models.port import ModelPort
 from farkad_ai.types import Completion, ModelTier, ModelUnavailableError, Prompt
 
-_log = get_logger(__name__)
+_log = logging.getLogger(__name__)
 
 
 class FallbackModel(ModelPort):
@@ -31,12 +32,10 @@ class FallbackModel(ModelPort):
             _log.warning(
                 "model_fallback_triggered",
                 extra={
-                    "extra_fields": {
-                        "primary_model": error.model,
-                        "because": error.because.value,
-                        "tier": tier.value,
-                        "step": prompt.step.value,
-                    }
+                    "primary_model": error.model,
+                    "because": error.because.value,
+                    "tier": tier.value,
+                    "step": prompt.step.value,
                 },
             )
             return await self._fallback.complete(prompt, schema=schema, tier=tier)

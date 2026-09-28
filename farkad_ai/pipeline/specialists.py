@@ -30,7 +30,7 @@ async def extract_each(
     transcript: str,
     profile: CaptureProfileProtocol,
     media: tuple[MediaBlob, ...] = (),
-    memory_context: str = "",
+    briefing: str = "",
 ) -> list[Attempt]:
     return list(
         await asyncio.gather(
@@ -41,7 +41,7 @@ async def extract_each(
                     transcript,
                     profile,
                     media=media,
-                    memory_context=memory_context,
+                    briefing=briefing,
                 )
                 for pillar in pillars
             )
@@ -55,13 +55,13 @@ async def _attempt(
     transcript: str,
     profile: CaptureProfileProtocol,
     media: tuple[MediaBlob, ...] = (),
-    memory_context: str = "",
+    briefing: str = "",
 ) -> Attempt:
     context = ExtractionContext(
         config=profile.config_for(pillar),
         transcript=transcript,
         media=media,
-        memory_context=memory_context,
+        briefing=briefing,
     )
     try:
         return Extracted(pillar=pillar, result=await engine.extract(context))

@@ -46,7 +46,6 @@ These are the techniques I measure here, and where each one currently stands:
 | **Multi-Pass Pipelines** | Pass 1 Router (intent, language, scope) + concurrent Pass 2 Specialists | Maintained baseline |
 | **Model Agnosticism** | One `ModelPort`, four adapters: Vertex (Gemini), Anthropic, OpenAI, and a recorded-fixture adapter for offline runs | Implemented |
 | **Provider Fallback** | A chain that moves to the next adapter when one is unavailable | Implemented |
-| **Deterministic Golden Evals** | Offline fixture replay scoring tolerance, field drift, and token pricing | Built into CLI |
 
 ---
 
@@ -172,9 +171,9 @@ if __name__ == "__main__":
 
 ---
 
-## Command line and offline evaluation
+## Command line
 
-`farkad-ai` includes a full CLI suite for inspection, live testing, and benchmark evaluation:
+`farkad-ai` includes a CLI for inspection and live testing:
 
 ```bash
 # Inspect all supported model tiers and live pricing
@@ -185,9 +184,6 @@ farkad-ai prompts
 
 # Test intent routing against recorded fixtures or live providers
 farkad-ai route --text "Ate 2 eggs and slept 8 hours" --fixtures ./fixtures
-
-# Run deterministic evaluation scoring across capture datasets
-farkad-ai eval --fixtures ./fixtures
 ```
 
 ---

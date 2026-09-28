@@ -53,6 +53,8 @@ pytest
 - **Clean Protocols**: All new components should implement clear `typing.Protocol` interfaces so the core stays decoupled from vendor SDKs.
 - **Zero Cloud Coupling**: Do not introduce database dependencies (e.g. Firebase, Postgres) or user identity systems. Keep the package pure computation and reasoning.
 - **Empirical Evaluation**: Whenever proposing a prompt change or new workflow pattern, share benchmark results comparing accuracy, latency, and token cost.
+- **Model Adapters**: A new provider implements `ModelPort`, maps its network and rate-limit errors to `ModelUnavailableError(tier, model, because, detail)`, reports exact token counts, and prices them through `TokenPrice.cost_cents()`.
+- **Prompts**: Prompts live in `farkad_ai/prompts/assets/*.txt` and are versioned by the first 12 characters of their SHA-256. Never hardcode a date or a model name inside one.
 
 ---
 

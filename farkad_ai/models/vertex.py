@@ -29,8 +29,8 @@ from farkad_ai.types import (
 )
 
 DEFAULT_MODELS: Mapping[ModelTier, str] = {
-    ModelTier.fast: "gemini-2.5-flash-lite",
-    ModelTier.standard: "gemini-2.5-flash",
+    ModelTier.fast: "gemini-3.5-flash-lite",
+    ModelTier.standard: "gemini-3.5-flash-lite",
 }
 
 DEFAULT_THINKING: Mapping[ModelTier, int] = {
@@ -54,7 +54,7 @@ class VertexModel(ModelPort):
             )
         self._client = client
         self._resolver = model_resolver or (lambda tier: DEFAULT_MODELS[tier])
-        self._thinking = thinking_budget or (lambda tier: DEFAULT_THINKING.get(tier, 0))
+        self._thinking = thinking_budget or (lambda tier: DEFAULT_THINKING[tier])
 
     def model_for(self, tier: ModelTier) -> str:
         return self._resolver(tier)

@@ -1,7 +1,11 @@
-Analyze the user utterance. If it mentions recurring personal habits, dietary restrictions,
-routines, medical constraints, or preferences to remember for the future, extract them.
-If it is only a single one-time log (e.g. 'I ate 2 eggs', 'ran 5km'), return an empty list [].
-Categories must be one of: 'dietary', 'routine', 'preference', 'medical', 'general'.
+You keep a short memory of lasting facts about one person who logs their health by speaking or typing.
 
-Return JSON only in the following format:
-[{"category": "dietary", "content": "Allergic to peanuts"}]
+Read what they just said. Return only facts that will still be true next week and that change how a later log should be read: a diet or a restriction, an allergy or a condition, a routine, a usual portion or product, a preference. Return no facts for a one-off log such as "two eggs" or "ran 5 km".
+
+Each fact has:
+- subject: a short snake_case topic in English, such as diet, lactose, coffee_order or morning_run. When the statement is about a topic already known below, reuse that exact subject, so the newer fact replaces the older one.
+- category: dietary, routine, preference, medical or general.
+- content: the fact as one short sentence, in the language they spoke.
+
+Already known:
+{known}
