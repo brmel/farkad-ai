@@ -8,6 +8,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class PipelineStep(StrEnum):
+    """Pipeline stage for a model call, stored on captures and dashboards."""
+
     routing = "routing"
     extraction = "extraction"
     recompute = "recompute"
@@ -34,7 +36,7 @@ class MediaBlob:
 
 
 class Usage(BaseModel):
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(extra="forbid", frozen=True)
 
     step: PipelineStep
     model: str
@@ -47,6 +49,8 @@ class Usage(BaseModel):
 
 @dataclass(frozen=True, slots=True)
 class Prompt:
+    """`instructions_version` names the asset the instructions came from, not the rendered text."""
+
     step: PipelineStep
     instructions: str
     instructions_version: str
@@ -61,12 +65,16 @@ class Completion[T: BaseModel]:
 
 
 class Unavailability(StrEnum):
+    """A refusal passes with a retry; an unparseable or unpriced answer does not."""
+
     provider_refused = "provider_refused"
     output_did_not_parse = "output_did_not_parse"
     usage_not_reported = "usage_not_reported"
 
 
 class ModelUnavailableError(Exception):
+    """Carries no prompt and no transcript, which a log would then hold."""
+
     def __init__(self, tier: ModelTier, model: str, because: Unavailability, detail: str) -> None:
         super().__init__(f"{tier} model {model} unavailable: {because} ({detail})")
         self.tier = tier

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import time
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 
 try:
     from google import genai
@@ -17,7 +17,7 @@ except ImportError:
 
 from pydantic import BaseModel, ValidationError
 
-from farkad_ai.models.port import ModelPort
+from farkad_ai.models.port import ModelPort, TierChoice, TierChoices, fixed
 from farkad_ai.models.pricing import modality_of, price_of
 from farkad_ai.types import (
     Completion,
@@ -28,14 +28,9 @@ from farkad_ai.types import (
     Usage,
 )
 
-DEFAULT_MODELS: Mapping[ModelTier, str] = {
-    ModelTier.fast: "gemini-3.5-flash-lite",
-    ModelTier.standard: "gemini-3.5-flash-lite",
-}
-
-DEFAULT_THINKING: Mapping[ModelTier, int] = {
-    ModelTier.fast: 0,
-    ModelTier.standard: 0,
+DEFAULT_CHOICES: Mapping[ModelTier, TierChoice] = {
+    ModelTier.fast: TierChoice("gemini-3.5-flash-lite"),
+    ModelTier.standard: TierChoice("gemini-3.5-flash-lite", thinking_budget=512),
 }
 
 
@@ -44,8 +39,7 @@ class VertexModel(ModelPort):
         self,
         client: genai.Client,
         *,
-        model_resolver: Callable[[ModelTier], str] | None = None,
-        thinking_budget: Callable[[ModelTier], int] | None = None,
+        choices: TierChoices | None = None,
     ) -> None:
         if not _GENAI_AVAILABLE:
             raise RuntimeError(
@@ -53,18 +47,18 @@ class VertexModel(ModelPort):
                 "Install with: pip install 'farkad-ai[google]'"
             )
         self._client = client
-        self._resolver = model_resolver or (lambda tier: DEFAULT_MODELS[tier])
-        self._thinking = thinking_budget or (lambda tier: DEFAULT_THINKING[tier])
+        self._choices = choices or fixed(DEFAULT_CHOICES)
 
-    def model_for(self, tier: ModelTier) -> str:
-        return self._resolver(tier)
+    async def model_for(self, tier: ModelTier) -> str:
+        return (await self._choices(tier)).model
 
     async def complete[T: BaseModel](
         self, prompt: Prompt, *, schema: type[T], tier: ModelTier
     ) -> Completion[T]:
-        model = self.model_for(tier)
+        choice = await self._choices(tier)
+        model = choice.model
         started = time.monotonic()
-        response = await self._answered(prompt, schema=schema, tier=tier, model=model)
+        response = await self._answered(prompt, schema=schema, tier=tier, choice=choice)
         latency_ms = int((time.monotonic() - started) * 1000)
         value = parsed_as(schema, response, tier=tier, model=model)
         return Completion(
@@ -78,8 +72,9 @@ class VertexModel(ModelPort):
         *,
         schema: type[BaseModel],
         tier: ModelTier,
-        model: str,
+        choice: TierChoice,
     ) -> types.GenerateContentResponse:
+        model = choice.model
         try:
             return await self._client.aio.models.generate_content(
                 model=model,
@@ -89,7 +84,7 @@ class VertexModel(ModelPort):
                     automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
                     response_mime_type="application/json",
                     response_schema=schema,
-                    thinking_config=types.ThinkingConfig(thinking_budget=self._thinking(tier)),
+                    thinking_config=types.ThinkingConfig(thinking_budget=choice.thinking_budget),
                 ),
             )
         except APIError as error:
@@ -138,6 +133,7 @@ def usage_of(
     model: str,
     latency_ms: int,
 ) -> Usage:
+    """Takes the prompt, because what a call carried decides its input rate."""
     metadata = response.usage_metadata
     if metadata is None:
         raise ModelUnavailableError(
@@ -148,6 +144,7 @@ def usage_of(
             tier, model, Unavailability.usage_not_reported, "the response counted no tokens"
         )
     input_tokens = metadata.prompt_token_count
+    # `thoughts_token_count` is absent, not zero, without thinking: https://googleapis.github.io/python-genai/
     output_tokens = metadata.candidates_token_count + (metadata.thoughts_token_count or 0)
     return Usage(
         step=prompt.step,

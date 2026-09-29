@@ -6,7 +6,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from farkad_ai.models.port import ModelPort
+from farkad_ai.models.port import ModelPort, TierChoices
 from farkad_ai.models.pricing import InputModality, modality_of, price_of
 from farkad_ai.types import Completion, ModelTier, Prompt, Usage
 
@@ -21,6 +21,19 @@ class NoRecordedResponseError(Exception):
         )
         self.key = key
         self.because = because
+
+
+class UnrecordedModelError(Exception):
+    """The pin moved and the recordings did not, so a replay would score the old model."""
+
+    def __init__(self, key: str, tier: ModelTier, *, pinned: str, recorded: str) -> None:
+        super().__init__(
+            f"the {tier} tier is pinned to {pinned}, but {key}.json holds {recorded}'s "
+            f"answer; re-record the fixtures — replaying {recorded} would report a score "
+            f"and a cost {pinned} has never produced"
+        )
+        self.pinned = pinned
+        self.recorded = recorded
 
 
 PROMPT_CHANGED = (
@@ -47,6 +60,7 @@ def fingerprint(prompt: Prompt, *, schema: type[BaseModel], tier: ModelTier) -> 
 
 
 def repriced(counted: Usage, *, input_modality: InputModality) -> Usage:
+    """Cost is arithmetic over today's price table, never what a recording froze."""
     return counted.model_copy(
         update={
             "cost_cents": price_of(counted.model).cost_cents(
@@ -59,8 +73,14 @@ def repriced(counted: Usage, *, input_modality: InputModality) -> Usage:
 
 
 class RecordedModel(ModelPort):
-    def __init__(self, directory: Path) -> None:
+    """Real responses, replayed; a missing recording fails loudly rather than being invented.
+
+    Given `pinned`, a recording made by another model than the tier's is refused too.
+    """
+
+    def __init__(self, directory: Path, *, pinned: TierChoices | None = None) -> None:
         self._directory = directory
+        self._pinned = pinned
 
     async def complete[T: BaseModel](
         self, prompt: Prompt, *, schema: type[T], tier: ModelTier
@@ -76,6 +96,10 @@ class RecordedModel(ModelPort):
             recording["usage"]
             | {"step": prompt.step, "prompt_version": prompt.instructions_version}
         )
+        if self._pinned is not None:
+            pinned = (await self._pinned(tier)).model
+            if counted.model != pinned:
+                raise UnrecordedModelError(key, tier, pinned=pinned, recorded=counted.model)
         return Completion(
             value=schema.model_validate(recording["value"]),
             usage=repriced(counted, input_modality=modality_of(prompt)),

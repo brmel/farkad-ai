@@ -48,7 +48,7 @@ async def test_anthropic_model_parses_tool_response() -> None:
 
     with patch("farkad_ai.models.anthropic._ANTHROPIC_AVAILABLE", True):
         adapter = AnthropicModel(client)
-        assert adapter.model_for(ModelTier.fast) == "claude-3-5-haiku-20241022"
+        assert await adapter.model_for(ModelTier.fast) == "claude-3-5-haiku-20241022"
 
         prompt = Prompt(
             step=PipelineStep.routing,
@@ -86,7 +86,7 @@ async def test_openai_model_parses_structured_response() -> None:
 
     with patch("farkad_ai.models.openai._OPENAI_AVAILABLE", True):
         adapter = OpenAIModel(client)
-        assert adapter.model_for(ModelTier.standard) == "gpt-4o"
+        assert await adapter.model_for(ModelTier.standard) == "gpt-4o"
 
         prompt = Prompt(
             step=PipelineStep.extraction,

@@ -10,8 +10,8 @@ authors:
 repository-code: "https://github.com/brmel/farkad-ai"
 url: "https://farkad.web.app"
 license: Apache-2.0
-version: 0.2.0
-date-released: 2026-09-28
+version: 0.3.0
+date-released: 2026-09-29
 keywords:
   - structured output
   - multimodal

@@ -25,12 +25,12 @@ class DummyPillarConfig:
         return "food"
 
 
-class SuccessfulExtractor(PillarExtractionPort):
+class SuccessfulExtractor(PillarExtractionPort[DummyPillarConfig]):
     def __init__(self, label: str) -> None:
         self.label = label
         self.calls = 0
 
-    async def extract(self, context: ExtractionContext) -> ExtractionResult:
+    async def extract(self, context: ExtractionContext[DummyPillarConfig]) -> ExtractionResult:
         self.calls += 1
         return ExtractionResult(
             pillar=context.config.pillar,
@@ -48,12 +48,12 @@ class SuccessfulExtractor(PillarExtractionPort):
         )
 
 
-class RefusingExtractor(PillarExtractionPort):
+class RefusingExtractor(PillarExtractionPort[DummyPillarConfig]):
     def __init__(self, because: Unavailability) -> None:
         self.because = because
         self.calls = 0
 
-    async def extract(self, context: ExtractionContext) -> ExtractionResult:
+    async def extract(self, context: ExtractionContext[DummyPillarConfig]) -> ExtractionResult:
         self.calls += 1
         raise ModelUnavailableError(ModelTier.fast, "model-fast", self.because, "detail")
 
