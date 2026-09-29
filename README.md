@@ -11,39 +11,30 @@ spoken or photographed, becomes separate health entries you can correct.
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 [![Live demo](https://img.shields.io/badge/live%20demo-farkad.web.app-2ea44f)](https://farkad.web.app)
 
-[Try it live](#try-it-live) · [Why it is public](#why-this-repository-is-public) ·
-[What is used](#what-is-used-and-what-is-not) · [Stack](#stack) · [Quickstart](#quickstart) ·
-[Contributing](CONTRIBUTING.md)
+[Try it live](#try-it-live) · [What is used](#what-is-used-and-what-is-not) · [Stack](#stack) ·
+[Quickstart](#quickstart) · [Contributing](CONTRIBUTING.md)
 
 </div>
 
 ## Try it live
 
-[**farkad.web.app**](https://farkad.web.app) runs this engine. Type a day in one sentence, for
-example *"two eggs, a big glass of water, and I slept badly"*, and it comes back as three entries:
-food, water and sleep. The same engine serves the Farkad apps for iOS and Android.
+[**farkad.web.app**](https://farkad.web.app) runs this engine, and so do the Farkad apps for iOS
+and Android. Type *"two eggs, a big glass of water, and I slept badly"* and it comes back as three
+entries: food, water and sleep.
 
-The prompts on `main` are the prompts production sends, byte for byte. The pricing table, the
-memory rules and the data contracts are held equal to production by a parity test in the product
-repository. Production wires the same two-pass pipeline to Firebase; this repository is the
-pipeline without the infrastructure.
+The prompts on `main` are the ones production sends, byte for byte; a parity test in the private
+product repository keeps them, the pricing and the memory rules identical. Production connects
+this pipeline to Firebase; this repository is the pipeline alone.
 
 ## Why this repository is public
 
-AI tooling comes with a lot of vocabulary: agents, tool calling, MCP servers, skills, memory,
-harnesses, sub-agents. This repository shows which of them a shipped product actually needed,
-where each one sits in the code, and which ones it does without and why.
-
-It covers two things:
-
-- **The product**: the code in this repository, which turns a sentence into entries.
-- **How it is built**: the private product repository, where a coding agent writes, tests and
-  ships the app, the backend and the website.
+To show, in a shipped product, which AI techniques were needed, where each one sits in the code,
+and which ones were left out and why: in the product itself, and in how a coding agent builds it.
 
 ## What is used, and what is not
 
-✅ marks what Farkad uses. A row without a mark is something it does without, and the last column
-says why. Each term links to the source that defines it.
+✅ marks what Farkad uses; an unmarked row is left out, with the reason. Each term links to its
+definition.
 
 ### In the product
 
@@ -108,7 +99,8 @@ The five patterns from Anthropic's [Building effective agents](https://www.anthr
 
 ### In how it is built
 
-The product repository is private; this is what its development uses.
+The private product repository, where a coding agent writes, tests and ships the app, the backend
+and the website.
 
 #### The coding agent
 
@@ -143,8 +135,6 @@ The product repository is private; this is what its development uses.
 
 ## Stack
 
-✅ marks what is used.
-
 #### Models and SDKs
 
 | | Technology | What it is | Where, or why not |
@@ -170,7 +160,8 @@ The product repository is private; this is what its development uses.
 | :-: | --- | --- | --- |
 | ✅ | Python 3.13 | The language of this package and of the backend | |
 | ✅ | [Pydantic](https://docs.pydantic.dev/) | Data validation from type hints | Every schema the model answers in |
-| ✅ | mypy, ruff, pytest | Strict type checking, lint and format, tests | [CI](.github/workflows/ci.yml) on every push |
+| ✅ | mypy, ruff, pytest | Strict type checking, lint and format, tests | [CI](.github/workflows/ci.yml) on every push and pull request |
+| ✅ | [CodeQL](https://docs.github.com/en/code-security/code-scanning/introduction-to-code-scanning/about-code-scanning-with-codeql), [Dependabot](https://docs.github.com/en/code-security/dependabot) | Code scanning, dependency updates | CodeQL on every push; Dependabot weekly |
 
 #### Product infrastructure (private repository)
 
@@ -181,13 +172,6 @@ The product repository is private; this is what its development uses.
 | ✅ | [Flutter](https://flutter.dev) | One codebase for iOS and Android | The app |
 | ✅ | TypeScript, React, Vite, Tailwind CSS, Firebase Hosting | Web stack | [farkad.web.app](https://farkad.web.app) |
 | ✅ | [Stripe](https://stripe.com) | Payments | Premium |
-
-#### Development
-
-| | Technology | What it is | Where, or why not |
-| :-: | --- | --- | --- |
-| ✅ | [Claude Code](https://code.claude.com/docs/en/overview) | Anthropic's coding agent | Writes, tests and ships every part of Farkad |
-| ✅ | GitHub Actions, [CodeQL](https://docs.github.com/en/code-security/code-scanning/introduction-to-code-scanning/about-code-scanning-with-codeql), [Dependabot](https://docs.github.com/en/code-security/dependabot) | Continuous integration, code scanning, dependency updates | CI and CodeQL on every push and pull request; Dependabot weekly |
 
 ## Quickstart
 
@@ -205,7 +189,7 @@ farkad-ai models    # every model it can price, and when each one retires
 farkad-ai prompts   # the prompts, each with its version hash
 ```
 
-With a Google Cloud project that has Vertex AI enabled (`gcloud auth application-default login`):
+With a Google Cloud project that has Vertex AI on (`gcloud auth application-default login`):
 
 ```bash
 export GOOGLE_CLOUD_PROJECT=your-project GOOGLE_CLOUD_LOCATION=global
@@ -221,8 +205,8 @@ farkad-ai route --provider vertex --text "two eggs, a big glass of water, and I 
 }
 ```
 
-`--provider anthropic` and `--provider openai` read `ANTHROPIC_API_KEY` and `OPENAI_API_KEY`;
-install the matching extra (`farkad-ai[anthropic]`, `farkad-ai[openai]`) first.
+`--provider anthropic` and `--provider openai` read `ANTHROPIC_API_KEY` and `OPENAI_API_KEY`, with
+the matching extra installed.
 
 ## Repository layout
 
@@ -239,29 +223,8 @@ farkad_ai/
 tests/            offline: every test runs on recorded answers
 ```
 
-## Development
+## Contributing, security, license
 
-```bash
-git clone https://github.com/brmel/farkad-ai && cd farkad-ai
-python3.13 -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"
-
-ruff check . && ruff format --check . && mypy farkad_ai && pytest
-```
-
-These are the four steps [CI](.github/workflows/ci.yml) runs on every push and pull request.
-
-## Contributing
-
-Bug reports, failure cases and pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md)
-first, and use [Discussions](https://github.com/brmel/farkad-ai/discussions) for questions and
-ideas. Everyone taking part follows the [Code of Conduct](CODE_OF_CONDUCT.md).
-
-## Security
-
-Report a vulnerability privately, as [SECURITY.md](SECURITY.md) describes, never in a public
-issue.
-
-## License
-
-[Apache 2.0](LICENSE).
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before a pull request, and use
+[Discussions](https://github.com/brmel/farkad-ai/discussions) for questions. Report a vulnerability
+privately, as [SECURITY.md](SECURITY.md) describes. Licensed under [Apache 2.0](LICENSE).

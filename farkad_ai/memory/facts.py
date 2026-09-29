@@ -1,4 +1,4 @@
-"""The model decides what a sentence means; this decides what memory keeps (D81, D437)."""
+"""The model decides what a sentence means; this decides what memory keeps."""
 
 from __future__ import annotations
 

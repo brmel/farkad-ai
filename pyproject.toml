@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "farkad-ai"
 version = "0.2.0"
-description = "Provider-agnostic, multimodal two-pass structured extraction engine"
+description = "Turns a sentence, a recording or a photo about your day into structured health entries"
 readme = "README.md"
 requires-python = ">=3.13"
 license = "Apache-2.0"
@@ -13,12 +13,12 @@ authors = [
     { name = "Farkad", email = "mellah.brahim.redouane@gmail.com" },
 ]
 keywords = [
-    "ai",
-    "health",
+    "llm",
+    "structured-output",
     "multimodal",
-    "structured-extraction",
-    "routing",
-    "clean-architecture",
+    "gemini",
+    "evaluation",
+    "health",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -72,9 +72,6 @@ farkad-ai = "farkad_ai.cli:main"
 [tool.hatch.build.targets.wheel]
 packages = ["farkad_ai"]
 
-[tool.hatch.build.targets.wheel.sources]
-"farkad_ai" = "farkad_ai"
-
 [tool.hatch.build.targets.sdist]
 include = [
     "/farkad_ai",
@@ -89,8 +86,7 @@ testpaths = ["tests"]
 line-length = 100
 target-version = "py313"
 
-# The same set the monorepo selects, so `make check` there and this repository's CI measure one
-# standard. Without it a standalone checkout lints by whatever ruff's default is that month.
+# Pinned, so a new ruff default does not change what CI checks.
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "UP", "B", "SIM", "RUF"]
 
@@ -98,9 +94,7 @@ select = ["E", "F", "I", "N", "UP", "B", "SIM", "RUF"]
 python_version = "3.13"
 strict = true
 packages = ["farkad_ai"]
-# An optional adapter must typecheck with its SDK installed and without it. The ignore that the
-# fallback assignment needs in the first state is redundant in the second, and no single file
-# satisfies both, so the check that would flip between them is off here and only here.
+# An optional adapter's ignore is needed without its SDK and redundant with it.
 warn_unused_ignores = false
 
 [[tool.mypy.overrides]]

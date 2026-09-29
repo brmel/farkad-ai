@@ -1,44 +1,23 @@
 # AGENTS.md
 
-Instructions for coding agents, and for people, working in `farkad-ai`. Agents that read
-`AGENTS.md` (Claude Code, Codex, Cursor and others) load this file before they start.
+Instructions for coding agents, and for people, working in `farkad-ai`.
 
 ## Rules
 
-- **No infrastructure.** No Firestore, Firebase, Postgres, Stripe or any other service in this
-  package. It takes a request and returns entries.
+- **No infrastructure.** No database, account system or cloud service in this package. It takes a
+  request and returns entries.
 - **Providers behind `ModelPort`.** Never call a provider SDK from the pipeline or the routing
-  pass; add an adapter in `farkad_ai/models/`.
-- **Types decide branches.** Use `match` over typed values, frozen dataclasses and strict types.
-  No `isinstance` on untyped data, no `getattr`/`hasattr`, no `except` that hides a bug.
+  pass; add an adapter in `farkad_ai/models/`. An adapter maps network and rate-limit errors to
+  `ModelUnavailableError`, reports exact token counts and prices them with `TokenPrice.cost_cents()`.
+- **Prompts are text files** in `farkad_ai/prompts/assets/`, versioned by the first 12 characters
+  of their SHA-256. A prompt never names a date or a model.
+- **Types decide branches.** `match` over typed values, frozen dataclasses, strict types. No
+  `isinstance` on untyped data, no `getattr`/`hasattr`, no `except` that hides a bug.
 - **Offline first.** Every change is testable on recorded answers (`RecordedModel`), with no key
-  and no spend.
-- **Small and lean.** Functions under 40 lines, files under 250. No dead code, no abstraction
-  without a second case that needs it, no duplicate tests.
-- **Comments state an outside constraint, with its source.** Anything else is said by a name.
+  and no spend. A test that needs an optional provider SDK skips without it.
+- **Small.** Functions under 40 lines, files under 250. No dead code, no abstraction without a
+  second case, no duplicate tests, no comment the code can say.
+- **Measure prompt changes.** Show the gold-set score before and after, with latency and cost.
 
-## Layout
-
-| Path | What it holds |
-| --- | --- |
-| `farkad_ai/types.py` | `Prompt`, `Completion`, `Usage`, `MediaBlob`, `PipelineStep` |
-| `farkad_ai/models/` | `ModelPort`, the Gemini, Claude, OpenAI and recorded adapters, fallback, pricing |
-| `farkad_ai/prompts/` | the prompt text files and their hash versions |
-| `farkad_ai/routing/` | pass 1: relevance, language and topics |
-| `farkad_ai/extraction/` | pass 2: one topic's fields, and tier escalation |
-| `farkad_ai/pipeline/` | the two passes together, and the trace of a run |
-| `farkad_ai/memory/` | facts, habits and the sheet a capture is told |
-| `farkad_ai/eval/` | scoring against the gold set |
-| `tests/` | the offline suite |
-
-## Before a pull request
-
-```bash
-ruff check .
-ruff format --check .
-mypy farkad_ai
-pytest
-```
-
-CI runs the same four steps in a fresh environment with no optional provider installed, so a
-test that needs `google-genai`, `anthropic` or `openai` must skip without it.
+The layout is in the [README](README.md#repository-layout); the checks to run before a pull request
+are in [CONTRIBUTING.md](CONTRIBUTING.md#before-you-open-a-pull-request).

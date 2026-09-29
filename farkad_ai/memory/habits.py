@@ -1,5 +1,5 @@
-"""The shape of a counted habit. Counting one needs the product's pillar specs, so it stays
-in the backend; the sheet that reads one is shared."""
+"""The shape of a counted habit; the counting needs the product's topic definitions and is not
+part of this package."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""The model reads meaning from one sentence; every rule about keeping it is `facts.learn` (D81).
+"""The model reads meaning from one sentence; every rule about keeping it is `facts.learn`.
 
 The model docstrings here reach Gemini as schema descriptions, so they are prompt text."""
 
