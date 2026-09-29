@@ -7,11 +7,9 @@ import pytest
 from farkad_ai.models.factory import ProviderName, create_model
 from farkad_ai.models.recorded import RecordedModel
 
-FIXTURES = Path(__file__).resolve().parents[2] / "backend" / "tests" / "fixtures" / "model"
 
-
-def test_factory_creates_recorded_model() -> None:
-    model = create_model(ProviderName.recorded, fixtures_dir=FIXTURES)
+def test_factory_creates_recorded_model(tmp_path: Path) -> None:
+    model = create_model(ProviderName.recorded, fixtures_dir=tmp_path)
     assert isinstance(model, RecordedModel)
 
 

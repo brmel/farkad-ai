@@ -1,5 +1,4 @@
-# Free on a public repository, and this one is the only Farkad surface that is public.
-# `security-extended` over the default set: the cost is minutes on a small package.
+# `security-extended` over the default set: on a package this small it costs minutes.
 name: codeql
 
 on:
