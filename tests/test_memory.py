@@ -6,77 +6,177 @@ from decimal import Decimal
 import pytest
 from pydantic import BaseModel
 
-from farkad_ai.memory import (
+from farkad_ai.memory.facts import (
+    MAX_CONTENT_CHARACTERS,
+    MAX_FACTS,
+    Confirmed,
     Declined,
     Disclosure,
+    EmptyFactError,
     Fact,
     FactSource,
-    HabitBaseline,
     MemoryCategory,
-    MemoryInferrer,
+    OverlongFactError,
     Refusal,
+    Remembered,
     Superseded,
-    UsualAmount,
-    core_sheet,
     learn,
+    learn_all,
 )
+from farkad_ai.memory.habits import HabitBaseline, UsualAmount
+from farkad_ai.memory.inference import NOTHING_KNOWN, MemoryInferrer, subject_named
+from farkad_ai.memory.sheet import SHEET_CHARACTERS, core_sheet
 from farkad_ai.types import Completion, ModelTier, PipelineStep, Prompt, Usage
 
 MONDAY = datetime(2026, 9, 21, 8, tzinfo=UTC)
+FRIDAY = MONDAY + timedelta(days=4)
+
 VEGAN = Disclosure("diet", MemoryCategory.dietary, "Vegan")
-MEAT = Disclosure("diet", MemoryCategory.dietary, "Eats meat again")
+EATS_MEAT = Disclosure("diet", MemoryCategory.dietary, "Eats meat again since September")
 
 
-def test_a_newer_word_on_a_topic_replaces_the_older_unless_the_user_switched_it_off() -> None:
-    spoken = Fact(VEGAN, FactSource.spoken, enabled=True, since=MONDAY)
-    later = MONDAY + timedelta(days=3)
-
-    assert learn(spoken, MEAT, at=later) == Superseded(
-        Fact(MEAT, FactSource.spoken, enabled=True, since=later), replaced=spoken
-    )
-    switched_off = Fact(VEGAN, FactSource.spoken, enabled=False, since=MONDAY)
-    assert learn(switched_off, MEAT, at=later) == Declined(MEAT, Refusal.switched_off)
+def known(
+    disclosure: Disclosure,
+    *,
+    source: FactSource = FactSource.spoken,
+    enabled: bool = True,
+) -> Fact:
+    return Fact(disclosure, source, enabled=enabled, since=MONDAY)
 
 
-def test_the_sheet_tells_constraints_first_and_leaves_out_what_is_switched_off() -> None:
-    facts = [
-        Fact(VEGAN, FactSource.spoken, enabled=False, since=MONDAY),
-        Fact(
-            Disclosure("allergy", MemoryCategory.medical, "Allergic to peanuts"),
-            FactSource.entered,
-            enabled=True,
-            since=MONDAY,
-        ),
-    ]
-    coffee = HabitBaseline("water", "coffee", 12, UsualAmount(250.0, "ml"), 8)
+class TestANewerWordOnATopicReplacesTheOlder:
+    def test_a_first_word_on_a_topic_is_remembered(self) -> None:
+        assert learn(None, VEGAN, at=MONDAY) == Remembered(
+            Fact(VEGAN, FactSource.spoken, enabled=True, since=MONDAY)
+        )
 
-    assert core_sheet(facts, [coffee]) == (
-        "About this person:\n- Allergic to peanuts\n"
-        "- logs coffee 250 ml around 08:00 (12x in 28 days)"
-    )
+    def test_vegan_then_meat_leaves_one_fact_saying_meat(self) -> None:
+        learned = learn(known(VEGAN), EATS_MEAT, at=FRIDAY)
 
+        assert learned == Superseded(
+            Fact(EATS_MEAT, FactSource.spoken, enabled=True, since=FRIDAY), replaced=known(VEGAN)
+        )
 
-class Answering:
-    async def complete[T: BaseModel](
-        self, prompt: Prompt, *, schema: type[T], tier: ModelTier
-    ) -> Completion[T]:
-        facts = [{"subject": "Diet!", "category": "dietary", "content": "Vegan"}]
-        return Completion(
-            value=schema.model_validate({"facts": facts}),
-            usage=Usage(
-                step=PipelineStep.memory,
-                model="gemini-3.5-flash-lite",
-                prompt_version=prompt.instructions_version,
-                input_tokens=10,
-                output_tokens=5,
-                latency_ms=1,
-                cost_cents=Decimal("0.001"),
-            ),
+    def test_saying_the_same_thing_again_only_moves_its_date(self) -> None:
+        again = Disclosure("diet", MemoryCategory.dietary, "  vegan ")
+
+        assert learn(known(VEGAN), again, at=FRIDAY) == Confirmed(
+            Fact(VEGAN, FactSource.spoken, enabled=True, since=FRIDAY)
         )
 
 
-@pytest.mark.anyio
-async def test_the_inferrer_parses_the_subject_it_was_given() -> None:
-    inference = await MemoryInferrer(Answering()).infer("I'm vegan", ())
+class TestWhatAModelReadingMayNotOverwrite:
+    def test_a_fact_the_user_switched_off_stays_off(self) -> None:
+        assert learn(known(VEGAN, enabled=False), EATS_MEAT, at=FRIDAY) == Declined(
+            EATS_MEAT, Refusal.switched_off
+        )
 
-    assert inference.disclosures == (VEGAN,)
+    def test_a_fact_the_user_typed_is_theirs(self) -> None:
+        typed = known(VEGAN, source=FactSource.entered)
+
+        assert learn(typed, EATS_MEAT, at=FRIDAY) == Declined(EATS_MEAT, Refusal.written_by_user)
+
+    def test_a_full_memory_refuses_a_new_topic_but_still_updates_a_known_one(self) -> None:
+        full = {
+            f"topic_{n}": known(Disclosure(f"topic_{n}", MemoryCategory.general, f"Fact {n}"))
+            for n in range(MAX_FACTS - 1)
+        } | {"diet": known(VEGAN)}
+        novel = Disclosure("coffee_order", MemoryCategory.preference, "Oat flat white")
+
+        learned = learn_all(full, (novel, EATS_MEAT), at=FRIDAY)
+
+        assert learned[0] == Declined(novel, Refusal.memory_full)
+        assert isinstance(learned[1], Superseded)
+
+
+class TestAFactIsOneShortSentence:
+    def test_empty_and_overlong_facts_are_refused(self) -> None:
+        with pytest.raises(EmptyFactError):
+            Disclosure("diet", MemoryCategory.dietary, "   ")
+        with pytest.raises(OverlongFactError):
+            Disclosure("diet", MemoryCategory.dietary, "x" * (MAX_CONTENT_CHARACTERS + 1))
+
+
+ALLERGY = Disclosure("allergy", MemoryCategory.medical, "Allergic to peanuts")
+COFFEE = HabitBaseline("water", "coffee", 12, UsualAmount(250.0, "ml"), 8)
+
+
+class TestTheSheetEveryCaptureIsTold:
+    def test_nothing_known_tells_nothing(self) -> None:
+        assert core_sheet((), ()) == ""
+
+    def test_constraints_come_first_and_a_switched_off_fact_is_left_out(self) -> None:
+        facts = [known(VEGAN, enabled=False), known(ALLERGY, source=FactSource.entered)]
+
+        assert core_sheet(facts, [COFFEE]) == (
+            "About this person:\n- Allergic to peanuts\n"
+            "- logs coffee 250 ml around 08:00 (12x in 28 days)"
+        )
+
+    def test_the_sheet_stays_inside_its_budget(self) -> None:
+        wordy = [
+            known(Disclosure(f"topic_{n}", MemoryCategory.preference, "Prefers oat milk " * 3))
+            for n in range(6)
+        ]
+
+        sheet = core_sheet([*wordy, known(ALLERGY, source=FactSource.entered)], [COFFEE])
+
+        assert len(sheet) <= SHEET_CHARACTERS
+        assert sheet.splitlines()[1] == "- Allergic to peanuts"
+
+
+USAGE = Usage(
+    step=PipelineStep.memory,
+    model="gemini-3.5-flash-lite",
+    prompt_version="v1",
+    input_tokens=120,
+    output_tokens=20,
+    latency_ms=300,
+    cost_cents=Decimal("0.004"),
+)
+
+
+class Answering:
+    def __init__(self, *facts: dict[str, str]) -> None:
+        self._facts = list(facts)
+        self.asked: list[Prompt] = []
+
+    async def complete[T: BaseModel](
+        self, prompt: Prompt, *, schema: type[T], tier: ModelTier
+    ) -> Completion[T]:
+        self.asked.append(prompt)
+        return Completion(value=schema.model_validate({"facts": self._facts}), usage=USAGE)
+
+
+def said(subject: str, content: str, category: str = "dietary") -> dict[str, str]:
+    return {"subject": subject, "category": category, "content": content}
+
+
+class TestASubjectIsParsedNotTrusted:
+    def test_a_subject_becomes_a_lowercase_ascii_slug(self) -> None:
+        assert subject_named("Coffee Order!") == "coffee_order"
+        assert subject_named("  diet  ") == "diet"
+        assert subject_named("قهوة") == ""
+
+    @pytest.mark.anyio
+    async def test_a_fact_without_a_usable_subject_is_dropped(self) -> None:
+        model = Answering(said("قهوة", "Drinks Arabic coffee"), said("Diet", "Vegan"))
+
+        inference = await MemoryInferrer(model).infer("I'm vegan", ())
+
+        assert inference.disclosures == (VEGAN,)
+        assert inference.usage == USAGE
+
+
+class TestTheModelIsToldWhatIsKnown:
+    @pytest.mark.anyio
+    async def test_known_facts_are_listed_so_a_subject_can_be_reused(self) -> None:
+        model = Answering()
+
+        await MemoryInferrer(model).infer("I eat meat again", (known(VEGAN, enabled=False),))
+        await MemoryInferrer(model).infer("I eat meat again", ())
+
+        told, untold = model.asked
+        assert told.step is PipelineStep.memory
+        assert "- diet: Vegan" in told.instructions
+        assert untold.instructions.endswith(NOTHING_KNOWN)
