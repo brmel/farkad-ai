@@ -1,43 +1,32 @@
 # Contributing to farkad-ai
 
-`farkad-ai` is an open-source testbed and benchmarking laboratory for **agentic workflows, multimodal extraction, prompt engineering, and model evaluation**.
+Thank you for taking the time. Bug reports, sentences the engine gets wrong, and pull requests are
+all welcome.
 
-We actively encourage feedback, architectural discussions, failure-case reports, and pull requests!
+## Where to start
 
----
+- **A sentence it got wrong**: open a [wrong extraction](https://github.com/brmel/farkad-ai/issues/new?template=wrong_extraction.yml)
+  issue with the exact words and what you expected. These become gold-set cases, which is the
+  most useful contribution there is.
+- **A bug in the code**: open a [bug report](https://github.com/brmel/farkad-ai/issues/new?template=bug_report.yml).
+- **A question or an idea**: start a thread in [Discussions](https://github.com/brmel/farkad-ai/discussions)
+  before writing code, so the design can be agreed first.
+- **A vulnerability**: follow [SECURITY.md](SECURITY.md), never a public issue.
 
-## Areas Where We Need Your Ideas & Feedback
+Ideas that would be welcome: adapters for other providers (Mistral, DeepSeek, a self-hosted
+model through vLLM or Ollama), gold-set cases in more languages and dialects, and harder photos.
 
-1. **Agentic Paradigms & Tool Calling**:
-   - Model Context Protocol (MCP) integrations.
-   - Dynamic agent skills vs. hardcoded specialist pipelines.
-   - Dynamic tool calling vs. constrained schema generation.
-2. **Model Providers & SDKs**:
-   - Adapters for DeepSeek, Mistral, and local Ollama/vLLM, beside the existing Gemini, Claude and OpenAI ones.
-3. **Multilingual & Multimodal Routing**:
-   - Edge cases with dialect switching, mixed languages, background audio noise, and complex photo recognition.
-4. **Evaluation Benchmarks**:
-   - Edge-case golden fixtures that push models to their hallucination limits.
-
----
-
-## Getting Started
-
-### 1. Fork & Setup
+## Setting up
 
 ```bash
-git clone https://github.com/brmel/farkad-ai.git
-cd farkad-ai
-
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e .
-pip install pytest ruff mypy
+git clone https://github.com/brmel/farkad-ai && cd farkad-ai
+python3.13 -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]"
 ```
 
-### 2. Verify Changes Locally
+Every test runs offline on recorded answers, so no API key or cloud account is needed.
 
-Before submitting code, run the suite (all offline, no API spend or cloud credentials needed):
+## Before you open a pull request
 
 ```bash
 ruff check .
@@ -46,21 +35,25 @@ mypy farkad_ai
 pytest
 ```
 
----
+CI runs the same four steps on every pull request, in a fresh environment with no optional
+provider installed.
 
-## Guidelines
+## Conventions
 
-- **Clean Protocols**: All new components should implement clear `typing.Protocol` interfaces so the core stays decoupled from vendor SDKs.
-- **Zero Cloud Coupling**: Do not introduce database dependencies (e.g. Firebase, Postgres) or user identity systems. Keep the package pure computation and reasoning.
-- **Empirical Evaluation**: Whenever proposing a prompt change or new workflow pattern, share benchmark results comparing accuracy, latency, and token cost.
-- **Model Adapters**: A new provider implements `ModelPort`, maps its network and rate-limit errors to `ModelUnavailableError(tier, model, because, detail)`, reports exact token counts, and prices them through `TokenPrice.cost_cents()`.
-- **Prompts**: Prompts live in `farkad_ai/prompts/assets/*.txt` and are versioned by the first 12 characters of their SHA-256. Never hardcode a date or a model name inside one.
+- **No infrastructure.** No database, user accounts or cloud storage in this package; it takes a
+  request and returns entries.
+- **Providers behind one interface.** A new provider implements `ModelPort`, maps its network and
+  rate-limit errors to `ModelUnavailableError`, reports exact token counts, and prices them
+  through `TokenPrice.cost_cents()`.
+- **Prompts are text files.** They live in `farkad_ai/prompts/assets/` and are versioned by the
+  first 12 characters of their SHA-256. A prompt never names a date or a model.
+- **Measure a prompt change.** Show the gold-set score before and after, with the latency and the
+  token cost.
+- **Small units.** Functions stay under 40 lines and files under 250. Types are strict, branches
+  use `match` over typed values, and nothing is kept "for later".
+- **One change per pull request**, with its test. A test must fail when the behaviour it names
+  breaks.
 
----
+## Code of Conduct
 
-## Submitting Pull Requests & Discussions
-
-- **Proposals & Architecture Ideas**: Open a thread in [GitHub Discussions](https://github.com/brmel/farkad-ai/discussions) to brainstorm before writing large chunks of code.
-- **Pull Requests**: Keep PRs focused, include unit tests or golden fixture additions, and ensure all CI checks pass.
-
-Thank you for helping build a more transparent, accurate, and cost-effective AI extraction engine!
+Everyone taking part follows the [Code of Conduct](CODE_OF_CONDUCT.md).

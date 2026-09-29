@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or idea
+    url: https://github.com/brmel/farkad-ai/discussions
+    about: Ask a question or propose a change in Discussions before writing code.
+  - name: Security vulnerability
+    url: https://github.com/brmel/farkad-ai/security/advisories/new
+    about: Report it privately. Never open a public issue for a vulnerability.
+  - name: Try it live
+    url: https://farkad.web.app
+    about: The engine running in production.

@@ -1,46 +1,44 @@
-# farkad-ai — Agent & Contributor Guidance
+# AGENTS.md
 
-Operational rules and conventions for AI coding agents and human contributors working on `farkad-ai`.
+Instructions for coding agents, and for people, working in `farkad-ai`. Agents that read
+`AGENTS.md` (Claude Code, Codex, Cursor and others) load this file before they start.
 
----
+## Rules
 
-## 1. Core Principles
+- **No infrastructure.** No Firestore, Firebase, Postgres, Stripe or any other service in this
+  package. It takes a request and returns entries.
+- **Providers behind `ModelPort`.** Never call a provider SDK from the pipeline or the routing
+  pass; add an adapter in `farkad_ai/models/`.
+- **Types decide branches.** Use `match` over typed values, frozen dataclasses and strict types.
+  No `isinstance` on untyped data, no `getattr`/`hasattr`, no `except` that hides a bug.
+- **Offline first.** Every change is testable on recorded answers (`RecordedModel`), with no key
+  and no spend.
+- **Small and lean.** Functions under 40 lines, files under 250. No dead code, no abstraction
+  without a second case that needs it, no duplicate tests.
+- **Comments state an outside constraint, with its source.** Anything else is said by a name.
 
-- **Zero Cloud Coupling**: `farkad-ai` is pure Python logic and protocols. Never import or introduce dependencies on Firestore, Firebase, Postgres, Stripe, or proprietary infrastructure.
-- **Provider Agnostic**: LLMs must implement the `ModelPort` protocol. Never hardcode SDK calls directly into the pipeline or routing passes.
-- **Static Over Dynamic**: Use structural pattern matching (`match / case`), frozen dataclasses, and strict types. Avoid runtime `isinstance` on untyped data, `getattr`/`hasattr`, or defensive `try/catch` hiding bugs.
-- **Deterministic Offline Replay**: Every prompt or pipeline change must be testable offline using `RecordedModel` without requiring cloud credentials or incurring API spend.
-- **Concise, High-Signal Code**: Functions ≤ 40 lines, files ≤ 250 lines. Remove dead code, redundant abstractions, and duplicate tests. Do not add speculative code or layers without real variation.
+## Layout
 
----
+| Path | What it holds |
+| --- | --- |
+| `farkad_ai/types.py` | `Prompt`, `Completion`, `Usage`, `MediaBlob`, `PipelineStep` |
+| `farkad_ai/models/` | `ModelPort`, the Gemini, Claude, OpenAI and recorded adapters, fallback, pricing |
+| `farkad_ai/prompts/` | the prompt text files and their hash versions |
+| `farkad_ai/routing/` | pass 1: relevance, language and topics |
+| `farkad_ai/extraction/` | pass 2: one topic's fields, and tier escalation |
+| `farkad_ai/pipeline/` | the two passes together, and the trace of a run |
+| `farkad_ai/memory/` | facts, habits and the sheet a capture is told |
+| `farkad_ai/eval/` | scoring against the gold set |
+| `tests/` | the offline suite |
 
-## 2. Agent Skills & Directory Layout
-
-Task-specific guidelines and conventions:
-
-- `farkad_ai/types.py`: Fundamental primitives (`Prompt`, `Completion`, `Usage`, `MediaBlob`, `PipelineStep`).
-- `farkad_ai/models/`: Model ports (`port.py`), token pricing (`pricing.py`), providers (`vertex.py`), and offline fixtures (`recorded.py`).
-- `farkad_ai/prompts/`: Raw prompt text files under `assets/` and sha256 versioning loader.
-- `farkad_ai/routing/`: Pass 1 intent detection and domain classification (`router.py`, `pass_one.py`).
-- `farkad_ai/extraction/`: Pass 2 specialist extraction protocols (`port.py`).
-- `farkad_ai/pipeline/`: Two-pass orchestrator (`two_pass.py`) and specialist concurrency (`specialists.py`).
-- `farkad_ai/eval/`: Offline scoring metrics, token counts, and accuracy percentiles (`scoring.py`).
-- `tests/`: Offline pytest suite testing router, pipeline, and scoring.
-
----
-
-## 3. Pull Request & Verification Checklist
-
-Always run all three checks locally before opening a pull request:
+## Before a pull request
 
 ```bash
-# 1. Format & Lint
 ruff check .
 ruff format --check .
-
-# 2. Strict Type Check
 mypy farkad_ai
-
-# 3. Deterministic Test Suite
 pytest
 ```
+
+CI runs the same four steps in a fresh environment with no optional provider installed, so a
+test that needs `google-genai`, `anthropic` or `openai` must skip without it.

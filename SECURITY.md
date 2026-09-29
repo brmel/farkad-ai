@@ -1,38 +1,32 @@
 # Security Policy
 
-## Supported Versions
+## Supported versions
 
-We release security updates and bug fixes for the latest active version of `farkad-ai`.
+| Version | Supported |
+| --- | :-: |
+| 0.2.x | ✅ |
+| < 0.2 | ❌ |
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 0.2.x   | :white_check_mark: |
-| < 0.2   | :x:                |
+## Reporting a vulnerability
 
-## Reporting a Vulnerability
+Please do not report a vulnerability in a public issue, discussion or pull request.
 
-The Farkad team takes security seriously. If you discover a vulnerability or security flaw in `farkad-ai`, please disclose it responsibly.
+Report it privately instead, in either of these ways:
 
-### How to Report
+1. **GitHub**: [open a private advisory](https://github.com/brmel/farkad-ai/security/advisories/new)
+   from the Security tab.
+2. **Email**: mellah.brahim.redouane@gmail.com
 
-**Please do not report security vulnerabilities through public GitHub issues, discussions, or pull requests.**
+Please include:
 
-Instead, report security issues through:
-1. **GitHub Security Advisory**: Use the "Report a vulnerability" button under the **Security** tab of the GitHub repository.
-2. **Email**: Send details of the issue to `mellah.brahim.redouane@gmail.com`.
+- what the vulnerability is and what an attacker could do with it;
+- the steps, code or input that reproduce it;
+- your environment: Python version, operating system, model provider.
 
-### What to Include
+## What happens next
 
-To help us triage and resolve the issue quickly, please provide:
-- A description of the vulnerability and its potential impact.
-- Step-by-step instructions, minimal reproducible code, or sample payload.
-- Environment details (Python version, operating system, model provider).
-- Any proposed remediation or mitigation, if available.
+- You get an acknowledgement within 3 working days.
+- The issue is confirmed and its severity assessed, and you are told the expected timeline.
+- The fix is released in a patch version and credited to you, unless you prefer otherwise.
 
-### Disclosure Process
-
-- **Acknowledgment**: We aim to acknowledge receipt within 48 hours.
-- **Triage**: We will confirm the issue, determine its severity, and provide an estimated timeline.
-- **Remediation**: A fix will be developed, tested, released in a patch version, and attributed to the reporter.
-
-Thank you for contributing to the security of open-source software.
+The live service at [farkad.web.app](https://farkad.web.app) is covered by the same address.

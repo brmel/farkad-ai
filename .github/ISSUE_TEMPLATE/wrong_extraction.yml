@@ -1,0 +1,46 @@
+name: Wrong extraction
+description: A sentence, recording or photo that came back wrong.
+title: "Wrong extraction: "
+labels: ["extraction"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you. Cases like this become gold-set tests. Please leave out anything you would not want public.
+  - type: textarea
+    id: input
+    attributes:
+      label: What you said, typed or photographed
+      description: The exact words. For a photo, describe it or attach one without personal details.
+      placeholder: two eggs, a big glass of water, and I slept badly
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+      placeholder: "food: 2 eggs · water: 500 ml · sleep: quality poor"
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What came back
+      description: Paste the output, or describe what the app or farkad.web.app showed.
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      options:
+        - farkad.web.app
+        - The Farkad app
+        - This package (farkad-ai route or code)
+    validations:
+      required: true
+  - type: input
+    id: language
+    attributes:
+      label: Language
+      placeholder: English, French, Arabic, Spanish, or a mix
