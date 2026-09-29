@@ -5,6 +5,7 @@ import logging
 from farkad_ai.extraction.port import (
     ExtractionContext,
     ExtractionResult,
+    PillarConfigProtocol,
     PillarExtractionPort,
 )
 from farkad_ai.types import ModelUnavailableError, Unavailability
@@ -12,16 +13,16 @@ from farkad_ai.types import ModelUnavailableError, Unavailability
 _log = logging.getLogger(__name__)
 
 
-class AdaptiveExtractor(PillarExtractionPort):
+class AdaptiveExtractor[Config: PillarConfigProtocol](PillarExtractionPort[Config]):
     def __init__(
         self,
-        fast: PillarExtractionPort,
-        standard: PillarExtractionPort,
+        fast: PillarExtractionPort[Config],
+        standard: PillarExtractionPort[Config],
     ) -> None:
         self._fast = fast
         self._standard = standard
 
-    async def extract(self, context: ExtractionContext) -> ExtractionResult:
+    async def extract(self, context: ExtractionContext[Config]) -> ExtractionResult:
         try:
             return await self._fast.extract(context)
         except ModelUnavailableError as refusal:

@@ -89,7 +89,7 @@ The five patterns from Anthropic's [Building effective agents](https://www.anthr
 
 | | Term | What it means | Where in the code, or why not |
 | :-: | --- | --- | --- |
-| ✅ | [Golden dataset](https://langfuse.com/resources/engineering/golden-dataset-evaluation) | Known inputs with expected outputs, scored after every change | [`eval/scoring.py`](farkad_ai/eval/scoring.py) and [`tests/fixtures/gold.json`](tests/fixtures/gold.json) |
+| ✅ | [Golden dataset](https://langfuse.com/resources/engineering/golden-dataset-evaluation) | Known inputs with expected outputs, scored after every change | [`eval/scoring.py`](farkad_ai/eval/scoring.py) and [`eval/gold.json`](farkad_ai/eval/gold.json) |
 | ✅ | [Record and replay](https://vcrpy.readthedocs.io/) | Tests reuse recorded model answers, so they are repeatable, free and offline | [`models/recorded.py`](farkad_ai/models/recorded.py) |
 | ✅ | [Guardrails](https://www.datadoghq.com/blog/llm-guardrails-best-practices/) | Checks on what goes into and comes out of the model | Pass 1 turns away sentences that are not about health; every answer is validated against its Pydantic schema |
 | ✅ | [Tracing](https://opentelemetry.io/blog/2026/genai-observability/) | A record of every step and model call in a run | [`pipeline/observer.py`](farkad_ai/pipeline/observer.py), kept in process rather than exported to OpenTelemetry |
@@ -218,7 +218,7 @@ farkad_ai/
 ├── models/       one interface; Gemini, Claude, OpenAI and recorded answers behind it
 ├── memory/       facts and habits, and the sheet a capture is told
 ├── prompts/      the prompt text files, versioned by hash
-├── eval/         scoring against the gold set
+├── eval/         the gold set, and scoring against it
 └── cli.py        farkad-ai models | prompts | route
 tests/            offline: every test runs on recorded answers
 ```

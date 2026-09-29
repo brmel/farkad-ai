@@ -24,6 +24,10 @@ class StatedTime:
 
 
 class TimeHint(BaseModel):
+    """A time the user stated, split into the two parts a model is reliable at: which day
+    relative to today, and what time of day. It is never asked for a date — D74 keeps the
+    calendar arithmetic server-side so a misheard word cannot become the year 2019."""
+
     model_config = ConfigDict(extra="forbid")
 
     phrase: str = Field(description="The time expression exactly as the user said it")
@@ -36,6 +40,7 @@ class TimeHint(BaseModel):
     @field_validator("clock")
     @classmethod
     def _drop_offset(cls, clock: time | None) -> time | None:
+        """Gemini answers "at eleven" with `23:00:00Z`, and the Z is formatting, not a zone."""
         return clock.replace(tzinfo=None) if clock else clock
 
     def stated(self) -> StatedTime:
@@ -43,6 +48,9 @@ class TimeHint(BaseModel):
 
 
 class PassOne(BaseModel):
+    """The model's answer. Deliberately not the domain type: `routes` here is what the
+    model claimed, before it is intersected with what the user actually tracks."""
+
     model_config = ConfigDict(extra="forbid")
 
     transcript: str = Field(description="Exactly what was said, in its own language")

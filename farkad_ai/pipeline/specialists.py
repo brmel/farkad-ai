@@ -1,12 +1,20 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from farkad_ai.extraction.port import ExtractionContext, ExtractionResult, PillarExtractionPort
+from farkad_ai.extraction.port import (
+    ExtractionContext,
+    ExtractionResult,
+    PillarConfigProtocol,
+    PillarExtractionPort,
+)
 from farkad_ai.pipeline.types import CaptureProfileProtocol, FailureReason
 from farkad_ai.types import MediaBlob, ModelUnavailableError
+
+_log = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, slots=True)
@@ -24,11 +32,11 @@ class Failed:
 Attempt = Extracted | Failed
 
 
-async def extract_each(
-    engine: PillarExtractionPort,
+async def extract_each[Config: PillarConfigProtocol](
+    engine: PillarExtractionPort[Config],
     pillars: Sequence[str],
     transcript: str,
-    profile: CaptureProfileProtocol,
+    profile: CaptureProfileProtocol[Config],
     media: tuple[MediaBlob, ...] = (),
     briefing: str = "",
 ) -> list[Attempt]:
@@ -49,11 +57,11 @@ async def extract_each(
     )
 
 
-async def _attempt(
-    engine: PillarExtractionPort,
+async def _attempt[Config: PillarConfigProtocol](
+    engine: PillarExtractionPort[Config],
     pillar: str,
     transcript: str,
-    profile: CaptureProfileProtocol,
+    profile: CaptureProfileProtocol[Config],
     media: tuple[MediaBlob, ...] = (),
     briefing: str = "",
 ) -> Attempt:
@@ -65,5 +73,13 @@ async def _attempt(
     )
     try:
         return Extracted(pillar=pillar, result=await engine.extract(context))
-    except ModelUnavailableError:
+    except ModelUnavailableError as unavailable:
+        _log.warning(
+            "pillar extraction failed",
+            extra={
+                "pillar": pillar,
+                "model": unavailable.model,
+                "because": unavailable.because.value,
+            },
+        )
         return Failed(pillar=pillar, reason=FailureReason.model_error)

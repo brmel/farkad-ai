@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import base64
 import time
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from typing import Any
 
 try:
@@ -19,7 +19,7 @@ except ImportError:
 
 from pydantic import BaseModel, ValidationError
 
-from farkad_ai.models.port import ModelPort
+from farkad_ai.models.port import ModelPort, TierChoice, TierChoices, fixed
 from farkad_ai.models.pricing import modality_of, price_of
 from farkad_ai.types import (
     Completion,
@@ -32,9 +32,9 @@ from farkad_ai.types import (
     Usage,
 )
 
-DEFAULT_ANTHROPIC_MODELS: Mapping[ModelTier, str] = {
-    ModelTier.fast: "claude-3-5-haiku-20241022",
-    ModelTier.standard: "claude-3-5-sonnet-20241022",
+DEFAULT_ANTHROPIC_MODELS: Mapping[ModelTier, TierChoice] = {
+    ModelTier.fast: TierChoice("claude-3-5-haiku-20241022"),
+    ModelTier.standard: TierChoice("claude-3-5-sonnet-20241022"),
 }
 
 
@@ -43,7 +43,7 @@ class AnthropicModel(ModelPort):
         self,
         client: AsyncAnthropic,
         *,
-        model_resolver: Callable[[ModelTier], str] | None = None,
+        choices: TierChoices | None = None,
     ) -> None:
         if not _ANTHROPIC_AVAILABLE:
             raise RuntimeError(
@@ -51,15 +51,15 @@ class AnthropicModel(ModelPort):
                 "Install with: pip install 'farkad-ai[anthropic]'"
             )
         self._client = client
-        self._resolver = model_resolver or (lambda tier: DEFAULT_ANTHROPIC_MODELS[tier])
+        self._choices = choices or fixed(DEFAULT_ANTHROPIC_MODELS)
 
-    def model_for(self, tier: ModelTier) -> str:
-        return self._resolver(tier)
+    async def model_for(self, tier: ModelTier) -> str:
+        return (await self._choices(tier)).model
 
     async def complete[T: BaseModel](
         self, prompt: Prompt, *, schema: type[T], tier: ModelTier
     ) -> Completion[T]:
-        model = self.model_for(tier)
+        model = await self.model_for(tier)
         started = time.monotonic()
         response = await self._send(prompt, schema=schema, model=model, tier=tier)
         latency_ms = int((time.monotonic() - started) * 1000)

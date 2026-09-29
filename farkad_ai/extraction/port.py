@@ -8,6 +8,8 @@ from farkad_ai.types import MediaBlob, Usage
 
 @dataclass(frozen=True, slots=True)
 class Finding:
+    """Never rejects an entry; it lowers that field's confidence and asks for a look."""
+
     field: str
     reason: str
 
@@ -18,8 +20,8 @@ class PillarConfigProtocol(Protocol):
 
 
 @dataclass(frozen=True, slots=True)
-class ExtractionContext:
-    config: PillarConfigProtocol
+class ExtractionContext[Config: PillarConfigProtocol]:
+    config: Config
     transcript: str
     media: tuple[MediaBlob, ...] = ()
     briefing: str = ""
@@ -34,5 +36,5 @@ class ExtractionResult:
     confidence: float | None = None
 
 
-class PillarExtractionPort(Protocol):
-    async def extract(self, context: ExtractionContext) -> ExtractionResult: ...
+class PillarExtractionPort[Config: PillarConfigProtocol](Protocol):
+    async def extract(self, context: ExtractionContext[Config]) -> ExtractionResult: ...

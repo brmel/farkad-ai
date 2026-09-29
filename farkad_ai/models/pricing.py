@@ -1,3 +1,5 @@
+"""Prices per million tokens, transcribed from each provider's price sheet."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -82,6 +84,8 @@ PRICES: Mapping[str, TokenPrice] = MappingProxyType(
 
 
 class UnpricedModelError(Exception):
+    """An unpriced model would record every call as free and disarm a spend ceiling."""
+
     def __init__(self, model: str) -> None:
         super().__init__(f"no committed price for {model}")
         self.model = model
@@ -97,6 +101,7 @@ NOTICE = timedelta(days=30)
 
 
 def retiring_within(notice: timedelta, today: date) -> tuple[str, ...]:
+    """Thirty days' notice keeps a retirement a configuration change rather than an incident."""
     return tuple(
         sorted(
             model

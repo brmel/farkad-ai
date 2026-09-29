@@ -15,14 +15,14 @@ class FailureReason(StrEnum):
     unsupported_input = "unsupported_input"
 
 
-class CaptureProfileProtocol(Protocol):
+class CaptureProfileProtocol[Config: PillarConfigProtocol](Protocol):
     def restrict(self, pillars: frozenset[str]) -> frozenset[str]: ...
-    def config_for(self, pillar: str) -> PillarConfigProtocol: ...
+    def config_for(self, pillar: str) -> Config: ...
 
 
 @dataclass(frozen=True, slots=True)
-class CaptureRequest:
-    profile: CaptureProfileProtocol
+class CaptureRequest[Config: PillarConfigProtocol]:
+    profile: CaptureProfileProtocol[Config]
     text: str = ""
     media: tuple[MediaBlob, ...] = ()
     briefing: str = ""
@@ -37,6 +37,8 @@ class PillarEntries:
 
 @dataclass(frozen=True, slots=True)
 class PillarRefused:
+    """Reported beside the pillars that did come back, never instead of them."""
+
     pillar: str
     reason: FailureReason
 
@@ -47,6 +49,7 @@ class Logged:
     language: str
     routes: frozenset[str]
     untracked: frozenset[str]
+    """Spoken about and not tracked, which a capture must say rather than drop."""
     occurred_at_hint: StatedTime | None
     extracted: tuple[PillarEntries, ...]
     refused: tuple[PillarRefused, ...]
@@ -64,5 +67,5 @@ class NothingToLog:
 CaptureOutcome = Logged | NothingToLog
 
 
-class CapturePipelinePort(Protocol):
-    async def run(self, request: CaptureRequest) -> CaptureOutcome: ...
+class CapturePipelinePort[Config: PillarConfigProtocol](Protocol):
+    async def run(self, request: CaptureRequest[Config]) -> CaptureOutcome: ...

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from farkad_ai.extraction.port import PillarExtractionPort
+import logging
+
+from farkad_ai.extraction.port import PillarConfigProtocol, PillarExtractionPort
 from farkad_ai.models.port import ModelPort
 from farkad_ai.pipeline.observer import (
     ExtractionCompleted,
@@ -23,22 +25,24 @@ from farkad_ai.pipeline.types import (
 from farkad_ai.routing.pass_one import PillarRegistryProtocol
 from farkad_ai.routing.router import NotApplicable, Routed, Router
 
+_log = logging.getLogger(__name__)
 
-def build_pipeline(
+
+def build_pipeline[Config: PillarConfigProtocol](
     model: ModelPort,
     registry: PillarRegistryProtocol,
-    extractor: PillarExtractionPort,
+    extractor: PillarExtractionPort[Config],
     *,
     observer: PipelineObserver | None = None,
-) -> TwoPassPipeline:
+) -> TwoPassPipeline[Config]:
     return TwoPassPipeline(Router(model, registry), extractor, observer=observer)
 
 
-class TwoPassPipeline(CapturePipelinePort):
+class TwoPassPipeline[Config: PillarConfigProtocol](CapturePipelinePort[Config]):
     def __init__(
         self,
         router: Router,
-        extractor: PillarExtractionPort,
+        extractor: PillarExtractionPort[Config],
         *,
         observer: PipelineObserver | None = None,
     ) -> None:
@@ -46,7 +50,7 @@ class TwoPassPipeline(CapturePipelinePort):
         self._extractor = extractor
         self._observer = observer if observer is not None else NullObserver()
 
-    async def run(self, request: CaptureRequest) -> CaptureOutcome:
+    async def run(self, request: CaptureRequest[Config]) -> CaptureOutcome:
         self._observer.on_event(RouteStarted(utterance=request.text, has_media=bool(request.media)))
         routed = await self._router.route(
             request.profile,
@@ -57,6 +61,7 @@ class TwoPassPipeline(CapturePipelinePort):
         self._observer.on_event(RouteCompleted(outcome=routed))
         match routed:
             case NotApplicable():
+                _log.info("nothing to log in this capture", extra={"reason": routed.reason})
                 return NothingToLog(
                     transcript=routed.transcript,
                     language=routed.language,
@@ -64,9 +69,10 @@ class TwoPassPipeline(CapturePipelinePort):
                     usages=(routed.usage,),
                 )
             case Routed():
+                _log.info("routed", extra={"pillars": sorted(routed.pillars)})
                 return await self._extract(routed, request)
 
-    async def _extract(self, routed: Routed, request: CaptureRequest) -> Logged:
+    async def _extract(self, routed: Routed, request: CaptureRequest[Config]) -> Logged:
         for pillar in sorted(routed.pillars):
             self._observer.on_event(ExtractionStarted(pillar=pillar))
         attempts = await extract_each(
