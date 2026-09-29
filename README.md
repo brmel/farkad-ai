@@ -22,9 +22,9 @@ spoken or photographed, becomes separate health entries you can correct.
 and Android. Type *"two eggs, a big glass of water, and I slept badly"* and it comes back as three
 entries: food, water and sleep.
 
-The prompts on `main` are the ones production sends, byte for byte; a parity test in the private
-product repository keeps them, the pricing and the memory rules identical. Production connects
-this pipeline to Firebase; this repository is the pipeline alone.
+Production installs this package from its [releases](https://github.com/brmel/farkad-ai/releases),
+so a release is exactly what the product runs. Production connects this pipeline to Firebase; this
+repository is the pipeline alone.
 
 ## Why this repository is public
 
