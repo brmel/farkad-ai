@@ -1,63 +1,26 @@
 # SOUL OF FARKAD-AI
 
-> *"A model is not a brain; it is an untrusted remote service that predicts text under a schema."*
+Core tenets for the AI extraction engine.
 
-You are working in `farkad-ai`. This package is the intelligence core of Farkad: it receives multimodal human expressions (audio, text, photos of meals or blood pressure monitors) and extracts clean, strictly validated health entities.
+## 1. Zero Infrastructure
+- No databases, auth, buckets, or networking. Accepts requests, returns validated entries.
+- Application concerns belong in the consumer, never here.
 
-Because this engine powers personal health understanding, it must be predictable, auditable, and resilient to model flakiness.
+## 2. Providers Behind ModelPort
+- No pipeline or domain code imports vendor SDKs (`google.genai`, `anthropic`, `openai`).
+- Adapters live in `farkad_ai/models/`, map errors to `ModelUnavailableError`, report token counts, and calculate costs via `TokenPrice.cost_cents()`.
 
----
+## 3. Cryptographic Prompts
+- Raw text in `farkad_ai/prompts/assets/`, versioned by the first 12 characters of SHA-256.
+- Prompts never name dates, years, or vendor names. Immutable: add new assets, never edit in place.
 
-## 1. Zero Infrastructure Dependencies
+## 4. Offline First
+- Default test suite runs offline against `RecordedModel` with zero keys and zero spend.
+- Live provider tests belong in integration suites and skip if keys are missing.
 
-- `farkad-ai` contains no databases, no user accounts, no cloud buckets, and no network frameworks.
-- It accepts domain requests and returns validated entries.
-- If a concept requires Firestore, Supabase, Redis, or Celery, it belongs in an application layer, not here.
+## 5. Empirical Prompt Changes
+- Never change a prompt on intuition. Benchmark against `farkad_ai/eval/gold.json`.
+- Report routing accuracy, field F1, latency, and cost per 1,000 extractions in every PR.
 
----
-
-## 2. Provider Agnosticism Behind `ModelPort`
-
-- No business logic or pipeline may ever import a provider SDK (`google.genai`, `anthropic`, `openai`).
-- All provider integrations live behind `ModelPort` in `farkad_ai/models/`.
-- Every adapter must:
-  1. Map network drops, rate limits, and provider quirks to `ModelUnavailableError`.
-  2. Report exact input/output token counts.
-  3. Calculate exact transaction cost in cents using `TokenPrice.cost_cents()`.
-
----
-
-## 3. Prompts are Cryptographic Assets
-
-- Prompts are raw text files in `farkad_ai/prompts/assets/`.
-- They are identified and versioned strictly by the first 12 characters of their SHA-256 hash.
-- A prompt must never mention a specific date, a calendar year, or a model vendor's marketing name.
-- Prompts are immutable: never edit a prompt asset in place. Add a new prompt asset, update the version reference, and benchmark the delta.
-
----
-
-## 4. Offline First & Zero-Cost Testing
-
-- Every unit and pipeline test must execute completely offline using `RecordedModel`.
-- A developer or CI runner without an API key must be able to run `pytest` and see 100% green tests.
-- Live provider tests belong in dedicated integration suites marked with `@pytest.mark.integration` and must skip cleanly if keys are absent.
-
----
-
-## 5. Empirical Prompt & Model Engineering
-
-- Never modify a prompt or change model routing based on vibes or a single anecdote.
-- Every prompt change requires evaluating against the gold evaluation set (`make eval` or `/eval-prompt`).
-- The PR description must publish:
-  - Overall extraction accuracy (%)
-  - Field-level F1 scores (Food, Activity, Symptom, Biomarker)
-  - P50 and P95 latency (seconds)
-  - Cost per 1,000 extractions (cents)
-
----
-
-## 6. Strict Types & Exhaustive Dispatch
-
-- Pydantic models are frozen where feasible.
-- Dispatch logic uses exhaustive `match` over typed discriminated unions.
-- No `isinstance` checks on untyped dictionaries; parse once at the perimeter.
+## 6. Strict Types
+- Frozen Pydantic models. Exhaustive `match` on sealed unions. No untyped `isinstance` or dynamic lookups.
