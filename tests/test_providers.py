@@ -1,4 +1,3 @@
-from decimal import Decimal
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -62,7 +61,6 @@ async def test_anthropic_model_parses_tool_response() -> None:
         assert completion.value.amount == 250
         assert completion.usage.input_tokens == 40
         assert completion.usage.output_tokens == 15
-        assert completion.usage.cost_cents > Decimal("0")
 
 
 @pytest.mark.anyio
@@ -100,4 +98,3 @@ async def test_openai_model_parses_structured_response() -> None:
         assert completion.value.amount == 8
         assert completion.usage.input_tokens == 50
         assert completion.usage.output_tokens == 20
-        assert completion.usage.cost_cents > Decimal("0")

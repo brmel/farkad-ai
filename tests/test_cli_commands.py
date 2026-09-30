@@ -4,17 +4,6 @@ from unittest.mock import patch
 from farkad_ai.cli import main
 
 
-def test_cli_models_prints_all_providers() -> None:
-    stdout = StringIO()
-    with patch("sys.stdout", stdout):
-        code = main(["models"])
-    assert code == 0
-    output = stdout.getvalue()
-    assert "gemini-3.5-flash-lite" in output
-    assert "claude-3-5-sonnet-20241022" in output
-    assert "gpt-4o" in output
-
-
 def test_cli_prompts_lists_all_prompt_assets() -> None:
     stdout = StringIO()
     with patch("sys.stdout", stdout):

@@ -20,7 +20,6 @@ except ImportError:
 from pydantic import BaseModel, ValidationError
 
 from farkad_ai.models.port import ModelPort, TierChoice, TierChoices, fixed
-from farkad_ai.models.pricing import modality_of, price_of
 from farkad_ai.types import (
     Completion,
     MediaBlob,
@@ -170,9 +169,4 @@ def usage_from_anthropic(
         input_tokens=input_tokens,
         output_tokens=output_tokens,
         latency_ms=latency_ms,
-        cost_cents=price_of(model).cost_cents(
-            input_tokens=input_tokens,
-            output_tokens=output_tokens,
-            input_modality=modality_of(prompt),
-        ),
     )

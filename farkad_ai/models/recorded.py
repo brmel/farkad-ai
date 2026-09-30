@@ -7,7 +7,6 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from farkad_ai.models.port import ModelPort, TierChoices
-from farkad_ai.models.pricing import InputModality, modality_of, price_of
 from farkad_ai.types import Completion, ModelTier, Prompt, Usage
 
 
@@ -59,19 +58,6 @@ def fingerprint(prompt: Prompt, *, schema: type[BaseModel], tier: ModelTier) -> 
     return hashlib.sha256(canonical.encode()).hexdigest()[:16]
 
 
-def repriced(counted: Usage, *, input_modality: InputModality) -> Usage:
-    """Cost is arithmetic over today's price table, never what a recording froze."""
-    return counted.model_copy(
-        update={
-            "cost_cents": price_of(counted.model).cost_cents(
-                input_tokens=counted.input_tokens,
-                output_tokens=counted.output_tokens,
-                input_modality=input_modality,
-            )
-        }
-    )
-
-
 class RecordedModel(ModelPort):
     """Real responses, replayed; a missing recording fails loudly rather than being invented.
 
@@ -102,7 +88,7 @@ class RecordedModel(ModelPort):
                 raise UnrecordedModelError(key, tier, pinned=pinned, recorded=counted.model)
         return Completion(
             value=schema.model_validate(recording["value"]),
-            usage=repriced(counted, input_modality=modality_of(prompt)),
+            usage=counted,
         )
 
     def _diagnose(self, prompt: Prompt, schema: type[BaseModel], tier: ModelTier) -> str | None:
