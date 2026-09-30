@@ -33,8 +33,8 @@ mypy farkad_ai
 pytest
 ```
 
-CI runs the same four steps on every pull request, in a fresh environment with no optional provider
-installed. Follow the rules in [AGENTS.md](AGENTS.md), keep one change per pull request with its
+CI installs the same `dev` extra, whose tools are pinned to exact versions, and runs the same four
+steps on every pull request, in a fresh environment with no optional provider installed. Follow the rules in [AGENTS.md](AGENTS.md), keep one change per pull request with its
 test, and make sure that test fails without the change.
 
 Everyone taking part follows the [Code of Conduct](CODE_OF_CONDUCT.md).

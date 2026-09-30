@@ -2,32 +2,20 @@
 
 from __future__ import annotations
 
-from decimal import Decimal
 from pathlib import Path
 
 import pytest
 from pydantic import BaseModel
 
 from farkad_ai.models.recorded import RecordingModel
-from farkad_ai.types import Completion, ModelTier, PipelineStep, Prompt, Usage
+from farkad_ai.types import Completion, ModelTier, PipelineStep, Prompt
+from tests.support import a_usage
 
 pytestmark = pytest.mark.anyio
 
 
 class Answer(BaseModel):
     said: str
-
-
-def a_usage() -> Usage:
-    return Usage(
-        step=PipelineStep.routing,
-        model="fake",
-        prompt_version="v1",
-        input_tokens=1,
-        output_tokens=1,
-        latency_ms=1,
-        cost_cents=Decimal(0),
-    )
 
 
 class QuotaLimitedModel:
@@ -40,7 +28,7 @@ class QuotaLimitedModel:
         if self._answers_left == 0:
             raise RuntimeError("ClientError 429")
         self._answers_left -= 1
-        return Completion(value=schema(said=prompt.utterance), usage=a_usage())
+        return Completion(value=schema(said=prompt.utterance), usage=a_usage(prompt.step))
 
 
 async def record(
