@@ -11,7 +11,6 @@ from pathlib import Path
 
 from farkad_ai.logging import configure_logging
 from farkad_ai.models.factory import ProviderName, create_model
-from farkad_ai.models.pricing import PRICES
 from farkad_ai.prompts import list_prompts
 from farkad_ai.routing.pass_one import PillarRegistryProtocol, PillarSpecProtocol
 from farkad_ai.routing.router import NotApplicable, Routed, Router, TrackingProfileProtocol
@@ -65,7 +64,6 @@ def build_parser() -> argparse.ArgumentParser:
     )
     route.add_argument("--fixtures", type=Path, help="Fixtures directory")
 
-    sub.add_parser("models", help="List supported models and pricing")
     sub.add_parser("prompts", help="List active prompt assets and versions")
     return p
 
@@ -96,18 +94,6 @@ def handle_route(args: argparse.Namespace) -> int:
     return 0
 
 
-def handle_models(args: argparse.Namespace) -> int:
-    sys.stdout.write(f"{'Model':<30} {'Input ($/M)':<12} {'Output ($/M)':<12} {'Retires':<12}\n")
-    sys.stdout.write(f"{'-' * 30} {'-' * 12} {'-' * 12} {'-' * 12}\n")
-    for name, price in sorted(PRICES.items()):
-        retires = str(price.retires_on) if price.retires_on else "None"
-        sys.stdout.write(
-            f"{name:<30} {price.input_usd_per_million!s:<12} "
-            f"{price.output_usd_per_million!s:<12} {retires:<12}\n"
-        )
-    return 0
-
-
 def handle_prompts(args: argparse.Namespace) -> int:
     for asset in list_prompts():
         sys.stdout.write(f"{asset.name:<15} (version: {asset.version}) [{len(asset.text)} chars]\n")
@@ -122,8 +108,6 @@ def main(argv: list[str] | None = None) -> int:
     match args.command:
         case "route":
             return handle_route(args)
-        case "models":
-            return handle_models(args)
         case "prompts":
             return handle_prompts(args)
         case _:

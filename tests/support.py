@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
-from decimal import Decimal
 
 from pydantic import BaseModel
 
@@ -27,7 +26,6 @@ def a_usage(step: PipelineStep) -> Usage:
         input_tokens=10,
         output_tokens=5,
         latency_ms=100,
-        cost_cents=Decimal("0.001"),
     )
 
 
