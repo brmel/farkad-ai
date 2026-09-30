@@ -1,23 +1,59 @@
-# AGENTS.md
+# farkad-ai — Agent Operating Manual
 
-Instructions for coding agents, and for people, working in `farkad-ai`.
+Binding instructions for coding agents and developers working in `farkad-ai`.
 
-## Rules
+Context: [SOUL](SOUL.md) · [MEMORY](MEMORY.md) · [README](README.md) · [CONTRIBUTING](CONTRIBUTING.md)
 
-- **No infrastructure.** No database, account system or cloud service in this package. It takes a
-  request and returns entries.
-- **Providers behind `ModelPort`.** Never call a provider SDK from the pipeline or the routing
-  pass; add an adapter in `farkad_ai/models/`. An adapter maps network and rate-limit errors to
-  `ModelUnavailableError`, reports exact token counts and prices them with `TokenPrice.cost_cents()`.
-- **Prompts are text files** in `farkad_ai/prompts/assets/`, versioned by the first 12 characters
-  of their SHA-256. A prompt never names a date or a model.
-- **Types decide branches.** `match` over typed values, frozen dataclasses, strict types. No
-  `isinstance` on untyped data, no `getattr`/`hasattr`, no `except` that hides a bug.
-- **Offline first.** Every change is testable on recorded answers (`RecordedModel`), with no key
-  and no spend. A test that needs an optional provider SDK skips without it.
-- **Small.** Functions under 40 lines, files under 250. No dead code, no abstraction without a
-  second case, no duplicate tests, no comment the code can say.
-- **Measure prompt changes.** Show the gold-set score before and after, with latency and cost.
+---
 
-The layout is in the [README](README.md#repository-layout); the checks to run before a pull request
-are in [CONTRIBUTING.md](CONTRIBUTING.md#before-you-open-a-pull-request).
+## 1. Core Principles
+
+- **No infrastructure.** No database, auth system, or cloud bucket in this package. It takes an input (text, audio, image) and produces validated health entities.
+- **Providers behind `ModelPort`.** Never call a vendor SDK (`google-genai`, `anthropic`, `openai`) directly from pipelines. Write an adapter in `farkad_ai/models/` implementing `ModelPort`.
+- **Prompts are cryptographic assets.** Stored in `farkad_ai/prompts/assets/`, versioned by the first 12 chars of their SHA-256 hash. Prompts never contain dates or vendor names.
+- **Offline first.** Every pipeline unit test must pass against `RecordedModel` without network access or API keys.
+- **Strict types & exhaustive dispatch.** Pattern match on sealed unions (`match x: case ...`). No `isinstance` on untyped data, no `getattr`/`hasattr`, no silent exception swallowing.
+- **Measure every prompt modification.** Every prompt change must publish before-and-after gold-set metrics (routing accuracy, field-level F1, latency, cost).
+
+---
+
+## 2. Validation & Quality Gates
+
+Run these commands before opening any pull request:
+
+```bash
+# Linting & Formatting
+ruff check .
+ruff format --check .
+
+# Static Type Verification
+mypy farkad_ai tests
+
+# Offline Unit Tests
+pytest -q
+```
+
+All four checks must pass with zero warnings or errors.
+
+---
+
+## 3. Skills Matrix
+
+Invoke these skills for specialized tasks:
+
+| When | Skill | Purpose & Scope |
+| :--- | :--- | :--- |
+| Evaluating prompt or routing changes | `/eval-prompt` | Runs benchmark against `farkad_ai/eval/gold.json`, scores routing and field accuracy, reports cost & latency deltas. |
+| Recording live provider responses | `/record-fixtures` | Captures live model outputs into offline cassettes for zero-cost reproducible testing. |
+| Code cleanup and dead code removal | `/clean-sweep` | Removes unused imports, unreachable branches, and dead prompt assets. |
+
+---
+
+## 4. Layout & Seams
+
+- `farkad_ai/models/`: Vendor adapters implementing `ModelPort`. Maps network faults to `ModelUnavailableError`.
+- `farkad_ai/routing/`: Pass 1 router; identifies applicable pillars (`food`, `water`, `exercise`, etc.).
+- `farkad_ai/extraction/`: Pass 2 extraction; produces typed domain entities.
+- `farkad_ai/memory/`: Fact and habit inference from historical captures.
+- `farkad_ai/prompts/`: Prompt registry and sha256 asset management.
+- `farkad_ai/eval/`: Gold evaluation benchmark and scoring metrics (`scoring.py`).
