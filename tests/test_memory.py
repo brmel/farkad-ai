@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from decimal import Decimal
 
 import pytest
-from pydantic import BaseModel
 
 from farkad_ai.memory.facts import (
     MAX_CONTENT_CHARACTERS,
@@ -26,7 +24,8 @@ from farkad_ai.memory.facts import (
 from farkad_ai.memory.habits import HabitBaseline, UsualAmount
 from farkad_ai.memory.inference import NOTHING_KNOWN, MemoryInferrer, subject_named
 from farkad_ai.memory.sheet import SHEET_CHARACTERS, core_sheet
-from farkad_ai.types import Completion, ModelTier, PipelineStep, Prompt, Usage
+from farkad_ai.types import PipelineStep
+from tests.support import ScriptedModel, a_usage
 
 MONDAY = datetime(2026, 9, 21, 8, tzinfo=UTC)
 FRIDAY = MONDAY + timedelta(days=4)
@@ -125,29 +124,6 @@ class TestTheSheetEveryCaptureIsTold:
         assert sheet.splitlines()[1] == "- Allergic to peanuts"
 
 
-USAGE = Usage(
-    step=PipelineStep.memory,
-    model="gemini-3.5-flash-lite",
-    prompt_version="v1",
-    input_tokens=120,
-    output_tokens=20,
-    latency_ms=300,
-    cost_cents=Decimal("0.004"),
-)
-
-
-class Answering:
-    def __init__(self, *facts: dict[str, str]) -> None:
-        self._facts = list(facts)
-        self.asked: list[Prompt] = []
-
-    async def complete[T: BaseModel](
-        self, prompt: Prompt, *, schema: type[T], tier: ModelTier
-    ) -> Completion[T]:
-        self.asked.append(prompt)
-        return Completion(value=schema.model_validate({"facts": self._facts}), usage=USAGE)
-
-
 def said(subject: str, content: str, category: str = "dietary") -> dict[str, str]:
     return {"subject": subject, "category": category, "content": content}
 
@@ -160,18 +136,20 @@ class TestASubjectIsParsedNotTrusted:
 
     @pytest.mark.anyio
     async def test_a_fact_without_a_usable_subject_is_dropped(self) -> None:
-        model = Answering(said("قهوة", "Drinks Arabic coffee"), said("Diet", "Vegan"))
+        model = ScriptedModel(
+            {"facts": [said("قهوة", "Drinks Arabic coffee"), said("Diet", "Vegan")]}
+        )
 
         inference = await MemoryInferrer(model).infer("I'm vegan", ())
 
         assert inference.disclosures == (VEGAN,)
-        assert inference.usage == USAGE
+        assert inference.usage == a_usage(PipelineStep.memory)
 
 
 class TestTheModelIsToldWhatIsKnown:
     @pytest.mark.anyio
     async def test_known_facts_are_listed_so_a_subject_can_be_reused(self) -> None:
-        model = Answering()
+        model = ScriptedModel({"facts": []})
 
         await MemoryInferrer(model).infer("I eat meat again", (known(VEGAN, enabled=False),))
         await MemoryInferrer(model).infer("I eat meat again", ())

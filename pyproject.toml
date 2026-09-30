@@ -51,10 +51,10 @@ eval = [
 ]
 dev = [
     # anyio, not pytest-asyncio: every async test here is marked `@pytest.mark.anyio`.
-    "anyio>=4.0.0",
-    "mypy>=1.13.0",
-    "pytest>=8.0.0",
-    "ruff>=0.8.0",
+    "anyio==4.15.1",
+    "mypy==2.3.1",
+    "pytest==9.1.1",
+    "ruff==0.16.8",
 ]
 all = [
     "farkad-ai[all-providers,dev,eval]",
