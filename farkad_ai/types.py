@@ -35,7 +35,7 @@ class MediaBlob:
 
 
 class Usage(BaseModel):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(extra="ignore", frozen=True)
 
     step: PipelineStep
     model: str

@@ -78,8 +78,13 @@ class RecordedModel(ModelPort):
                 key, self._directory, self._diagnose(prompt, schema, tier)
             )
         recording = json.loads(path.read_text())
+        usage_data = {
+            k: v
+            for k, v in recording["usage"].items()
+            if k in {"model", "input_tokens", "output_tokens", "latency_ms"}
+        }
         counted = Usage.model_validate(
-            recording["usage"]
+            usage_data
             | {"step": prompt.step, "prompt_version": prompt.instructions_version}
         )
         if self._pinned is not None:
