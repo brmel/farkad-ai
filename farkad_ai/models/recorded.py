@@ -84,8 +84,7 @@ class RecordedModel(ModelPort):
             if k in {"model", "input_tokens", "output_tokens", "latency_ms"}
         }
         counted = Usage.model_validate(
-            usage_data
-            | {"step": prompt.step, "prompt_version": prompt.instructions_version}
+            usage_data | {"step": prompt.step, "prompt_version": prompt.instructions_version}
         )
         if self._pinned is not None:
             pinned = (await self._pinned(tier)).model
