@@ -157,10 +157,9 @@ def usage_from_openai(
         )
     input_tokens = response.usage.prompt_tokens
     output_tokens = response.usage.completion_tokens
-    return Usage(
-        step=prompt.step,
+    return Usage.answering(
+        prompt,
         model=model,
-        prompt_version=prompt.instructions_version,
         input_tokens=input_tokens,
         output_tokens=output_tokens,
         latency_ms=latency_ms,

@@ -5,7 +5,15 @@ from pydantic import BaseModel
 
 from farkad_ai.models.anthropic import AnthropicModel
 from farkad_ai.models.openai import OpenAIModel
-from farkad_ai.types import ModelTier, PipelineStep, Prompt
+from farkad_ai.types import (
+    InputModality,
+    MediaBlob,
+    MediaType,
+    ModelTier,
+    PipelineStep,
+    Prompt,
+    Usage,
+)
 
 
 class HealthFact(BaseModel):
@@ -98,3 +106,26 @@ async def test_openai_model_parses_structured_response() -> None:
         assert completion.value.amount == 8
         assert completion.usage.input_tokens == 50
         assert completion.usage.output_tokens == 20
+
+
+@pytest.mark.parametrize(
+    ("carried", "modality"),
+    [
+        ((), InputModality.text),
+        ((MediaType.image_png,), InputModality.image),
+        ((MediaType.image_jpeg, MediaType.audio_aac), InputModality.audio),
+    ],
+)
+def test_a_calls_usage_says_what_it_carried(
+    carried: tuple[MediaType, ...], modality: InputModality
+) -> None:
+    prompt = Prompt(
+        step=PipelineStep.routing,
+        instructions="Route",
+        instructions_version="v1",
+        media=tuple(MediaBlob(content_type=kind, data=b"") for kind in carried),
+    )
+
+    usage = Usage.answering(prompt, model="m", input_tokens=1, output_tokens=1, latency_ms=1)
+
+    assert usage.input_modality is modality
