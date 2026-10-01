@@ -93,13 +93,7 @@ class TwoPassPipeline[Config: PillarConfigProtocol](CapturePipelinePort[Config])
                     refused.append(PillarRefused(pillar=pillar, reason=reason))
                 case Extracted(pillar=pillar, result=result):
                     usages.append(result.usage)
-                    extracted.append(
-                        PillarEntries(
-                            pillar=pillar,
-                            entries=result.entries,
-                            stale_fields=frozenset(finding.field for finding in result.findings),
-                        )
-                    )
+                    extracted.append(PillarEntries(pillar=pillar, entries=result.entries))
 
         return Logged(
             transcript=routed.transcript,

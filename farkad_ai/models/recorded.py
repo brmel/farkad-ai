@@ -78,13 +78,13 @@ class RecordedModel(ModelPort):
                 key, self._directory, self._diagnose(prompt, schema, tier)
             )
         recording = json.loads(path.read_text())
-        usage_data = {
-            k: v
-            for k, v in recording["usage"].items()
-            if k in {"model", "input_tokens", "output_tokens", "latency_ms"}
-        }
-        counted = Usage.model_validate(
-            usage_data | {"step": prompt.step, "prompt_version": prompt.instructions_version}
+        recorded = recording["usage"]
+        counted = Usage.answering(
+            prompt,
+            model=recorded["model"],
+            input_tokens=recorded["input_tokens"],
+            output_tokens=recorded["output_tokens"],
+            latency_ms=recorded["latency_ms"],
         )
         if self._pinned is not None:
             pinned = (await self._pinned(tier)).model
@@ -124,7 +124,9 @@ class RecordingModel(ModelPort):
             "instructions": prompt.instructions,
             "utterance": prompt.utterance,
             "value": completion.value.model_dump(mode="json"),
-            "usage": completion.usage.model_dump(mode="json", exclude={"step", "prompt_version"}),
+            "usage": completion.usage.model_dump(
+                mode="json", exclude={"step", "prompt_version", "input_modality"}
+            ),
         }
         key = fingerprint(prompt, schema=schema, tier=tier)
         self._pending[key] = json.dumps(recording, indent=2) + "\n"

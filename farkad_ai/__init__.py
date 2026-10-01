@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from farkad_ai.eval import CaptureScore, RunScore, score_capture
 from farkad_ai.extraction import (
+    ExtractedEntry,
     ExtractionContext,
     ExtractionResult,
     Finding,
@@ -69,6 +70,7 @@ from farkad_ai.routing import (
 )
 from farkad_ai.types import (
     Completion,
+    InputModality,
     MediaBlob,
     MediaType,
     ModelTier,
@@ -90,6 +92,7 @@ __all__ = [
     "Completion",
     "Disclosure",
     "Extracted",
+    "ExtractedEntry",
     "ExtractionCompleted",
     "ExtractionContext",
     "ExtractionResult",
@@ -99,6 +102,7 @@ __all__ = [
     "Failed",
     "FailureReason",
     "Finding",
+    "InputModality",
     "Logged",
     "MediaBlob",
     "MediaType",

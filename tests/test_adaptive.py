@@ -19,7 +19,7 @@ async def test_adaptive_extractor_uses_fast_when_successful() -> None:
     extractor = AdaptiveExtractor(fast, standard)
 
     res = await extractor.extract(TWO_EGGS)
-    assert res.entries[0]["item"] == "fast"
+    assert res.entries[0].values["item"] == "fast"
     assert fast.calls == 1
     assert standard.calls == 0
 
@@ -31,7 +31,7 @@ async def test_an_answer_that_did_not_parse_escalates_to_standard() -> None:
     extractor = AdaptiveExtractor(fast, standard)
 
     res = await extractor.extract(TWO_EGGS)
-    assert res.entries[0]["item"] == "standard"
+    assert res.entries[0].values["item"] == "standard"
     assert fast.calls == 1
     assert standard.calls == 1
 
