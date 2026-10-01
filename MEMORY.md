@@ -5,8 +5,8 @@ Current engine state, gold set baseline, and runtime facts.
 ## 1. Package State
 | Item | State | Notes |
 | :--- | :--- | :--- |
-| **Version** | `0.5.1` | Wheel pinned by SHA-256 in monorepo backend (D441) |
-| **Commit** | `151cc4a` | Tag `v0.5.1` on `main` |
+| **Version** | `0.6.0` | Wheel pinned by SHA-256 in monorepo backend (D441) |
+| **Commit** | `63a02cc` | Tag `v0.6.0` on `main` |
 | **Python** | `>=3.13` | Pydantic v2, AnyIO (asyncio) |
 | **Providers** | Google, Anthropic, OpenAI, Recorded | Behind `ModelPort` |
 
