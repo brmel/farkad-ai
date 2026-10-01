@@ -5,10 +5,16 @@ from dataclasses import dataclass
 
 from pydantic import BaseModel
 
-from farkad_ai.extraction.port import ExtractionContext, ExtractionResult, PillarExtractionPort
+from farkad_ai.extraction.port import (
+    ExtractedEntry,
+    ExtractionContext,
+    ExtractionResult,
+    PillarExtractionPort,
+)
 from farkad_ai.models.port import ModelPort
 from farkad_ai.types import (
     Completion,
+    InputModality,
     ModelTier,
     ModelUnavailableError,
     PipelineStep,
@@ -23,6 +29,7 @@ def a_usage(step: PipelineStep) -> Usage:
         step=step,
         model="gemini-2.5-flash-lite",
         prompt_version="v1",
+        input_modality=InputModality.text,
         input_tokens=10,
         output_tokens=5,
         latency_ms=100,
@@ -85,8 +92,7 @@ class SuccessfulExtractor(PillarExtractionPort[PillarConfig]):
         self.told[context.config.pillar] = context.mentions
         return ExtractionResult(
             pillar=context.config.pillar,
-            entries=({"item": self.label},),
-            findings=(),
+            entries=(ExtractedEntry(values={"item": self.label}, findings=()),),
             usage=a_usage(PipelineStep.extraction),
         )
 

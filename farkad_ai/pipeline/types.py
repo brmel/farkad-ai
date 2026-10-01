@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Protocol
 
-from farkad_ai.extraction.port import PillarConfigProtocol
+from farkad_ai.extraction.port import ExtractedEntry, PillarConfigProtocol
 from farkad_ai.routing.pass_one import StatedTime
 from farkad_ai.routing.router import NothingToLogReason
 from farkad_ai.types import MediaBlob, Usage
@@ -31,8 +31,7 @@ class CaptureRequest[Config: PillarConfigProtocol]:
 @dataclass(frozen=True, slots=True)
 class PillarEntries:
     pillar: str
-    entries: tuple[dict[str, object], ...]
-    stale_fields: frozenset[str]
+    entries: tuple[ExtractedEntry, ...]
 
 
 @dataclass(frozen=True, slots=True)
