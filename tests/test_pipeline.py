@@ -52,7 +52,7 @@ async def test_build_pipeline_runs_capture_successfully() -> None:
     assert outcome.routes == frozenset({"water"})
     assert len(outcome.extracted) == 1
     assert outcome.extracted[0].pillar == "water"
-    assert outcome.extracted[0].entries == ({"item": "specialist"},)
+    assert [entry.values for entry in outcome.extracted[0].entries] == [{"item": "specialist"}]
     assert len(outcome.refused) == 0
 
 

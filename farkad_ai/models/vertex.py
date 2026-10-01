@@ -145,10 +145,9 @@ def usage_of(
     input_tokens = metadata.prompt_token_count
     # `thoughts_token_count` is absent, not zero, without thinking: https://googleapis.github.io/python-genai/
     output_tokens = metadata.candidates_token_count + (metadata.thoughts_token_count or 0)
-    return Usage(
-        step=prompt.step,
+    return Usage.answering(
+        prompt,
         model=model,
-        prompt_version=prompt.instructions_version,
         input_tokens=input_tokens,
         output_tokens=output_tokens,
         latency_ms=latency_ms,

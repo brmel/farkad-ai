@@ -30,10 +30,21 @@ class ExtractionContext[Config: PillarConfigProtocol]:
 
 
 @dataclass(frozen=True, slots=True)
+class ExtractedEntry:
+    """A finding belongs to the entry it was found in, never to that entry's siblings."""
+
+    values: dict[str, object]
+    findings: tuple[Finding, ...]
+
+    @property
+    def stale_fields(self) -> frozenset[str]:
+        return frozenset(finding.field for finding in self.findings)
+
+
+@dataclass(frozen=True, slots=True)
 class ExtractionResult:
     pillar: str
-    entries: tuple[dict[str, object], ...]
-    findings: tuple[Finding, ...]
+    entries: tuple[ExtractedEntry, ...]
     usage: Usage
     confidence: float | None = None
 
