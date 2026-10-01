@@ -9,7 +9,7 @@ from farkad_ai.pipeline import (
     TraceObserver,
     build_pipeline,
 )
-from farkad_ai.routing.pass_one import PassOne
+from farkad_ai.routing.pass_one import Mention, PassOne
 from tests.support import Profile, Registry, ScriptedModel, Spec, SuccessfulExtractor
 
 
@@ -20,7 +20,7 @@ async def test_trace_observer_records_all_pipeline_lifecycle_events() -> None:
             transcript="Drank 2 glasses of water",
             language="en",
             is_health_related=True,
-            routes=["water"],
+            mentions=[Mention(pillar="water", said="2 glasses of water")],
         )
     )
     observer = TraceObserver()

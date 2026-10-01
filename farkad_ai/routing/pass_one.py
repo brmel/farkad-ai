@@ -47,8 +47,19 @@ class TimeHint(BaseModel):
         return StatedTime(phrase=self.phrase, day_offset=self.day_offset, clock=self.clock)
 
 
+class Mention(BaseModel):
+    """One thing the user logged, and the one pillar that records it."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    pillar: str = Field(description="Id of the one pillar that records this thing")
+    said: str = Field(
+        description="Every word the user said about this one thing: what, how much, how, when"
+    )
+
+
 class PassOne(BaseModel):
-    """The model's answer. Deliberately not the domain type: `routes` here is what the
+    """The model's answer. Deliberately not the domain type: `mentions` here is what the
     model claimed, before it is intersected with what the user actually tracks."""
 
     model_config = ConfigDict(extra="forbid")
@@ -58,7 +69,10 @@ class PassOne(BaseModel):
         description="BCP-47 tag the sentence begins in; the transcript may mix languages"
     )
     is_health_related: bool = Field(description="False for anything that is not a log")
-    routes: list[str] = Field(default_factory=list, description="Pillar ids mentioned")
+    mentions: list[Mention] = Field(
+        default_factory=list,
+        description="Every thing the user logged, each once, under the one pillar that records it",
+    )
     occurred_at_hint: TimeHint | None = Field(
         default=None, description="When the user said it happened, or null if unstated"
     )

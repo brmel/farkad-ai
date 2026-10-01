@@ -3,7 +3,7 @@ from datetime import time
 import pytest
 
 from farkad_ai.pipeline import CaptureRequest, FailureReason, Logged, build_pipeline
-from farkad_ai.routing.pass_one import PassOne, StatedTime
+from farkad_ai.routing.pass_one import Mention, PassOne, StatedTime
 from farkad_ai.routing.router import NothingToLogReason
 from farkad_ai.types import Unavailability
 from tests.support import (
@@ -20,7 +20,12 @@ WATER = Registry(Spec("water", "tracks water intake"))
 
 def routing_to_water(transcript: str) -> ScriptedModel:
     return ScriptedModel(
-        PassOne(transcript=transcript, language="en", is_health_related=True, routes=["water"])
+        PassOne(
+            transcript=transcript,
+            language="en",
+            is_health_related=True,
+            mentions=[Mention(pillar="water", said=transcript)],
+        )
     )
 
 
@@ -49,6 +54,16 @@ async def test_build_pipeline_runs_capture_successfully() -> None:
     assert outcome.extracted[0].pillar == "water"
     assert outcome.extracted[0].entries == ({"item": "specialist"},)
     assert len(outcome.refused) == 0
+
+
+@pytest.mark.anyio
+async def test_a_specialist_is_told_what_it_records() -> None:
+    specialist = SuccessfulExtractor("specialist")
+    pipeline = build_pipeline(routing_to_water("Drank 500ml of water"), WATER, specialist)
+
+    await pipeline.run(CaptureRequest(profile=Profile("water"), text="Drank 500ml of water"))
+
+    assert specialist.told == {"water": ("Drank 500ml of water",)}
 
 
 @pytest.mark.anyio

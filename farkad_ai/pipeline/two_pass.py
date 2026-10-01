@@ -77,7 +77,7 @@ class TwoPassPipeline[Config: PillarConfigProtocol](CapturePipelinePort[Config])
             self._observer.on_event(ExtractionStarted(pillar=pillar))
         attempts = await extract_each(
             self._extractor,
-            sorted(routed.pillars),
+            routed.mentions,
             routed.transcript,
             request.profile,
             media=request.media,
