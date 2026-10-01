@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import Sequence
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from farkad_ai.extraction.port import (
@@ -34,7 +34,7 @@ Attempt = Extracted | Failed
 
 async def extract_each[Config: PillarConfigProtocol](
     engine: PillarExtractionPort[Config],
-    pillars: Sequence[str],
+    mentions: Mapping[str, tuple[str, ...]],
     transcript: str,
     profile: CaptureProfileProtocol[Config],
     media: tuple[MediaBlob, ...] = (),
@@ -46,12 +46,13 @@ async def extract_each[Config: PillarConfigProtocol](
                 _attempt(
                     engine,
                     pillar,
+                    mentions[pillar],
                     transcript,
                     profile,
                     media=media,
                     briefing=briefing,
                 )
-                for pillar in pillars
+                for pillar in sorted(mentions)
             )
         )
     )
@@ -60,6 +61,7 @@ async def extract_each[Config: PillarConfigProtocol](
 async def _attempt[Config: PillarConfigProtocol](
     engine: PillarExtractionPort[Config],
     pillar: str,
+    said: tuple[str, ...],
     transcript: str,
     profile: CaptureProfileProtocol[Config],
     media: tuple[MediaBlob, ...] = (),
@@ -68,6 +70,7 @@ async def _attempt[Config: PillarConfigProtocol](
     context = ExtractionContext(
         config=profile.config_for(pillar),
         transcript=transcript,
+        mentions=said,
         media=media,
         briefing=briefing,
     )

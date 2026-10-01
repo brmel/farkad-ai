@@ -78,9 +78,11 @@ class SuccessfulExtractor(PillarExtractionPort[PillarConfig]):
     def __init__(self, label: str) -> None:
         self.label = label
         self.calls = 0
+        self.told: dict[str, tuple[str, ...]] = {}
 
     async def extract(self, context: ExtractionContext[PillarConfig]) -> ExtractionResult:
         self.calls += 1
+        self.told[context.config.pillar] = context.mentions
         return ExtractionResult(
             pillar=context.config.pillar,
             entries=({"item": self.label},),

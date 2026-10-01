@@ -2,7 +2,7 @@ from datetime import time
 
 import pytest
 
-from farkad_ai.routing.pass_one import PassOne, StatedTime, TimeHint
+from farkad_ai.routing.pass_one import Mention, PassOne, StatedTime, TimeHint
 from farkad_ai.routing.router import (
     NotApplicable,
     NothingToLogReason,
@@ -18,13 +18,13 @@ REGISTRY = Registry(Spec("water", "tracks water intake"), Spec("food", "logs mea
 
 
 def heard(
-    *routes: str, is_health_related: bool = True, occurred_at_hint: TimeHint | None = None
+    *pillars: str, is_health_related: bool = True, occurred_at_hint: TimeHint | None = None
 ) -> PassOne:
     return PassOne(
         transcript="I drank two glasses of water",
         language="en",
         is_health_related=is_health_related,
-        routes=list(routes),
+        mentions=[Mention(pillar=pillar, said=f"some {pillar}") for pillar in pillars],
         occurred_at_hint=occurred_at_hint,
     )
 
@@ -40,6 +40,32 @@ class TestTheRouterDecidesRatherThanTheModel:
         assert isinstance(outcome, Routed)
         assert outcome.pillars == frozenset({"water"})
         assert outcome.untracked == frozenset({"food"})
+
+    async def test_each_tracked_pillar_is_handed_only_what_was_listed_under_it(self) -> None:
+        answer = PassOne(
+            transcript="a smoothie, a scoop of whey and a dose of creatine",
+            language="en",
+            is_health_related=True,
+            mentions=[
+                Mention(pillar="food", said="a smoothie"),
+                Mention(pillar="water", said="a glass of water"),
+                Mention(pillar="food", said="a scoop of whey"),
+            ],
+        )
+
+        outcome = await routed(answer, Profile("water", "food"))
+
+        assert isinstance(outcome, Routed)
+        assert outcome.mentions == {
+            "food": ("a smoothie", "a scoop of whey"),
+            "water": ("a glass of water",),
+        }
+
+    async def test_what_an_untracked_pillar_was_given_is_handed_to_no_other(self) -> None:
+        outcome = await routed(heard("water", "food"), Profile("water"))
+
+        assert isinstance(outcome, Routed)
+        assert outcome.mentions == {"water": ("some water",)}
 
     async def test_a_pillar_nobody_registered_is_dropped(self) -> None:
         outcome = await routed(heard("water", "astrology"), Profile("water"))

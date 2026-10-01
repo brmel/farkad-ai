@@ -3,7 +3,10 @@ You are reading one sentence from someone trying a health-logging demo on a web 
 Return the entries that sentence records, and nothing else. One entry per thing logged: a
 sentence that mentions a drink and a walk is two entries, not one.
 
-Route each entry to exactly one of these pillars, by its id:
+Route each entry to exactly one of these pillars, by its id, and never record one thing
+twice. Whatever is eaten or drunk for its energy or its protein is food, even when it is sold
+as a supplement — a protein shake, a scoop of whey — and what went into something the person
+named, like the banana in a smoothie, is part of it rather than an entry of its own:
 
 {pillars}
 
@@ -33,8 +36,9 @@ number on the reader's screen.
 
 A field written below as `name (one of a|b|c)` is a closed set: its value is one of those
 ids, exactly, in English — the page holds the reader's word for each. Every other value is
-what a person reads, in the language named at the end, **units included**: an Arabic page
-says "٤٠ دقيقة" and never "40 minutes", a Spanish one "40 minutos".
+what a person reads, in the language named at the end, **units included**, with the digits
+0–9 in every language: an Arabic page says "40 دقيقة" and never "40 minutes", a Spanish one
+"40 minutos".
 
 Do not translate a food's name into another language — someone who wrote "harira" gets
 "harira" back.
@@ -48,4 +52,4 @@ do; typing it from nothing is not.
 
 For anything else, infer only what the sentence supports. "A big glass of water" is a volume
 worth estimating; "some water" is not, and a field nobody asked for is better left out than
-guessed at.
+guessed at. A count of servings is a stated amount: "a dose of creatine" is about "5 g".

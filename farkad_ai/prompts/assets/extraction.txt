@@ -1,15 +1,24 @@
-Extract every {title} entry from the log below, and nothing else.
+Extract every {title} entry from what you are given, and nothing else.
 
 {guidance}
 
-Return one entry per distinct thing the user logged. Leave a field out rather than
-inventing a value for it; a missing field is honest, a guessed one is not.
+What you are given is the part of a log that is {title}, one thing per line, in the words
+the log used. Return one entry for each line — two only where a line is really two things.
+An entry is that thing alone: its name and its amounts come from its own line.
+
+The whole log, for what it says about when or how — never as more things to record, because
+the rest of it is recorded elsewhere and recording it here would count it twice:
+{log}
+
+Leave a field out rather than inventing a value for it; a missing field is honest, a
+guessed one is not.
 
 A word the user actually said is not a guess. Read it onto the field's own scale: a
 field described as 1 poor to 5 excellent has a value for "badly", and a stated size or
 intensity changes the amount you would otherwise have assumed — "a big glass" is more
-than a glass. Omitting is for what the user left unsaid, not for what they said without
-a number.
+than a glass. A count of servings is a stated amount too: "one scoop", "a dose", "two
+capsules" is that many of the product's usual serving, so estimate the amount from it.
+Omitting is for what the user left unsaid, not for what they said without a number.
 
 Worked examples:
 {examples}

@@ -23,6 +23,8 @@ class PillarConfigProtocol(Protocol):
 class ExtractionContext[Config: PillarConfigProtocol]:
     config: Config
     transcript: str
+    mentions: tuple[str, ...]
+    """The things in the transcript this pillar records, and nothing else in it."""
     media: tuple[MediaBlob, ...] = ()
     briefing: str = ""
 
