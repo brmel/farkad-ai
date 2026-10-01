@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from farkad_ai.routing.pass_one import (
+    Mention,
     PassOne,
     PillarRegistryProtocol,
     PillarSpecProtocol,
@@ -18,6 +19,7 @@ from farkad_ai.routing.router import (
 )
 
 __all__ = [
+    "Mention",
     "NotApplicable",
     "NothingToLogReason",
     "PassOne",

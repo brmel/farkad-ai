@@ -1,6 +1,6 @@
 {
-  "measured_on": "2026-09-23",
-  "why": "Ten sentences, because every model call is paid for and the set is re-recorded whenever a prompt or a model changes. They cover every topic at least once, English, French and Arabic, three sentences with several topics, a coffee that has to be read as water, a bedtime that has to become a timestamp, and one sentence that must route to nothing. 'I slept seven hours' stays because it is the case that stopped every Gemini 3.x model.",
+  "measured_on": "2026-10-01",
+  "why": "Eleven sentences, because every model call is paid for and the set is re-recorded whenever a prompt or a model changes. They cover every topic at least once, English, French and Arabic, four sentences with several topics, one of them a protein shake that must count once, as food, beside a creatine dose that must carry its amount, a coffee that has to be read as water, a bedtime that has to become a timestamp, and one sentence that must route to nothing. 'I slept seven hours' stays because it is the case that stopped every Gemini 3.x model.",
   "cases": [
     {
       "utterance": "I drank 500 ml of water",
@@ -122,6 +122,25 @@
             "category": "coffee"
           }
         ]
+      }
+    },
+    {
+      "utterance": "I had a smoothie with one banana, a scoop of whey protein and a dose of creatine",
+      "routes": [
+        "food",
+        "supplements"
+      ],
+      "expected": {
+        "supplements": [
+          {
+            "category": "performance",
+            "dose": {
+              "min": 3,
+              "max": 10
+            }
+          }
+        ],
+        "food": []
       }
     },
     {

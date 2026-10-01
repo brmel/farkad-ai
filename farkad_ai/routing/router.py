@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Protocol
@@ -30,6 +31,8 @@ class Routed:
     pillars: frozenset[str]
     untracked: frozenset[str]
     """What the intersection removed, so a partly untracked log still says so."""
+    mentions: Mapping[str, tuple[str, ...]]
+    """What each tracked pillar records, decided once so no two pillars record one thing."""
     occurred_at_hint: StatedTime | None
     usage: Usage
 
@@ -88,8 +91,9 @@ class Router:
                 usage=usage,
             )
 
-        known = frozenset(route for route in heard.routes if self._registry.knows(route))
-        pillars = profile.restrict(known)
+        known = [mention for mention in heard.mentions if self._registry.knows(mention.pillar)]
+        named = frozenset(mention.pillar for mention in known)
+        pillars = profile.restrict(named)
         if not pillars:
             return NotApplicable(
                 transcript=heard.transcript,
@@ -102,7 +106,11 @@ class Router:
             transcript=heard.transcript,
             language=heard.language,
             pillars=pillars,
-            untracked=known - pillars,
+            untracked=named - pillars,
+            mentions={
+                pillar: tuple(mention.said for mention in known if mention.pillar == pillar)
+                for pillar in sorted(pillars)
+            },
             occurred_at_hint=heard.occurred_at_hint.stated() if heard.occurred_at_hint else None,
             usage=usage,
         )
