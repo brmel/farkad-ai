@@ -23,11 +23,11 @@ class CliPillarSpec:
 
 
 CLI_SPECS: tuple[CliPillarSpec, ...] = (
-    CliPillarSpec("food", "meals, snacks and drinks that carry energy"),
+    CliPillarSpec("food", "meals, snacks, drinks that carry energy, and protein shakes"),
     CliPillarSpec("water", "water, tea, black coffee and other drinks without energy"),
     CliPillarSpec("exercise", "workouts, sport, movement"),
     CliPillarSpec("sleep", "nights, naps and sleep quality"),
-    CliPillarSpec("supplements", "vitamins, minerals, protein, creatine and the rest"),
+    CliPillarSpec("supplements", "vitamins, minerals, creatine and the rest"),
     CliPillarSpec("drugs", "medications and pharmaceuticals"),
     CliPillarSpec("recovery", "sauna, cold plunge, breathwork and other deliberate recovery"),
 )
@@ -82,6 +82,7 @@ def handle_route(args: argparse.Namespace) -> int:
                 "transcript": outcome.transcript,
                 "language": outcome.language,
                 "pillars": sorted(outcome.pillars),
+                "mentions": {pillar: list(said) for pillar, said in outcome.mentions.items()},
             }
         case NotApplicable():
             data = {

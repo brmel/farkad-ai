@@ -7,7 +7,9 @@ from farkad_ai.extraction.port import ExtractionContext
 from farkad_ai.types import ModelUnavailableError, Unavailability
 from tests.support import PillarConfig, RefusingExtractor, SuccessfulExtractor
 
-TWO_EGGS = ExtractionContext(config=PillarConfig("food"), transcript="two eggs")
+TWO_EGGS = ExtractionContext(
+    config=PillarConfig("food"), transcript="two eggs", mentions=("two eggs",)
+)
 
 
 @pytest.mark.anyio

@@ -53,6 +53,7 @@ from farkad_ai.pipeline import (
 )
 from farkad_ai.prompts import PromptAsset, list_prompts, prompt
 from farkad_ai.routing import (
+    Mention,
     NotApplicable,
     NothingToLogReason,
     PassOne,
@@ -103,6 +104,7 @@ __all__ = [
     "MediaType",
     "MemoryCategory",
     "MemoryInferrer",
+    "Mention",
     "ModelPort",
     "ModelTier",
     "ModelUnavailableError",
