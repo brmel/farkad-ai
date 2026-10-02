@@ -39,7 +39,7 @@ Demonstrates production AI techniques, architectural boundaries, and deliberate 
 | ✅ | [Image understanding](https://ai.google.dev/gemini-api/docs/image-understanding) | Multimodal input parsing | Meals or medication photos logged like text: [`prompts/assets/photo.txt`](farkad_ai/prompts/assets/photo.txt) |
 | ✅ | [Thinking budget](https://ai.google.dev/gemini-api/docs/thinking) | Reasoning token allowance | Configured per tier: [`models/vertex.py`](farkad_ai/models/vertex.py) |
 | ✅ | [LLM cascade](https://arxiv.org/abs/2305.05176) | Fast tier first, escalate on error | Escalates when compact output fails schema validation: [`extraction/adaptive.py`](farkad_ai/extraction/adaptive.py) |
-| ✅ | [Provider fallback](https://docs.litellm.ai/docs/proxy/reliability) | Redundant provider failover | [`models/fallback.py`](farkad_ai/models/fallback.py) |
+| | [Provider fallback](https://docs.litellm.ai/docs/proxy/reliability) | Redundant provider failover | Offered by [`models/fallback.py`](farkad_ai/models/fallback.py); the product runs one provider |
 | | Streaming | Incremental token delivery | Full structured payload required before UI rendering |
 | | Context caching | Reusing prompt prefixes | Prefix reuse savings do not justify cache lifecycle complexity |
 | | Batch inference | Asynchronous queued processing | Interactive user latency required |
@@ -83,7 +83,7 @@ Patterns from Anthropic's [Building effective agents](https://www.anthropic.com/
 | ✅ | Golden dataset | Regression evaluation | [`eval/scoring.py`](farkad_ai/eval/scoring.py) against [`eval/gold.json`](farkad_ai/eval/gold.json) |
 | ✅ | Record & replay | Deterministic offline test suite | [`models/recorded.py`](farkad_ai/models/recorded.py) |
 | ✅ | Guardrails | Input and output validation | Pass 1 filters non-health queries; Pydantic verifies schemas |
-| ✅ | Tracing | Step-level telemetry | In-process execution tracing: [`pipeline/observer.py`](farkad_ai/pipeline/observer.py) |
+| ✅ | Tracing | Step-level telemetry | The product traces every model call; the package also offers step events: [`pipeline/observer.py`](farkad_ai/pipeline/observer.py) |
 | ✅ | Token tracking | Token and latency accounting | [`types.py`](farkad_ai/types.py) (`Usage`); billing logic isolated in backend |
 | ✅ | Human in the loop | Manual verification | All output remains editable by the user |
 
@@ -118,7 +118,12 @@ Output:
   "applicable": true,
   "transcript": "two eggs, a big glass of water, and I slept badly",
   "language": "en",
-  "pillars": ["food", "sleep", "water"]
+  "pillars": ["food", "sleep", "water"],
+  "mentions": {
+    "food": ["two eggs"],
+    "sleep": ["I slept badly"],
+    "water": ["a big glass of water"]
+  }
 }
 ```
 
@@ -134,7 +139,7 @@ farkad_ai/
 ├── prompts/      Content-addressed SHA-256 prompt assets
 ├── eval/         Gold dataset benchmark and scoring harness
 └── cli.py        CLI entrypoints: prompts, route
-tests/            Offline tests against scripted and recorded answers
+tests/            Offline tests against scripted answers
 ```
 
 ## Contributing & License
