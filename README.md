@@ -83,7 +83,7 @@ Patterns from Anthropic's [Building effective agents](https://www.anthropic.com/
 | ✅ | Golden dataset | Regression evaluation | [`eval/scoring.py`](farkad_ai/eval/scoring.py) against [`eval/gold.json`](farkad_ai/eval/gold.json) |
 | ✅ | Record & replay | Deterministic offline test suite | [`models/recorded.py`](farkad_ai/models/recorded.py) |
 | ✅ | Guardrails | Input and output validation | Pass 1 filters non-health queries; Pydantic verifies schemas |
-| ✅ | Tracing | Step-level telemetry | The product traces every model call; the package also offers step events: [`pipeline/observer.py`](farkad_ai/pipeline/observer.py) |
+| ✅ | Tracing | Step-level telemetry | Traces every model call with usage and latency: [`types.py`](farkad_ai/types.py) |
 | ✅ | Token tracking | Token and latency accounting | [`types.py`](farkad_ai/types.py) (`Usage`); billing logic isolated in backend |
 | ✅ | Human in the loop | Manual verification | All output remains editable by the user |
 
@@ -133,7 +133,7 @@ Output:
 farkad_ai/
 ├── routing/      Pass 1: applicability, language, pillar detection
 ├── extraction/   Pass 2: typed entity extraction with adaptive cascade
-├── pipeline/     Two-pass orchestration and trace observation
+├── pipeline/     Two-pass orchestration: routing to parallel specialists
 ├── models/       Unified ModelPort (Vertex, Anthropic, OpenAI, Recorded)
 ├── memory/       Fact and habit inference
 ├── prompts/      Content-addressed SHA-256 prompt assets
