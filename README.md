@@ -87,22 +87,9 @@ Patterns from Anthropic's [Building effective agents](https://www.anthropic.com/
 | ✅ | Token tracking | Token and latency accounting | [`types.py`](farkad_ai/types.py) (`Usage`); billing logic isolated in backend |
 | ✅ | Human in the loop | Manual verification | All output remains editable by the user |
 
-### Engineering workflow
-
-Practices applied in the private product repository.
-
-| | Tool / Pattern | Role |
-| :-: | --- | --- |
-| ✅ | Coding agent | Claude Code drives development, refactoring, and releases |
-| ✅ | Agent skills | Custom commands: `/slice`, `/verify`, `/clean-sweep`, `/mobile-test` |
-| ✅ | MCP servers | Tool integration: Firebase, Playwright, Chrome DevTools, ARTEMIS |
-| ✅ | AGENTS.md / SOUL.md | Explicit constraints, code laws, and architectural invariants |
-| ✅ | Hooks & Guards | Pre-commit formatting, generated-file locks, command blockers |
-| ✅ | Golden gate | Automated regression testing against `gold.json` before merge |
-
 ## Stack
 
-- **Models:** Gemini 2.5 Flash-Lite (Vertex AI), Claude 3.5 Sonnet, OpenAI GPT-4o.
+- **Models:** Gemini 3.5 Flash-Lite on Vertex AI in production; Claude and OpenAI adapters behind the same port.
 - **SDKs:** `google-genai`, `anthropic`, `openai` (behind `ModelPort`).
 - **Runtime:** Python 3.13, Pydantic v2, AnyIO.
 - **Verification:** `mypy` (strict), `ruff`, `pytest`.
@@ -147,7 +134,7 @@ farkad_ai/
 ├── prompts/      Content-addressed SHA-256 prompt assets
 ├── eval/         Gold dataset benchmark and scoring harness
 └── cli.py        CLI entrypoints: prompts, route
-tests/            Offline cassettes for deterministic testing
+tests/            Offline tests against scripted and recorded answers
 ```
 
 ## Contributing & License

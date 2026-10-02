@@ -55,7 +55,7 @@ async def test_anthropic_model_parses_tool_response() -> None:
 
     with patch("farkad_ai.models.anthropic._ANTHROPIC_AVAILABLE", True):
         adapter = AnthropicModel(client)
-        assert await adapter.model_for(ModelTier.fast) == "claude-3-5-haiku-20241022"
+        assert await adapter.model_for(ModelTier.fast) == "claude-haiku-4-5-20251001"
 
         prompt = Prompt(
             step=PipelineStep.routing,

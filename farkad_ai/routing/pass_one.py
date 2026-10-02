@@ -25,8 +25,8 @@ class StatedTime:
 
 class TimeHint(BaseModel):
     """A time the user stated, split into the two parts a model is reliable at: which day
-    relative to today, and what time of day. It is never asked for a date — D74 keeps the
-    calendar arithmetic server-side so a misheard word cannot become the year 2019."""
+    relative to today, and what time of day. It is never asked for a date: the calendar
+    arithmetic stays with the consumer, so a misheard word cannot become the year 2019."""
 
     model_config = ConfigDict(extra="forbid")
 

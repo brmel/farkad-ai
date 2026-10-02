@@ -7,8 +7,7 @@ Bug reports, sentences the engine gets wrong, and pull requests are welcome.
 - **A sentence it got wrong**: open a [wrong extraction](https://github.com/brmel/farkad-ai/issues/new?template=wrong_extraction.yml)
   issue with the exact words and what you expected. These become gold-set cases.
 - **A bug in the code**: open a [bug report](https://github.com/brmel/farkad-ai/issues/new?template=bug_report.yml).
-- **A question or an idea**: start a thread in [Discussions](https://github.com/brmel/farkad-ai/discussions)
-  before writing code.
+- **A question or an idea**: open an issue before writing code.
 - **A vulnerability**: follow [SECURITY.md](SECURITY.md), never a public issue.
 
 Welcome ideas: adapters for other providers (Mistral, DeepSeek, a self-hosted model through vLLM or
@@ -29,12 +28,14 @@ Every test runs offline on recorded answers, so no API key or cloud account is n
 ```bash
 ruff check .
 ruff format --check .
-mypy farkad_ai
+mypy farkad_ai tests
 pytest
 ```
 
-CI installs the same `dev` extra, whose tools are pinned to exact versions, and runs the same four
-steps on every pull request, in a fresh environment with no optional provider installed. Follow the rules in [AGENTS.md](AGENTS.md), keep one change per pull request with its
-test, and make sure that test fails without the change.
+CI installs the same `dev` extra, whose tools are pinned to exact versions, and runs the same
+steps on every pull request, in a fresh environment with no optional provider installed. Keep one
+change per pull request with its test, and make sure that test fails without the change.
 
-Everyone taking part follows the [Code of Conduct](CODE_OF_CONDUCT.md).
+The package is laid out by stage: `models/` holds the adapters behind `ModelPort`, `routing/` is
+pass one, `extraction/` pass two, `memory/` fact and habit inference, `prompts/assets/` the
+hash-versioned prompts, and `eval/` the gold set and its scoring.
