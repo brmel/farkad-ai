@@ -2,9 +2,10 @@ from datetime import time
 
 import pytest
 
-from farkad_ai.pipeline import CaptureRequest, FailureReason, Logged, build_pipeline
+from farkad_ai.pipeline.two_pass import TwoPassPipeline
+from farkad_ai.pipeline.types import CaptureRequest, FailureReason, Logged
 from farkad_ai.routing.pass_one import Mention, PassOne, StatedTime
-from farkad_ai.routing.router import NothingToLogReason
+from farkad_ai.routing.router import NothingToLogReason, Router
 from farkad_ai.types import Unavailability
 from tests.support import (
     Profile,
@@ -42,9 +43,10 @@ def test_nothing_to_log_reasons_contain_expected_members() -> None:
 
 
 @pytest.mark.anyio
-async def test_build_pipeline_runs_capture_successfully() -> None:
-    pipeline = build_pipeline(
-        routing_to_water("Drank 500ml of water"), WATER, SuccessfulExtractor("specialist")
+async def test_pipeline_runs_capture_successfully() -> None:
+    pipeline = TwoPassPipeline(
+        Router(routing_to_water("Drank 500ml of water"), WATER),
+        SuccessfulExtractor("specialist"),
     )
     request = CaptureRequest(profile=Profile("water"), text="Drank 500ml of water", media=())
     outcome = await pipeline.run(request)
@@ -59,7 +61,10 @@ async def test_build_pipeline_runs_capture_successfully() -> None:
 @pytest.mark.anyio
 async def test_a_specialist_is_told_what_it_records() -> None:
     specialist = SuccessfulExtractor("specialist")
-    pipeline = build_pipeline(routing_to_water("Drank 500ml of water"), WATER, specialist)
+    pipeline = TwoPassPipeline(
+        Router(routing_to_water("Drank 500ml of water"), WATER),
+        specialist,
+    )
 
     await pipeline.run(CaptureRequest(profile=Profile("water"), text="Drank 500ml of water"))
 
@@ -68,9 +73,8 @@ async def test_a_specialist_is_told_what_it_records() -> None:
 
 @pytest.mark.anyio
 async def test_pipeline_records_refused_with_typed_failure_reason() -> None:
-    pipeline = build_pipeline(
-        routing_to_water("Drank water"),
-        WATER,
+    pipeline = TwoPassPipeline(
+        Router(routing_to_water("Drank water"), WATER),
         RefusingExtractor(Unavailability.provider_refused),
     )
     request = CaptureRequest(profile=Profile("water"), text="Drank water", media=())

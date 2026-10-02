@@ -15,14 +15,6 @@ class FallbackModel(ModelPort):
         self._primary = primary
         self._fallback = fallback
 
-    @property
-    def primary(self) -> ModelPort:
-        return self._primary
-
-    @property
-    def fallback(self) -> ModelPort:
-        return self._fallback
-
     async def complete[T: BaseModel](
         self, prompt: Prompt, *, schema: type[T], tier: ModelTier
     ) -> Completion[T]:

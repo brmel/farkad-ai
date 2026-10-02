@@ -12,7 +12,6 @@ from farkad_ai.types import MediaBlob, Usage
 
 class FailureReason(StrEnum):
     model_error = "model_error"
-    unsupported_input = "unsupported_input"
 
 
 class CaptureProfileProtocol[Config: PillarConfigProtocol](Protocol):
