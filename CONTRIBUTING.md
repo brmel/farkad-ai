@@ -21,7 +21,7 @@ python3.13 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 ```
 
-Every test runs offline on recorded answers, so no API key or cloud account is needed.
+Every test runs offline on scripted answers, so no API key or cloud account is needed.
 
 ## Before you open a pull request
 

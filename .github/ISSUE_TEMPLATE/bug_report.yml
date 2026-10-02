@@ -27,7 +27,7 @@ body:
     id: version
     attributes:
       label: farkad-ai version or commit
-      placeholder: 0.3.0, or a commit hash
+      placeholder: the Version line of `pip show farkad-ai`, or a commit hash
     validations:
       required: true
   - type: input
