@@ -5,7 +5,9 @@ import logging
 import sys
 from typing import Any
 
-LOGGED_FIELDS = frozenset({"pillar", "model", "primary_model", "because", "tier", "step"})
+LOGGED_FIELDS = frozenset(
+    {"because", "model", "pillar", "pillars", "primary_model", "reason", "step", "tier"}
+)
 
 
 class JsonFormatter(logging.Formatter):

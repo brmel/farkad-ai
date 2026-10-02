@@ -18,7 +18,6 @@ class NoRecordedResponseError(Exception):
             + "; record one with RecordingModel against the live provider "
             "rather than writing it"
         )
-        self.key = key
         self.because = because
 
 

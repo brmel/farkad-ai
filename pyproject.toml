@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "farkad-ai"
-version = "0.6.0"
+version = "0.7.0"
 description = "Turns a sentence, a recording or a photo about your day into structured health entries"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -41,9 +41,6 @@ anthropic = [
 ]
 openai = [
     "openai>=1.50.0",
-]
-all-providers = [
-    "farkad-ai[google,anthropic,openai]",
 ]
 dev = [
     # anyio, not pytest-asyncio: every async test here is marked `@pytest.mark.anyio`.
