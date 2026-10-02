@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass
 from hashlib import sha256
 from importlib.resources import files
-from pathlib import Path
 
 VERSION_LENGTH = 12
 KNOWN_PROMPTS: tuple[str, ...] = (
@@ -31,12 +29,6 @@ class PromptAsset:
 
 
 def prompt(name: str) -> PromptAsset:
-    override_dir = os.environ.get("FARKAD_PROMPTS_DIR")
-    if override_dir:
-        override_path = Path(override_dir) / f"{name}.txt"
-        if override_path.is_file():
-            return PromptAsset(name=name, text=override_path.read_text(encoding="utf-8").strip())
-
     text = (
         files("farkad_ai.prompts.assets")
         .joinpath(f"{name}.txt")
