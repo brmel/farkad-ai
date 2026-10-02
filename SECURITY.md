@@ -2,10 +2,7 @@
 
 ## Supported versions
 
-| Version | Supported |
-| --- | :-: |
-| 0.3.x | ✅ |
-| < 0.3 | ❌ |
+Only the latest release receives fixes.
 
 ## Reporting a vulnerability
 

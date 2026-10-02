@@ -32,8 +32,8 @@ from farkad_ai.types import (
 )
 
 DEFAULT_ANTHROPIC_MODELS: Mapping[ModelTier, TierChoice] = {
-    ModelTier.fast: TierChoice("claude-3-5-haiku-20241022"),
-    ModelTier.standard: TierChoice("claude-3-5-sonnet-20241022"),
+    ModelTier.fast: TierChoice("claude-haiku-4-5-20251001"),
+    ModelTier.standard: TierChoice("claude-sonnet-5"),
 }
 
 
