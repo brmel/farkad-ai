@@ -36,6 +36,4 @@ CI installs the same `dev` extra, whose tools are pinned to exact versions, and 
 steps on every pull request, in a fresh environment with no optional provider installed. Keep one
 change per pull request with its test, and make sure that test fails without the change.
 
-The package is laid out by stage: `models/` holds the adapters behind `ModelPort`, `routing/` is
-pass one, `extraction/` pass two, `memory/` fact and habit inference, `prompts/assets/` the
-hash-versioned prompts, and `eval/` the gold set and its scoring.
+The package is laid out by stage: [Repository layout](README.md#repository-layout).
