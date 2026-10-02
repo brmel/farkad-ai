@@ -46,7 +46,6 @@ class ExtractionResult:
     pillar: str
     entries: tuple[ExtractedEntry, ...]
     usage: Usage
-    confidence: float | None = None
 
 
 class PillarExtractionPort[Config: PillarConfigProtocol](Protocol):

@@ -48,9 +48,6 @@ class VertexModel(ModelPort):
         self._client = client
         self._choices = choices or fixed(DEFAULT_CHOICES)
 
-    async def model_for(self, tier: ModelTier) -> str:
-        return (await self._choices(tier)).model
-
     async def complete[T: BaseModel](
         self, prompt: Prompt, *, schema: type[T], tier: ModelTier
     ) -> Completion[T]:

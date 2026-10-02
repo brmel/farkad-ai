@@ -13,7 +13,6 @@ from farkad_ai.models.vertex import VertexModel
 
 class ProviderName(StrEnum):
     vertex = "vertex"
-    gemini = "gemini"
     openai = "openai"
     anthropic = "anthropic"
     recorded = "recorded"
@@ -65,7 +64,7 @@ def create_model(
     choices: TierChoices | None = None,
 ) -> ModelPort:
     match ProviderName(provider):
-        case ProviderName.vertex | ProviderName.gemini:
+        case ProviderName.vertex:
             return _build_vertex(project=project, location=location, choices=choices)
         case ProviderName.openai:
             return _build_openai(api_key=api_key, choices=choices)
