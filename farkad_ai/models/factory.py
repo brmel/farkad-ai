@@ -55,16 +55,16 @@ def _build_anthropic(
     return AnthropicModel(client, choices=choices)
 
 
-def _build_raw_model(
-    provider: ProviderName,
+def create_model(
+    provider: ProviderName | str = ProviderName.vertex,
     *,
-    api_key: str | None,
-    project: str | None,
-    location: str | None,
-    fixtures_dir: Path | None,
-    choices: TierChoices | None,
+    api_key: str | None = None,
+    project: str | None = None,
+    location: str | None = None,
+    fixtures_dir: Path | None = None,
+    choices: TierChoices | None = None,
 ) -> ModelPort:
-    match provider:
+    match ProviderName(provider):
         case ProviderName.vertex | ProviderName.gemini:
             return _build_vertex(project=project, location=location, choices=choices)
         case ProviderName.openai:
@@ -75,23 +75,3 @@ def _build_raw_model(
             if fixtures_dir is None:
                 raise ValueError("fixtures_dir is required for recorded provider")
             return RecordedModel(fixtures_dir)
-
-
-def create_model(
-    provider: ProviderName | str = ProviderName.vertex,
-    *,
-    api_key: str | None = None,
-    project: str | None = None,
-    location: str | None = None,
-    fixtures_dir: Path | None = None,
-    choices: TierChoices | None = None,
-) -> ModelPort:
-    resolved_provider = ProviderName(provider)
-    return _build_raw_model(
-        resolved_provider,
-        api_key=api_key,
-        project=project,
-        location=location,
-        fixtures_dir=fixtures_dir,
-        choices=choices,
-    )
