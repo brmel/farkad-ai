@@ -37,3 +37,15 @@ steps on every pull request, in a fresh environment with no optional provider in
 change per pull request with its test, and make sure that test fails without the change.
 
 The package is laid out by stage: [Repository layout](README.md#repository-layout).
+
+## Releasing
+
+Maintainers only. Releases are immutable: a wrong wheel is fixed by a new version, never by
+replacing an asset.
+
+1. Bump the version in `pyproject.toml` and `farkad_ai/__init__.py`, merge to `main`, and wait for CI.
+2. Tag the merge `vX.Y.Z` and build from a clean export of the tag
+   (`git archive vX.Y.Z | tar -x -C <dir>`, then `uv build` there). The wheel is reproducible:
+   the same tree gives the same sha256.
+3. `gh release create vX.Y.Z dist/*`, then confirm the uploaded wheel's digest with
+   `curl -sL <wheel url> | shasum -a 256`. Consumers pin that URL and digest.
