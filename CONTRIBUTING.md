@@ -45,7 +45,7 @@ replacing an asset.
 
 1. Bump the version in `pyproject.toml`, merge to `main`, and wait for CI.
 2. Tag the merge `vX.Y.Z` and build from a clean export of the tag
-   (`git archive vX.Y.Z | tar -x -C <dir>`, then `uv build` there). The wheel is reproducible:
+   (`git archive vX.Y.Z | tar -x -C <dir>`, then `uv build` there; `uv` is not in the `dev` extra). The wheel is reproducible:
    the same tree gives the same sha256.
 3. `gh release create vX.Y.Z dist/*`, then confirm the uploaded wheel's digest with
    `curl -sL <wheel url> | shasum -a 256`. Consumers pin that URL and digest.
