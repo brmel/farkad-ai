@@ -83,13 +83,12 @@ Patterns from Anthropic's [Building effective agents](https://www.anthropic.com/
 | ✅ | Golden dataset | Regression evaluation | [`eval/scoring.py`](farkad_ai/eval/scoring.py) against [`eval/gold.json`](farkad_ai/eval/gold.json) |
 | ✅ | Record & replay | Deterministic offline test suite | [`models/recorded.py`](farkad_ai/models/recorded.py) |
 | ✅ | Guardrails | Input and output validation | Pass 1 filters non-health queries; Pydantic verifies schemas |
-| ✅ | Tracing | Step-level telemetry | Traces every model call with usage and latency: [`types.py`](farkad_ai/types.py) |
 | ✅ | Token tracking | Token and latency accounting | [`types.py`](farkad_ai/types.py) (`Usage`); billing logic isolated in backend |
 | ✅ | Human in the loop | Manual verification | All output remains editable by the user |
 
 ## Stack
 
-- **Models:** Gemini 3.5 Flash-Lite on Vertex AI in production; Claude and OpenAI adapters behind the same port.
+- **Models:** Gemini on Vertex AI in production; Claude and OpenAI adapters behind the same port.
 - **SDKs:** `google-genai`, `anthropic`, `openai` (behind `ModelPort`).
 - **Runtime:** Python 3.13, Pydantic v2, AnyIO.
 - **Verification:** `mypy` (strict), `ruff`, `pytest`.
