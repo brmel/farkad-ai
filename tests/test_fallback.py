@@ -34,7 +34,7 @@ class FailingModel(ModelPort):
         )
 
 
-PROMPT = Prompt(step=PipelineStep.demo, instructions="i", instructions_version="v1")
+PROMPT = Prompt(step=PipelineStep.extraction, instructions="i", instructions_version="v1")
 
 
 @pytest.mark.anyio

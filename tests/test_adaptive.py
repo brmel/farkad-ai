@@ -3,59 +3,80 @@ from __future__ import annotations
 import pytest
 
 from farkad_ai.extraction.adaptive import AdaptiveExtractor
-from farkad_ai.extraction.port import ExtractionContext
-from farkad_ai.types import ModelUnavailableError, Unavailability
-from tests.support import PillarConfig, RefusingExtractor, SuccessfulExtractor
+from farkad_ai.extraction.port import (
+    ExtractedEntry,
+    ExtractionContext,
+    ExtractionResult,
+    TieredExtractionPort,
+)
+from farkad_ai.types import ModelTier, ModelUnavailableError, PipelineStep, Unavailability
+from tests.support import PillarConfig, a_usage
 
 TWO_EGGS = ExtractionContext(
     config=PillarConfig("food"), transcript="two eggs", mentions=("two eggs",)
 )
 
 
-@pytest.mark.anyio
-async def test_adaptive_extractor_uses_fast_when_successful() -> None:
-    fast = SuccessfulExtractor("fast")
-    standard = SuccessfulExtractor("standard")
-    extractor = AdaptiveExtractor(fast, standard)
+class TierScript(TieredExtractionPort[PillarConfig]):
+    def __init__(self, **answers: str | Unavailability) -> None:
+        self._answers = answers
+        self.asked: list[ModelTier] = []
 
-    res = await extractor.extract(TWO_EGGS)
-    assert res.entries[0].values["item"] == "fast"
-    assert fast.calls == 1
-    assert standard.calls == 0
+    async def extract(
+        self, context: ExtractionContext[PillarConfig], *, tier: ModelTier
+    ) -> ExtractionResult:
+        self.asked.append(tier)
+        match self._answers[tier.value]:
+            case Unavailability() as because:
+                raise ModelUnavailableError(tier, f"model-{tier}", because, "detail")
+            case label:
+                return ExtractionResult(
+                    pillar=context.config.pillar,
+                    entries=(ExtractedEntry(values={"item": label}, findings=()),),
+                    usage=a_usage(PipelineStep.extraction),
+                )
+
+
+@pytest.mark.anyio
+async def test_the_fast_tier_answers_when_it_can() -> None:
+    script = TierScript(fast="fast", standard="standard")
+
+    result = await AdaptiveExtractor(script).extract(TWO_EGGS)
+
+    assert result.entries[0].values["item"] == "fast"
+    assert script.asked == [ModelTier.fast]
 
 
 @pytest.mark.anyio
 async def test_an_answer_that_did_not_parse_escalates_to_standard() -> None:
-    fast = RefusingExtractor(Unavailability.output_did_not_parse)
-    standard = SuccessfulExtractor("standard")
-    extractor = AdaptiveExtractor(fast, standard)
+    script = TierScript(fast=Unavailability.output_did_not_parse, standard="standard")
 
-    res = await extractor.extract(TWO_EGGS)
-    assert res.entries[0].values["item"] == "standard"
-    assert fast.calls == 1
-    assert standard.calls == 1
+    result = await AdaptiveExtractor(script).extract(TWO_EGGS)
+
+    assert result.entries[0].values["item"] == "standard"
+    assert script.asked == [ModelTier.fast, ModelTier.standard]
 
 
 @pytest.mark.anyio
 async def test_a_refusal_neither_tier_can_answer_is_never_paid_for_twice() -> None:
-    for because in (Unavailability.provider_refused, Unavailability.usage_not_reported):
-        fast = RefusingExtractor(because)
-        standard = SuccessfulExtractor("standard")
-        extractor = AdaptiveExtractor(fast, standard)
+    for because in (
+        Unavailability.provider_refused,
+        Unavailability.unsupported_request,
+        Unavailability.usage_not_reported,
+    ):
+        script = TierScript(fast=because, standard="standard")
 
         with pytest.raises(ModelUnavailableError):
-            await extractor.extract(TWO_EGGS)
-        assert fast.calls == 1
-        assert standard.calls == 0
+            await AdaptiveExtractor(script).extract(TWO_EGGS)
+        assert script.asked == [ModelTier.fast]
 
 
 @pytest.mark.anyio
-async def test_adaptive_extractor_raises_when_both_tiers_cannot_parse() -> None:
-    fast = RefusingExtractor(Unavailability.output_did_not_parse)
-    standard = RefusingExtractor(Unavailability.output_did_not_parse)
-    extractor = AdaptiveExtractor(fast, standard)
+async def test_both_tiers_unparsed_is_a_refusal() -> None:
+    script = TierScript(
+        fast=Unavailability.output_did_not_parse, standard=Unavailability.output_did_not_parse
+    )
 
     with pytest.raises(ModelUnavailableError):
-        await extractor.extract(TWO_EGGS)
-    assert fast.calls == 1
-    assert standard.calls == 1
+        await AdaptiveExtractor(script).extract(TWO_EGGS)
+    assert script.asked == [ModelTier.fast, ModelTier.standard]

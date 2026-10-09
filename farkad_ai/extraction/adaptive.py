@@ -7,24 +7,22 @@ from farkad_ai.extraction.port import (
     ExtractionResult,
     PillarConfigProtocol,
     PillarExtractionPort,
+    TieredExtractionPort,
 )
-from farkad_ai.types import ModelUnavailableError, Unavailability
+from farkad_ai.types import ModelTier, ModelUnavailableError, Unavailability
 
 _log = logging.getLogger(__name__)
 
 
 class AdaptiveExtractor[Config: PillarConfigProtocol](PillarExtractionPort[Config]):
-    def __init__(
-        self,
-        fast: PillarExtractionPort[Config],
-        standard: PillarExtractionPort[Config],
-    ) -> None:
-        self._fast = fast
-        self._standard = standard
+    """Asks the fast tier first and the standard tier only when the fast answer did not parse."""
+
+    def __init__(self, extractor: TieredExtractionPort[Config]) -> None:
+        self._extractor = extractor
 
     async def extract(self, context: ExtractionContext[Config]) -> ExtractionResult:
         try:
-            return await self._fast.extract(context)
+            return await self._extractor.extract(context, tier=ModelTier.fast)
         except ModelUnavailableError as refusal:
             # A quota, a key or an outage refuses both tiers; only a schema escalates.
             if refusal.because is not Unavailability.output_did_not_parse:
@@ -33,4 +31,4 @@ class AdaptiveExtractor[Config: PillarConfigProtocol](PillarExtractionPort[Confi
                 "extraction_tier_escalated",
                 extra={"pillar": context.config.pillar, "model": refusal.model},
             )
-            return await self._standard.extract(context)
+            return await self._extractor.extract(context, tier=ModelTier.standard)

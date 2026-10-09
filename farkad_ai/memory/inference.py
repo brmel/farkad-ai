@@ -17,7 +17,7 @@ from farkad_ai.memory.facts import (
     MemoryCategory,
 )
 from farkad_ai.models.port import ModelPort
-from farkad_ai.prompts import prompt
+from farkad_ai.prompts import PromptAsset, prompt
 from farkad_ai.types import ModelTier, PipelineStep, Prompt, Usage
 
 INSTRUCTIONS = prompt("memory_inference")
@@ -55,15 +55,16 @@ class Inference:
 
 
 class MemoryInferrer:
-    def __init__(self, model: ModelPort) -> None:
+    def __init__(self, model: ModelPort, *, instructions: PromptAsset = INSTRUCTIONS) -> None:
         self._model = model
+        self._asset = instructions
 
     async def infer(self, said: str, known: Iterable[Fact]) -> Inference:
         completion = await self._model.complete(
             Prompt(
                 step=PipelineStep.memory,
-                instructions=INSTRUCTIONS.format(known=_listed(known)),
-                instructions_version=INSTRUCTIONS.version,
+                instructions=self._asset.format(known=_listed(known)),
+                instructions_version=self._asset.version,
                 utterance=said,
             ),
             schema=InferredFacts,

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
+from enum import StrEnum
 
 from pydantic import BaseModel
 
@@ -24,7 +25,7 @@ from farkad_ai.types import (
 )
 
 
-def a_usage(step: PipelineStep) -> Usage:
+def a_usage(step: StrEnum) -> Usage:
     return Usage(
         step=step,
         model="gemini-2.5-flash-lite",

@@ -1,17 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import StrEnum
 from typing import Protocol
 
 from farkad_ai.extraction.port import ExtractedEntry, PillarConfigProtocol
 from farkad_ai.routing.pass_one import StatedTime
 from farkad_ai.routing.router import NothingToLogReason
-from farkad_ai.types import MediaBlob, Usage
-
-
-class FailureReason(StrEnum):
-    model_error = "model_error"
+from farkad_ai.types import MediaBlob, Unavailability, Usage
 
 
 class CaptureProfileProtocol[Config: PillarConfigProtocol](Protocol):
@@ -38,7 +33,7 @@ class PillarRefused:
     """Reported beside the pillars that did come back, never instead of them."""
 
     pillar: str
-    reason: FailureReason
+    because: Unavailability
 
 
 @dataclass(frozen=True, slots=True)

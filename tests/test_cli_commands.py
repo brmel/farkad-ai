@@ -12,5 +12,4 @@ def test_cli_prompts_lists_all_prompt_assets() -> None:
     output = stdout.getvalue()
     assert "pass_one" in output
     assert "extraction" in output
-    assert "recompute" in output
-    assert "demo" in output
+    assert "memory_inference" in output

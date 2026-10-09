@@ -17,19 +17,27 @@ except ImportError:
 
 from pydantic import BaseModel, ValidationError
 
-from farkad_ai.models.port import ModelPort, TierChoice, TierChoices, fixed
+from farkad_ai.models.port import ModelChoice, ModelPort, TierChoices, fixed
 from farkad_ai.types import (
     Completion,
     ModelTier,
     ModelUnavailableError,
     Prompt,
+    Reasoning,
     Unavailability,
     Usage,
 )
 
-DEFAULT_CHOICES: Mapping[ModelTier, TierChoice] = {
-    ModelTier.fast: TierChoice("gemini-3.5-flash-lite"),
-    ModelTier.standard: TierChoice("gemini-3.5-flash-lite", thinking_budget=512),
+# Gemini's thinking budget in tokens: https://ai.google.dev/gemini-api/docs/thinking
+THINKING_BUDGET: Mapping[Reasoning, int] = {
+    Reasoning.none: 0,
+    Reasoning.brief: 512,
+    Reasoning.thorough: 2048,
+}
+
+DEFAULT_CHOICES: Mapping[ModelTier, ModelChoice] = {
+    ModelTier.fast: ModelChoice("gemini-3.5-flash-lite"),
+    ModelTier.standard: ModelChoice("gemini-3.5-flash-lite", Reasoning.brief),
 }
 
 
@@ -68,7 +76,7 @@ class VertexModel(ModelPort):
         *,
         schema: type[BaseModel],
         tier: ModelTier,
-        choice: TierChoice,
+        choice: ModelChoice,
     ) -> types.GenerateContentResponse:
         model = choice.model
         try:
@@ -80,7 +88,9 @@ class VertexModel(ModelPort):
                     automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
                     response_mime_type="application/json",
                     response_schema=schema,
-                    thinking_config=types.ThinkingConfig(thinking_budget=choice.thinking_budget),
+                    thinking_config=types.ThinkingConfig(
+                        thinking_budget=THINKING_BUDGET[choice.reasoning]
+                    ),
                 ),
             )
         except APIError as error:
