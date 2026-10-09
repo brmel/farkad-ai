@@ -10,23 +10,24 @@ from farkad_ai.types import (
     Completion,
     ModelTier,
     Prompt,
+    Reasoning,
 )
 
 
 @dataclass(frozen=True, slots=True)
-class TierChoice:
+class ModelChoice:
     model: str
-    thinking_budget: int = 0
+    reasoning: Reasoning = Reasoning.none
 
 
 class TierChoices(Protocol):
     """Which model a tier runs, asked on every call so it can change without a restart."""
 
-    async def __call__(self, tier: ModelTier) -> TierChoice: ...
+    async def __call__(self, tier: ModelTier) -> ModelChoice: ...
 
 
-def fixed(choices: Mapping[ModelTier, TierChoice]) -> TierChoices:
-    async def choose(tier: ModelTier) -> TierChoice:
+def fixed(choices: Mapping[ModelTier, ModelChoice]) -> TierChoices:
+    async def choose(tier: ModelTier) -> ModelChoice:
         return choices[tier]
 
     return choose

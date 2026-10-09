@@ -36,8 +36,8 @@ Demonstrates production AI techniques, architectural boundaries, and deliberate 
 | :-: | --- | --- | --- |
 | ✅ | [Structured output](https://ai.google.dev/gemini-api/docs/structured-output) | Guaranteed JSON schemas | Gemini `response_schema`, Claude forced tool, OpenAI `response_format`: [`models/`](farkad_ai/models) |
 | ✅ | [Audio understanding](https://ai.google.dev/gemini-api/docs/audio) | Direct speech parsing without STT | Pass 1 transcribes and routes audio in one call: [`routing/`](farkad_ai/routing) |
-| ✅ | [Image understanding](https://ai.google.dev/gemini-api/docs/image-understanding) | Multimodal input parsing | Meals or medication photos logged like text: [`prompts/assets/photo.txt`](farkad_ai/prompts/assets/photo.txt) |
-| ✅ | [Thinking budget](https://ai.google.dev/gemini-api/docs/thinking) | Reasoning token allowance | Configured per tier: [`models/vertex.py`](farkad_ai/models/vertex.py) |
+| ✅ | [Image understanding](https://ai.google.dev/gemini-api/docs/image-understanding) | Multimodal input parsing | Photos travel as `MediaBlob` parts beside the text: [`types.py`](farkad_ai/types.py) |
+| ✅ | [Thinking budget](https://ai.google.dev/gemini-api/docs/thinking) | Reasoning token allowance | A provider-neutral `Reasoning` level per tier ([`models/port.py`](farkad_ai/models/port.py)), mapped to Gemini's budget in [`models/vertex.py`](farkad_ai/models/vertex.py); an adapter that cannot honour it refuses |
 | ✅ | [LLM cascade](https://arxiv.org/abs/2305.05176) | Fast tier first, escalate on error | Escalates when compact output fails schema validation: [`extraction/adaptive.py`](farkad_ai/extraction/adaptive.py) |
 | | [Provider fallback](https://docs.litellm.ai/docs/proxy/reliability) | Redundant provider failover | Offered by [`models/fallback.py`](farkad_ai/models/fallback.py); the product runs one provider |
 | | Streaming | Incremental token delivery | Full structured payload required before UI rendering |
@@ -125,6 +125,13 @@ Output:
   }
 }
 ```
+
+## Public interface
+
+`from farkad_ai import …` gives the provider-neutral core: `ModelPort` and `ModelChoice`, the
+`Router`, `TwoPassPipeline` and `AdaptiveExtractor`, the request and outcome types, and
+`PromptAsset` for replacing any stage's prompt. It imports no provider SDK. A provider is chosen
+explicitly — `farkad_ai.models.vertex`, `.anthropic` or `.openai` — and installed as its extra.
 
 ## Repository layout
 

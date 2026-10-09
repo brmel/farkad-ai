@@ -7,14 +7,19 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class PipelineStep(StrEnum):
-    """Pipeline stage for a model call, stored on captures and dashboards."""
+    """This package's own stages. A consumer labels its own calls with its own StrEnum."""
 
     routing = "routing"
     extraction = "extraction"
-    recompute = "recompute"
-    demo = "demo"
-    vision = "vision"
     memory = "memory"
+
+
+class Reasoning(StrEnum):
+    """How much a model may think before answering, in words every provider can map."""
+
+    none = "none"
+    brief = "brief"
+    thorough = "thorough"
 
 
 class ModelTier(StrEnum):
@@ -53,7 +58,7 @@ class MediaBlob:
 class Usage(BaseModel):
     model_config = ConfigDict(extra="ignore", frozen=True)
 
-    step: PipelineStep
+    step: str
     model: str
     prompt_version: str
     input_modality: InputModality
@@ -80,7 +85,7 @@ class Usage(BaseModel):
 class Prompt:
     """`instructions_version` names the asset the instructions came from, not the rendered text."""
 
-    step: PipelineStep
+    step: StrEnum
     instructions: str
     instructions_version: str
     utterance: str = ""
@@ -105,6 +110,7 @@ class Unavailability(StrEnum):
     """A refusal passes with a retry; an unparseable or unpriced answer does not."""
 
     provider_refused = "provider_refused"
+    unsupported_request = "unsupported_request"
     output_did_not_parse = "output_did_not_parse"
     usage_not_reported = "usage_not_reported"
 

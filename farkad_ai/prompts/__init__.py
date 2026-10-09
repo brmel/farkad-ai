@@ -8,10 +8,7 @@ VERSION_LENGTH = 12
 KNOWN_PROMPTS: tuple[str, ...] = (
     "pass_one",
     "extraction",
-    "recompute",
-    "demo",
     "memory_inference",
-    "photo",
 )
 
 
