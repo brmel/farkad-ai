@@ -33,4 +33,3 @@ async def test_memory_infers_with_the_prompt_it_is_given() -> None:
     model = ScriptedModel(InferredFacts(facts=[]))
     await MemoryInferrer(model, instructions=own).infer("I'm vegan", ())
     assert model.asked[0].instructions_version == own.version
-
