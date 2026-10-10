@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
-from farkad_ai.types import MediaBlob, Usage
+from farkad_ai.types import MediaBlob, ModelTier, Usage
 
 
 @dataclass(frozen=True, slots=True)
@@ -50,3 +50,9 @@ class ExtractionResult:
 
 class PillarExtractionPort[Config: PillarConfigProtocol](Protocol):
     async def extract(self, context: ExtractionContext[Config]) -> ExtractionResult: ...
+
+
+class TieredExtractionPort[Config: PillarConfigProtocol](Protocol):
+    async def extract(
+        self, context: ExtractionContext[Config], *, tier: ModelTier
+    ) -> ExtractionResult: ...

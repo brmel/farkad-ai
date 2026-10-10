@@ -11,8 +11,8 @@ from farkad_ai.extraction.port import (
     PillarConfigProtocol,
     PillarExtractionPort,
 )
-from farkad_ai.pipeline.types import CaptureProfileProtocol, FailureReason
-from farkad_ai.types import MediaBlob, ModelUnavailableError
+from farkad_ai.pipeline.types import CaptureProfileProtocol
+from farkad_ai.types import MediaBlob, ModelUnavailableError, Unavailability
 
 _log = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ class Extracted:
 @dataclass(frozen=True, slots=True)
 class Failed:
     pillar: str
-    reason: FailureReason
+    because: Unavailability
 
 
 Attempt = Extracted | Failed
@@ -85,4 +85,4 @@ async def _attempt[Config: PillarConfigProtocol](
                 "because": unavailable.because.value,
             },
         )
-        return Failed(pillar=pillar, reason=FailureReason.model_error)
+        return Failed(pillar=pillar, because=unavailable.because)

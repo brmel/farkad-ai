@@ -5,13 +5,17 @@ from pydantic import BaseModel
 
 from farkad_ai.models.anthropic import AnthropicModel
 from farkad_ai.models.openai import OpenAIModel
+from farkad_ai.models.port import ModelChoice, fixed
 from farkad_ai.types import (
     InputModality,
     MediaBlob,
     MediaType,
     ModelTier,
+    ModelUnavailableError,
     PipelineStep,
     Prompt,
+    Reasoning,
+    Unavailability,
     Usage,
 )
 
@@ -129,3 +133,18 @@ def test_a_calls_usage_says_what_it_carried(
     usage = Usage.answering(prompt, model="m", input_tokens=1, output_tokens=1, latency_ms=1)
 
     assert usage.input_modality is modality
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("adapter", [AnthropicModel, OpenAIModel])
+async def test_a_reasoning_level_the_adapter_cannot_honour_is_refused_not_ignored(
+    adapter: type[AnthropicModel] | type[OpenAIModel],
+) -> None:
+    thinking = fixed({ModelTier.standard: ModelChoice("some-model", Reasoning.brief)})
+    module = adapter.__module__
+    flag = "_ANTHROPIC_AVAILABLE" if adapter is AnthropicModel else "_OPENAI_AVAILABLE"
+    with patch(f"{module}.{flag}", True):
+        model = adapter(Mock(), choices=thinking)
+        with pytest.raises(ModelUnavailableError) as refused:
+            await model.model_for(ModelTier.standard)
+    assert refused.value.because is Unavailability.unsupported_request

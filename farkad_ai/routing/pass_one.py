@@ -7,7 +7,7 @@ from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from farkad_ai.prompts import prompt
+from farkad_ai.prompts import PromptAsset, prompt
 
 INSTRUCTIONS = prompt("pass_one")
 
@@ -91,6 +91,8 @@ class PillarRegistryProtocol(Protocol):
     def knows(self, route: str) -> bool: ...
 
 
-def routing_instructions(registry: PillarRegistryProtocol) -> str:
+def routing_instructions(
+    registry: PillarRegistryProtocol, asset: PromptAsset = INSTRUCTIONS
+) -> str:
     catalogue = "\n".join(f"- {spec.pillar}: {spec.intent}" for spec in registry)
-    return INSTRUCTIONS.format(pillars=catalogue)
+    return asset.format(pillars=catalogue)
