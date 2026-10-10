@@ -7,7 +7,12 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel
 
-from farkad_ai.models.recorded import RecordingModel
+from farkad_ai.models.recorded import (
+    SCHEMA_CHANGED,
+    NoRecordedResponseError,
+    RecordedModel,
+    RecordingModel,
+)
 from farkad_ai.types import Completion, ModelTier, PipelineStep, Prompt
 from tests.support import a_usage
 
@@ -79,3 +84,32 @@ async def test_committing_twice_is_not_two_sets(tmp_path: Path) -> None:
 
     assert recorder.commit() == 2
     assert len(list(tmp_path.glob("*.json"))) == 2
+
+
+class Reworded(BaseModel):
+    said: str
+    loudly: bool = False
+
+
+async def test_a_schema_changed_under_the_same_name_is_not_replayed(tmp_path: Path) -> None:
+    (await record(QuotaLimitedModel(before_failing=1), tmp_path, ["one"])).commit()
+    changed = type("Answer", (Reworded,), {})
+    asked = Prompt(
+        step=PipelineStep.routing,
+        instructions="say it back",
+        instructions_version="v1",
+        utterance="one",
+    )
+
+    with pytest.raises(NoRecordedResponseError) as missing:
+        await RecordedModel(tmp_path).complete(asked, schema=changed, tier=ModelTier.fast)
+
+    assert missing.value.because == SCHEMA_CHANGED
+    replayed = await RecordedModel(tmp_path).complete(asked, schema=Answer, tier=ModelTier.fast)
+    assert replayed.value == Answer(said="one")
+
+
+async def test_a_question_asked_twice_in_a_run_is_answered_once(tmp_path: Path) -> None:
+    recorder = await record(QuotaLimitedModel(before_failing=1), tmp_path, ["one", "one"])
+
+    assert recorder.commit() == 1

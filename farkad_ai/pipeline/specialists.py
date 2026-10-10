@@ -8,10 +8,9 @@ from dataclasses import dataclass
 from farkad_ai.extraction.port import (
     ExtractionContext,
     ExtractionResult,
-    PillarConfigProtocol,
     PillarExtractionPort,
+    TrackedPillar,
 )
-from farkad_ai.pipeline.types import CaptureProfileProtocol
 from farkad_ai.types import MediaBlob, ModelUnavailableError, Unavailability
 
 _log = logging.getLogger(__name__)
@@ -32,11 +31,11 @@ class Failed:
 Attempt = Extracted | Failed
 
 
-async def extract_each[Config: PillarConfigProtocol](
-    engine: PillarExtractionPort[Config],
+async def extract_each(
+    engine: PillarExtractionPort,
     mentions: Mapping[str, tuple[str, ...]],
     transcript: str,
-    profile: CaptureProfileProtocol[Config],
+    tracked: Mapping[str, TrackedPillar],
     media: tuple[MediaBlob, ...] = (),
     briefing: str = "",
 ) -> list[Attempt]:
@@ -45,10 +44,9 @@ async def extract_each[Config: PillarConfigProtocol](
             *(
                 _attempt(
                     engine,
-                    pillar,
+                    tracked[pillar],
                     mentions[pillar],
                     transcript,
-                    profile,
                     media=media,
                     briefing=briefing,
                 )
@@ -58,31 +56,30 @@ async def extract_each[Config: PillarConfigProtocol](
     )
 
 
-async def _attempt[Config: PillarConfigProtocol](
-    engine: PillarExtractionPort[Config],
-    pillar: str,
+async def _attempt(
+    engine: PillarExtractionPort,
+    pillar: TrackedPillar,
     said: tuple[str, ...],
     transcript: str,
-    profile: CaptureProfileProtocol[Config],
     media: tuple[MediaBlob, ...] = (),
     briefing: str = "",
 ) -> Attempt:
     context = ExtractionContext(
-        config=profile.config_for(pillar),
+        pillar=pillar,
         transcript=transcript,
         mentions=said,
         media=media,
         briefing=briefing,
     )
     try:
-        return Extracted(pillar=pillar, result=await engine.extract(context))
+        return Extracted(pillar=pillar.pillar, result=await engine.extract(context))
     except ModelUnavailableError as unavailable:
         _log.warning(
             "pillar extraction failed",
             extra={
-                "pillar": pillar,
+                "pillar": pillar.pillar,
                 "model": unavailable.model,
                 "because": unavailable.because.value,
             },
         )
-        return Failed(pillar=pillar, because=unavailable.because)
+        return Failed(pillar=pillar.pillar, because=unavailable.because)

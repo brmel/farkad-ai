@@ -5,14 +5,9 @@ from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
+from farkad_ai.extraction.extractor import holds_nothing
+
 NUMERIC_TOLERANCE = 0.01
-UNSTATED_FIELDS = frozenset({"pillar", "category"})
-
-
-def holds_nothing(payload: Mapping[str, object]) -> bool:
-    return not any(
-        value is not None for name, value in payload.items() if name not in UNSTATED_FIELDS
-    )
 
 
 @dataclass(frozen=True, slots=True)

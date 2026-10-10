@@ -10,28 +10,24 @@ from farkad_ai.extraction.port import (
     TieredExtractionPort,
 )
 from farkad_ai.types import ModelTier, ModelUnavailableError, PipelineStep, Unavailability
-from tests.support import PillarConfig, a_usage
+from tests.support import Tracked, a_usage
 
-TWO_EGGS = ExtractionContext(
-    config=PillarConfig("food"), transcript="two eggs", mentions=("two eggs",)
-)
+TWO_EGGS = ExtractionContext(pillar=Tracked("food"), transcript="two eggs", mentions=("two eggs",))
 
 
-class TierScript(TieredExtractionPort[PillarConfig]):
+class TierScript(TieredExtractionPort):
     def __init__(self, **answers: str | Unavailability) -> None:
         self._answers = answers
         self.asked: list[ModelTier] = []
 
-    async def extract(
-        self, context: ExtractionContext[PillarConfig], *, tier: ModelTier
-    ) -> ExtractionResult:
+    async def extract(self, context: ExtractionContext, *, tier: ModelTier) -> ExtractionResult:
         self.asked.append(tier)
         match self._answers[tier.value]:
             case Unavailability() as because:
                 raise ModelUnavailableError(tier, f"model-{tier}", because, "detail")
             case label:
                 return ExtractionResult(
-                    pillar=context.config.pillar,
+                    pillar=context.pillar.pillar,
                     entries=(ExtractedEntry(values={"item": label}, findings=()),),
                     usage=a_usage(PipelineStep.extraction),
                 )
