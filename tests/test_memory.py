@@ -123,6 +123,19 @@ class TestTheSheetEveryCaptureIsTold:
         assert len(sheet) <= SHEET_CHARACTERS
         assert sheet.splitlines()[1] == "- Allergic to peanuts"
 
+    def test_a_line_that_fits_is_kept_after_one_that_did_not(self) -> None:
+        newest = Fact(
+            Disclosure("surgery", MemoryCategory.medical, "Had surgery " * 16),
+            FactSource.spoken,
+            enabled=True,
+            since=FRIDAY,
+        )
+        too_long_beside_it = known(Disclosure("insulin", MemoryCategory.medical, "Insulin " * 18))
+
+        sheet = core_sheet([newest, too_long_beside_it, known(ALLERGY)], [])
+
+        assert "- Allergic to peanuts" in sheet.splitlines()
+
 
 def said(subject: str, content: str, category: str = "dietary") -> dict[str, str]:
     return {"subject": subject, "category": category, "content": content}
@@ -144,6 +157,24 @@ class TestASubjectIsParsedNotTrusted:
 
         assert inference.disclosures == (VEGAN,)
         assert inference.usage == a_usage(PipelineStep.memory)
+
+
+class TestAKnownSubjectIsReusedAsWritten:
+    @pytest.mark.anyio
+    async def test_a_typed_fact_keeps_its_subject_whatever_case_the_model_answers_in(
+        self,
+    ) -> None:
+        typed = known(
+            Disclosure("Xk3mPq9RtZ", MemoryCategory.dietary, "Vegetarian"),
+            source=FactSource.entered,
+        )
+        model = ScriptedModel({"facts": [said("xk3mpq9rtz", "Eats meat again")]})
+
+        inference = await MemoryInferrer(model).infer("eating meat again", (typed,))
+
+        (heard,) = inference.disclosures
+        assert heard.subject == "Xk3mPq9RtZ"
+        assert isinstance(learn(typed, heard, at=FRIDAY), Declined)
 
 
 class TestTheModelIsToldWhatIsKnown:

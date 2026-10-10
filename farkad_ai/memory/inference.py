@@ -5,7 +5,7 @@ The model docstrings here reach Gemini as schema descriptions, so they are promp
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -60,6 +60,7 @@ class MemoryInferrer:
         self._asset = instructions
 
     async def infer(self, said: str, known: Iterable[Fact]) -> Inference:
+        known = tuple(known)
         completion = await self._model.complete(
             Prompt(
                 step=PipelineStep.memory,
@@ -74,7 +75,7 @@ class MemoryInferrer:
             disclosures=tuple(
                 disclosure
                 for inferred in completion.value.facts
-                if (disclosure := _disclosed(inferred)) is not None
+                if (disclosure := _disclosed(inferred, _subjects_of(known))) is not None
             ),
             usage=completion.usage,
         )
@@ -88,8 +89,12 @@ def subject_named(said: str) -> str:
     return "_".join(words)[:MAX_SUBJECT_CHARACTERS].strip("_")
 
 
-def _disclosed(inferred: InferredFact) -> Disclosure | None:
-    subject = subject_named(inferred.subject)
+def _subjects_of(known: Iterable[Fact]) -> dict[str, str]:
+    return {fact.subject.casefold(): fact.subject for fact in known}
+
+
+def _disclosed(inferred: InferredFact, known: Mapping[str, str]) -> Disclosure | None:
+    subject = known.get(inferred.subject.casefold()) or subject_named(inferred.subject)
     if not subject or not inferred.content.strip():
         _log.warning("inferred fact dropped: no usable subject or content")
         return None
