@@ -28,9 +28,8 @@ def core_sheet(facts: Iterable[Fact], habits: Iterable[HabitBaseline]) -> str:
     lines += [f"- {_described(habit)}" for habit in habits]
     kept = [HEADING]
     for line in lines:
-        if len("\n".join([*kept, line])) > SHEET_CHARACTERS:
-            break
-        kept.append(line)
+        if len("\n".join([*kept, line])) <= SHEET_CHARACTERS:
+            kept.append(line)
     return "\n".join(kept) if len(kept) > 1 else ""
 
 
