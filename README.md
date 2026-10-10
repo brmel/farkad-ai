@@ -52,7 +52,7 @@ Patterns from Anthropic's [Building effective agents](https://www.anthropic.com/
 
 | | Pattern | Mechanism | Implementation or Rationale |
 | :-: | --- | --- | --- |
-| ✅ | Prompt chaining | Sequential dependent execution | Pass 1 routing, then Pass 2 extraction: [`pipeline/two_pass.py`](farkad_ai/pipeline/two_pass.py) |
+| ✅ | Prompt chaining | Sequential dependent execution | Pass 1 routing, then Pass 2 extraction: [`pipeline/engine.py`](farkad_ai/pipeline/engine.py) |
 | ✅ | Routing | Input classification to specialized prompts | Pass 1 maps text to active pillars: [`routing/`](farkad_ai/routing) |
 | ✅ | Parallelization | Concurrent independent calls | Parallel extraction across selected pillars: [`pipeline/specialists.py`](farkad_ai/pipeline/specialists.py) |
 | | Orchestrator-workers | Dynamic runtime task delegation | Fixed pillar domain boundaries make static dispatch faster and deterministic |
@@ -128,10 +128,19 @@ Output:
 
 ## Public interface
 
-`from farkad_ai import …` gives the provider-neutral core: `ModelPort` and `ModelChoice`, the
-`Router`, `TwoPassPipeline` and `AdaptiveExtractor`, the request and outcome types, and
-`PromptAsset` for replacing any stage's prompt. It imports no provider SDK. A provider is chosen
-explicitly — `farkad_ai.models.vertex`, `.anthropic` or `.openai` — and installed as its extra.
+```python
+engine = CaptureEngine(model, catalogue)
+outcome = await engine.capture(CaptureRequest(tracked=(pillar, ...), text="two eggs and a glass"))
+```
+
+`CaptureEngine` routes once, extracts every tracked pillar the capture names side by side, and
+answers `Logged` or `NothingToLog`. The consumer supplies two things: a `ModelPort`, and each
+`TrackedPillar` — its title, guidance, worked examples, entry schema and review. Its
+`routing_prompt` and `extraction_prompt` replace either stage's `PromptAsset`.
+
+`from farkad_ai import …` is that provider-neutral core and imports no provider SDK. A provider
+is chosen explicitly — `farkad_ai.models.vertex`, `.anthropic` or `.openai` — and installed as
+its extra.
 
 ## Repository layout
 
@@ -139,7 +148,7 @@ explicitly — `farkad_ai.models.vertex`, `.anthropic` or `.openai` — and inst
 farkad_ai/
 ├── routing/      Pass 1: applicability, language, pillar detection
 ├── extraction/   Pass 2: typed entity extraction with adaptive cascade
-├── pipeline/     Two-pass orchestration: routing to parallel specialists
+├── pipeline/     CaptureEngine: routing, then parallel specialists
 ├── models/       Unified ModelPort (Vertex, Anthropic, OpenAI, Recorded)
 ├── memory/       Fact and habit inference
 ├── prompts/      Content-addressed SHA-256 prompt assets

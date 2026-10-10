@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from typing import Protocol
+
+from pydantic import BaseModel
 
 from farkad_ai.types import MediaBlob, ModelTier, Usage
 
@@ -14,14 +17,32 @@ class Finding:
     reason: str
 
 
-class PillarConfigProtocol(Protocol):
+class TrackedPillar(Protocol):
+    """A pillar as one user tracks it: everything extraction asks the consumer for."""
+
     @property
     def pillar(self) -> str: ...
 
+    @property
+    def title(self) -> str: ...
+
+    @property
+    def guidance(self) -> str: ...
+
+    @property
+    def examples(self) -> str:
+        """Worked examples, already written in the units this user chose."""
+        ...
+
+    @property
+    def entry_schema(self) -> type[BaseModel]: ...
+
+    def review(self, entry: Mapping[str, object]) -> Iterable[Finding]: ...
+
 
 @dataclass(frozen=True, slots=True)
-class ExtractionContext[Config: PillarConfigProtocol]:
-    config: Config
+class ExtractionContext:
+    pillar: TrackedPillar
     transcript: str
     mentions: tuple[str, ...]
     """The things in the transcript this pillar records, and nothing else in it."""
@@ -48,11 +69,9 @@ class ExtractionResult:
     usage: Usage
 
 
-class PillarExtractionPort[Config: PillarConfigProtocol](Protocol):
-    async def extract(self, context: ExtractionContext[Config]) -> ExtractionResult: ...
+class PillarExtractionPort(Protocol):
+    async def extract(self, context: ExtractionContext) -> ExtractionResult: ...
 
 
-class TieredExtractionPort[Config: PillarConfigProtocol](Protocol):
-    async def extract(
-        self, context: ExtractionContext[Config], *, tier: ModelTier
-    ) -> ExtractionResult: ...
+class TieredExtractionPort(Protocol):
+    async def extract(self, context: ExtractionContext, *, tier: ModelTier) -> ExtractionResult: ...
