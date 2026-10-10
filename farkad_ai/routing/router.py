@@ -6,7 +6,7 @@ from enum import StrEnum
 from typing import Protocol
 
 from farkad_ai.models.port import ModelPort
-from farkad_ai.prompts import briefed
+from farkad_ai.prompts import PromptAsset, briefed
 from farkad_ai.routing.pass_one import (
     INSTRUCTIONS,
     PassOne,
@@ -55,10 +55,17 @@ class TrackingProfileProtocol(Protocol):
 
 
 class Router:
-    def __init__(self, model: ModelPort, registry: PillarRegistryProtocol) -> None:
+    def __init__(
+        self,
+        model: ModelPort,
+        registry: PillarRegistryProtocol,
+        *,
+        instructions: PromptAsset = INSTRUCTIONS,
+    ) -> None:
         self._model = model
         self._registry = registry
-        self._instructions = routing_instructions(registry)
+        self._asset = instructions
+        self._instructions = routing_instructions(registry, instructions)
 
     async def route(
         self,
@@ -71,7 +78,7 @@ class Router:
         prompt = Prompt(
             step=PipelineStep.routing,
             instructions=briefed(self._instructions, briefing),
-            instructions_version=INSTRUCTIONS.version,
+            instructions_version=self._asset.version,
             utterance=text,
             media=media,
         )

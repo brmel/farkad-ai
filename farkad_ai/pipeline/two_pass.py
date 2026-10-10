@@ -61,8 +61,8 @@ class TwoPassPipeline[Config: PillarConfigProtocol](CapturePipelinePort[Config])
         usages = [routed.usage]
         for attempt in attempts:
             match attempt:
-                case Failed(pillar=pillar, reason=reason):
-                    refused.append(PillarRefused(pillar=pillar, reason=reason))
+                case Failed(pillar=pillar, because=because):
+                    refused.append(PillarRefused(pillar=pillar, because=because))
                 case Extracted(pillar=pillar, result=result):
                     usages.append(result.usage)
                     extracted.append(PillarEntries(pillar=pillar, entries=result.entries))

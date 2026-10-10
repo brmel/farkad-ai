@@ -3,7 +3,7 @@ from datetime import time
 import pytest
 
 from farkad_ai.pipeline.two_pass import TwoPassPipeline
-from farkad_ai.pipeline.types import CaptureRequest, FailureReason, Logged
+from farkad_ai.pipeline.types import CaptureRequest, Logged
 from farkad_ai.routing.pass_one import Mention, PassOne, StatedTime
 from farkad_ai.routing.router import NothingToLogReason, Router
 from farkad_ai.types import Unavailability
@@ -83,4 +83,4 @@ async def test_pipeline_records_refused_with_typed_failure_reason() -> None:
     assert len(outcome.extracted) == 0
     assert len(outcome.refused) == 1
     assert outcome.refused[0].pillar == "water"
-    assert outcome.refused[0].reason is FailureReason.model_error
+    assert outcome.refused[0].because is Unavailability.provider_refused

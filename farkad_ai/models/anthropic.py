@@ -19,7 +19,7 @@ except ImportError:
 
 from pydantic import BaseModel, ValidationError
 
-from farkad_ai.models.port import ModelPort, TierChoice, TierChoices, fixed
+from farkad_ai.models.port import ModelChoice, ModelPort, TierChoices, fixed
 from farkad_ai.types import (
     Completion,
     MediaBlob,
@@ -27,13 +27,14 @@ from farkad_ai.types import (
     ModelTier,
     ModelUnavailableError,
     Prompt,
+    Reasoning,
     Unavailability,
     Usage,
 )
 
-DEFAULT_ANTHROPIC_MODELS: Mapping[ModelTier, TierChoice] = {
-    ModelTier.fast: TierChoice("claude-haiku-4-5-20251001"),
-    ModelTier.standard: TierChoice("claude-sonnet-5"),
+DEFAULT_ANTHROPIC_MODELS: Mapping[ModelTier, ModelChoice] = {
+    ModelTier.fast: ModelChoice("claude-haiku-4-5-20251001"),
+    ModelTier.standard: ModelChoice("claude-sonnet-5"),
 }
 
 
@@ -53,7 +54,15 @@ class AnthropicModel(ModelPort):
         self._choices = choices or fixed(DEFAULT_ANTHROPIC_MODELS)
 
     async def model_for(self, tier: ModelTier) -> str:
-        return (await self._choices(tier)).model
+        choice = await self._choices(tier)
+        if choice.reasoning is not Reasoning.none:
+            raise ModelUnavailableError(
+                tier,
+                choice.model,
+                Unavailability.unsupported_request,
+                f"reasoning {choice.reasoning} with a forced structured answer",
+            )
+        return choice.model
 
     async def complete[T: BaseModel](
         self, prompt: Prompt, *, schema: type[T], tier: ModelTier

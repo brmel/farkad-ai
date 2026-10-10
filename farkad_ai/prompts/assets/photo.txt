@@ -1,5 +1,0 @@
-This log is a photograph. The utterance, if there is one, is the caption the person wrote under it.
-
-Read what the photo shows as what they logged. For the transcript, write one short sentence describing what is in it that is worth logging. Where a portion, a count or a dose is visible, estimate it from the photo rather than leaving it out: the estimate is theirs to correct, and a photo of a plate says how much is on it. Return is_health_related false for a photo with nothing in it to log.
-
-Write every word you return, the transcript included, in {language}, unless the caption is written in another language.

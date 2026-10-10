@@ -19,7 +19,7 @@ except ImportError:
 
 from pydantic import BaseModel, ValidationError
 
-from farkad_ai.models.port import ModelPort, TierChoice, TierChoices, fixed
+from farkad_ai.models.port import ModelChoice, ModelPort, TierChoices, fixed
 from farkad_ai.types import (
     Completion,
     MediaBlob,
@@ -27,13 +27,14 @@ from farkad_ai.types import (
     ModelTier,
     ModelUnavailableError,
     Prompt,
+    Reasoning,
     Unavailability,
     Usage,
 )
 
-DEFAULT_OPENAI_MODELS: Mapping[ModelTier, TierChoice] = {
-    ModelTier.fast: TierChoice("gpt-4o-mini"),
-    ModelTier.standard: TierChoice("gpt-4o"),
+DEFAULT_OPENAI_MODELS: Mapping[ModelTier, ModelChoice] = {
+    ModelTier.fast: ModelChoice("gpt-4o-mini"),
+    ModelTier.standard: ModelChoice("gpt-4o"),
 }
 
 
@@ -53,7 +54,15 @@ class OpenAIModel(ModelPort):
         self._choices = choices or fixed(DEFAULT_OPENAI_MODELS)
 
     async def model_for(self, tier: ModelTier) -> str:
-        return (await self._choices(tier)).model
+        choice = await self._choices(tier)
+        if choice.reasoning is not Reasoning.none:
+            raise ModelUnavailableError(
+                tier,
+                choice.model,
+                Unavailability.unsupported_request,
+                f"reasoning {choice.reasoning} with a forced structured answer",
+            )
+        return choice.model
 
     async def complete[T: BaseModel](
         self, prompt: Prompt, *, schema: type[T], tier: ModelTier
