@@ -3,20 +3,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
-from farkad_ai.extraction.port import ExtractedEntry, PillarConfigProtocol
+from farkad_ai.extraction.port import ExtractedEntry, TrackedPillar
 from farkad_ai.routing.pass_one import StatedTime
 from farkad_ai.routing.router import NothingToLogReason
 from farkad_ai.types import MediaBlob, Unavailability, Usage
 
 
-class CaptureProfileProtocol[Config: PillarConfigProtocol](Protocol):
-    def restrict(self, pillars: frozenset[str]) -> frozenset[str]: ...
-    def config_for(self, pillar: str) -> Config: ...
-
-
 @dataclass(frozen=True, slots=True)
-class CaptureRequest[Config: PillarConfigProtocol]:
-    profile: CaptureProfileProtocol[Config]
+class CaptureRequest:
+    tracked: tuple[TrackedPillar, ...]
     text: str = ""
     media: tuple[MediaBlob, ...] = ()
     briefing: str = ""
@@ -60,5 +55,5 @@ class NothingToLog:
 CaptureOutcome = Logged | NothingToLog
 
 
-class CapturePipelinePort[Config: PillarConfigProtocol](Protocol):
-    async def run(self, request: CaptureRequest[Config]) -> CaptureOutcome: ...
+class CaptureEnginePort(Protocol):
+    async def capture(self, request: CaptureRequest) -> CaptureOutcome: ...

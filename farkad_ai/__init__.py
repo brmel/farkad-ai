@@ -1,22 +1,36 @@
-from farkad_ai.extraction.adaptive import AdaptiveExtractor
+from farkad_ai.extraction.extractor import (
+    PillarExtractor,
+    answer_schema,
+    fill,
+    holds_nothing,
+)
 from farkad_ai.extraction.port import (
     ExtractedEntry,
     ExtractionContext,
     ExtractionResult,
     Finding,
-    PillarExtractionPort,
-    TieredExtractionPort,
+    TrackedPillar,
 )
-from farkad_ai.models.port import ModelChoice, ModelPort, TierChoices, fixed
-from farkad_ai.pipeline.two_pass import TwoPassPipeline
+from farkad_ai.models.port import (
+    ModelChoice,
+    ModelPort,
+    TierChoices,
+    fixed,
+)
+from farkad_ai.pipeline.engine import CaptureEngine
 from farkad_ai.pipeline.types import (
+    CaptureEnginePort,
     CaptureRequest,
     Logged,
     NothingToLog,
     PillarEntries,
     PillarRefused,
 )
-from farkad_ai.prompts import PromptAsset, briefed, prompt
+from farkad_ai.prompts import (
+    PromptAsset,
+    briefed,
+    prompt,
+)
 from farkad_ai.routing.router import NothingToLogReason, Router
 from farkad_ai.types import (
     Completion,
@@ -33,7 +47,8 @@ from farkad_ai.types import (
 )
 
 __all__ = [
-    "AdaptiveExtractor",
+    "CaptureEngine",
+    "CaptureEnginePort",
     "CaptureRequest",
     "Completion",
     "ExtractedEntry",
@@ -51,7 +66,7 @@ __all__ = [
     "NothingToLog",
     "NothingToLogReason",
     "PillarEntries",
-    "PillarExtractionPort",
+    "PillarExtractor",
     "PillarRefused",
     "PipelineStep",
     "Prompt",
@@ -59,11 +74,13 @@ __all__ = [
     "Reasoning",
     "Router",
     "TierChoices",
-    "TieredExtractionPort",
-    "TwoPassPipeline",
+    "TrackedPillar",
     "Unavailability",
     "Usage",
+    "answer_schema",
     "briefed",
+    "fill",
     "fixed",
+    "holds_nothing",
     "prompt",
 ]

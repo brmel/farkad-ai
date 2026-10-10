@@ -13,7 +13,7 @@ from farkad_ai.logging import configure_logging
 from farkad_ai.models.factory import ProviderName, create_model
 from farkad_ai.prompts import list_prompts
 from farkad_ai.routing.pass_one import PillarRegistryProtocol, PillarSpecProtocol
-from farkad_ai.routing.router import NotApplicable, Routed, Router, TrackingProfileProtocol
+from farkad_ai.routing.router import NotApplicable, Routed, Router
 
 
 @dataclass(frozen=True, slots=True)
@@ -44,11 +44,6 @@ class DefaultRegistry(PillarRegistryProtocol):
         return route in self._known
 
 
-class AllowAllProfile(TrackingProfileProtocol):
-    def restrict(self, pillars: frozenset[str]) -> frozenset[str]:
-        return pillars
-
-
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="farkad-ai", description="Farkad AI Engine")
     p.add_argument("--verbose", action="store_true", help="Enable debug logging")
@@ -74,7 +69,8 @@ def handle_route(args: argparse.Namespace) -> int:
     except (ValueError, ImportError) as error:
         sys.stderr.write(f"Error initializing model: {error}\n")
         return 1
-    outcome = asyncio.run(Router(model, DefaultRegistry()).route(AllowAllProfile(), text=args.text))
+    every_pillar = frozenset(spec.pillar for spec in CLI_SPECS)
+    outcome = asyncio.run(Router(model, DefaultRegistry()).route(every_pillar, text=args.text))
     match outcome:
         case Routed():
             data = {

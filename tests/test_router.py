@@ -10,7 +10,7 @@ from farkad_ai.routing.router import (
     Router,
     RoutingOutcome,
 )
-from tests.support import Profile, Registry, ScriptedModel, Spec
+from tests.support import Registry, ScriptedModel, Spec
 
 pytestmark = pytest.mark.anyio
 
@@ -29,13 +29,13 @@ def heard(
     )
 
 
-async def routed(answer: PassOne, profile: Profile) -> RoutingOutcome:
-    return await Router(ScriptedModel(answer), REGISTRY).route(profile, text=answer.transcript)
+async def routed(answer: PassOne, tracked: frozenset[str]) -> RoutingOutcome:
+    return await Router(ScriptedModel(answer), REGISTRY).route(tracked, text=answer.transcript)
 
 
 class TestTheRouterDecidesRatherThanTheModel:
     async def test_a_pillar_the_user_does_not_track_is_reported_untracked(self) -> None:
-        outcome = await routed(heard("water", "food"), Profile("water"))
+        outcome = await routed(heard("water", "food"), frozenset({"water"}))
 
         assert isinstance(outcome, Routed)
         assert outcome.pillars == frozenset({"water"})
@@ -53,7 +53,7 @@ class TestTheRouterDecidesRatherThanTheModel:
             ],
         )
 
-        outcome = await routed(answer, Profile("water", "food"))
+        outcome = await routed(answer, frozenset({"water", "food"}))
 
         assert isinstance(outcome, Routed)
         assert outcome.mentions == {
@@ -62,26 +62,26 @@ class TestTheRouterDecidesRatherThanTheModel:
         }
 
     async def test_what_an_untracked_pillar_was_given_is_handed_to_no_other(self) -> None:
-        outcome = await routed(heard("water", "food"), Profile("water"))
+        outcome = await routed(heard("water", "food"), frozenset({"water"}))
 
         assert isinstance(outcome, Routed)
         assert outcome.mentions == {"water": ("some water",)}
 
     async def test_a_pillar_nobody_registered_is_dropped(self) -> None:
-        outcome = await routed(heard("water", "astrology"), Profile("water"))
+        outcome = await routed(heard("water", "astrology"), frozenset({"water"}))
 
         assert isinstance(outcome, Routed)
         assert outcome.pillars == frozenset({"water"})
         assert outcome.untracked == frozenset()
 
     async def test_a_log_of_only_untracked_pillars_has_nothing_to_log(self) -> None:
-        outcome = await routed(heard("food"), Profile("water"))
+        outcome = await routed(heard("food"), frozenset({"water"}))
 
         assert isinstance(outcome, NotApplicable)
         assert outcome.reason is NothingToLogReason.no_enabled_pillar
 
     async def test_a_sentence_that_is_not_a_log_has_nothing_to_log(self) -> None:
-        outcome = await routed(heard("water", is_health_related=False), Profile("water"))
+        outcome = await routed(heard("water", is_health_related=False), frozenset({"water"}))
 
         assert isinstance(outcome, NotApplicable)
         assert outcome.reason is NothingToLogReason.not_a_health_log
@@ -89,7 +89,9 @@ class TestTheRouterDecidesRatherThanTheModel:
     async def test_a_stated_time_is_kept_as_a_day_and_a_clock(self) -> None:
         at_half_twelve = TimeHint(phrase="at 12:30", day_offset=0, clock=time(12, 30))
 
-        outcome = await routed(heard("water", occurred_at_hint=at_half_twelve), Profile("water"))
+        outcome = await routed(
+            heard("water", occurred_at_hint=at_half_twelve), frozenset({"water"})
+        )
 
         assert isinstance(outcome, Routed)
         assert outcome.occurred_at_hint == StatedTime(
@@ -100,7 +102,7 @@ class TestTheRouterDecidesRatherThanTheModel:
 async def test_the_model_is_told_every_pillar_the_registry_holds() -> None:
     model = ScriptedModel(heard("water"))
 
-    await Router(model, REGISTRY).route(Profile("water"), text="I drank water")
+    await Router(model, REGISTRY).route(frozenset({"water"}), text="I drank water")
 
     told = model.asked[0].instructions
     assert [spec for spec in REGISTRY if f"- {spec.pillar}: {spec.intent}" not in told] == []

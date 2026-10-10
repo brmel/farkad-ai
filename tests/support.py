@@ -1,24 +1,18 @@
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 
 from pydantic import BaseModel
 
-from farkad_ai.extraction.port import (
-    ExtractedEntry,
-    ExtractionContext,
-    ExtractionResult,
-    PillarExtractionPort,
-)
+from farkad_ai.extraction.port import Finding
 from farkad_ai.models.port import ModelPort
 from farkad_ai.types import (
     Completion,
     InputModality,
     ModelTier,
     ModelUnavailableError,
-    PipelineStep,
     Prompt,
     Unavailability,
     Usage,
@@ -66,43 +60,37 @@ class Registry:
         return any(spec.pillar == route for spec in self._specs)
 
 
-@dataclass(frozen=True, slots=True)
-class PillarConfig:
+class Item(BaseModel):
     pillar: str
+    item: str | None = None
 
 
-class Profile:
-    def __init__(self, *tracked: str) -> None:
-        self._tracked = frozenset(tracked)
+@dataclass(frozen=True, slots=True)
+class Tracked:
+    pillar: str
+    title: str = "Items"
+    guidance: str = "Record each item."
+    examples: str = ""
+    entry_schema: type[BaseModel] = Item
+    flagged: tuple[Finding, ...] = ()
 
-    def restrict(self, pillars: frozenset[str]) -> frozenset[str]:
-        return pillars & self._tracked
-
-    def config_for(self, pillar: str) -> PillarConfig:
-        return PillarConfig(pillar)
-
-
-class SuccessfulExtractor(PillarExtractionPort[PillarConfig]):
-    def __init__(self, label: str) -> None:
-        self.label = label
-        self.calls = 0
-        self.told: dict[str, tuple[str, ...]] = {}
-
-    async def extract(self, context: ExtractionContext[PillarConfig]) -> ExtractionResult:
-        self.calls += 1
-        self.told[context.config.pillar] = context.mentions
-        return ExtractionResult(
-            pillar=context.config.pillar,
-            entries=(ExtractedEntry(values={"item": self.label}, findings=()),),
-            usage=a_usage(PipelineStep.extraction),
-        )
+    def review(self, entry: Mapping[str, object]) -> Iterable[Finding]:
+        return self.flagged
 
 
-class RefusingExtractor(PillarExtractionPort[PillarConfig]):
-    def __init__(self, because: Unavailability) -> None:
-        self.because = because
-        self.calls = 0
+class AnswersByStep(ModelPort):
+    """Answers each step with its own script; an `Unavailability` refuses that step."""
 
-    async def extract(self, context: ExtractionContext[PillarConfig]) -> ExtractionResult:
-        self.calls += 1
-        raise ModelUnavailableError(ModelTier.fast, "model-fast", self.because, "detail")
+    def __init__(self, **answers: BaseModel | Mapping[str, object] | Unavailability) -> None:
+        self._answers = answers
+        self.asked: list[tuple[Prompt, ModelTier]] = []
+
+    async def complete[T: BaseModel](
+        self, prompt: Prompt, *, schema: type[T], tier: ModelTier
+    ) -> Completion[T]:
+        self.asked.append((prompt, tier))
+        match self._answers[prompt.step.value]:
+            case Unavailability() as because:
+                raise ModelUnavailableError(tier, f"model-{tier}", because, "detail")
+            case answer:
+                return Completion(value=schema.model_validate(answer), usage=a_usage(prompt.step))

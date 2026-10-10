@@ -40,11 +40,17 @@ PROMPT_CHANGED = (
 )
 
 
+SCHEMA_CHANGED = (
+    "the same utterance is recorded against the same instructions but another answer "
+    "schema, so the schema changed and the recording would replay an answer to the old one"
+)
+
+
 def fingerprint(prompt: Prompt, *, schema: type[BaseModel], tier: ModelTier) -> str:
     canonical = json.dumps(
         {
             "tier": tier.value,
-            "schema": schema.__name__,
+            "schema": schema.model_json_schema(),
             "instructions": prompt.instructions,
             "utterance": prompt.utterance,
             "media": [
@@ -97,26 +103,38 @@ class RecordedModel(ModelPort):
     def _diagnose(self, prompt: Prompt, schema: type[BaseModel], tier: ModelTier) -> str | None:
         for path in sorted(self._directory.glob("*.json")):
             recorded = json.loads(path.read_text())
-            if (
+            if not (
                 recorded.get("tier") == tier.value
                 and recorded.get("schema") == schema.__name__
                 and recorded.get("utterance") == prompt.utterance
-                and recorded.get("instructions") != prompt.instructions
             ):
+                continue
+            if recorded.get("instructions") != prompt.instructions:
                 return PROMPT_CHANGED
+            return SCHEMA_CHANGED
         return None
 
 
 class RecordingModel(ModelPort):
+    """Asks the live model once per question, so a run's recordings agree with each other."""
+
     def __init__(self, live: ModelPort, directory: Path) -> None:
         self._live = live
         self._directory = directory
         self._pending: dict[str, str] = {}
+        self._answered: dict[str, Completion[BaseModel]] = {}
 
     async def complete[T: BaseModel](
         self, prompt: Prompt, *, schema: type[T], tier: ModelTier
     ) -> Completion[T]:
+        key = fingerprint(prompt, schema=schema, tier=tier)
+        if key in self._answered:
+            return Completion(
+                value=schema.model_validate(self._answered[key].value.model_dump()),
+                usage=self._answered[key].usage,
+            )
         completion = await self._live.complete(prompt, schema=schema, tier=tier)
+        self._answered[key] = completion
         recording = {
             "tier": tier.value,
             "schema": schema.__name__,
@@ -127,7 +145,6 @@ class RecordingModel(ModelPort):
                 mode="json", exclude={"step", "prompt_version", "input_modality"}
             ),
         }
-        key = fingerprint(prompt, schema=schema, tier=tier)
         self._pending[key] = json.dumps(recording, indent=2) + "\n"
         return completion
 
