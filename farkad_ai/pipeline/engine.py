@@ -2,34 +2,47 @@ from __future__ import annotations
 
 import logging
 
-from farkad_ai.extraction.port import PillarConfigProtocol, PillarExtractionPort
+from farkad_ai.extraction.adaptive import AdaptiveExtractor
+from farkad_ai.extraction.extractor import INSTRUCTIONS as EXTRACTION
+from farkad_ai.extraction.extractor import PillarExtractor
+from farkad_ai.extraction.port import TrackedPillar
+from farkad_ai.models.port import ModelPort
 from farkad_ai.pipeline.specialists import Extracted, Failed, extract_each
 from farkad_ai.pipeline.types import (
+    CaptureEnginePort,
     CaptureOutcome,
-    CapturePipelinePort,
     CaptureRequest,
     Logged,
     NothingToLog,
     PillarEntries,
     PillarRefused,
 )
+from farkad_ai.prompts import PromptAsset
+from farkad_ai.routing.pass_one import INSTRUCTIONS as ROUTING
+from farkad_ai.routing.pass_one import PillarRegistryProtocol
 from farkad_ai.routing.router import NotApplicable, Routed, Router
 
 _log = logging.getLogger(__name__)
 
 
-class TwoPassPipeline[Config: PillarConfigProtocol](CapturePipelinePort[Config]):
+class CaptureEngine(CaptureEnginePort):
+    """Routes a capture once, then extracts each tracked pillar it names, side by side."""
+
     def __init__(
         self,
-        router: Router,
-        extractor: PillarExtractionPort[Config],
+        model: ModelPort,
+        catalogue: PillarRegistryProtocol,
+        *,
+        routing_prompt: PromptAsset = ROUTING,
+        extraction_prompt: PromptAsset = EXTRACTION,
     ) -> None:
-        self._router = router
-        self._extractor = extractor
+        self._router = Router(model, catalogue, instructions=routing_prompt)
+        self._extractor = AdaptiveExtractor(PillarExtractor(model, instructions=extraction_prompt))
 
-    async def run(self, request: CaptureRequest[Config]) -> CaptureOutcome:
+    async def capture(self, request: CaptureRequest) -> CaptureOutcome:
+        tracked = {pillar.pillar: pillar for pillar in request.tracked}
         routed = await self._router.route(
-            request.profile,
+            frozenset(tracked),
             text=request.text,
             media=request.media,
             briefing=request.briefing,
@@ -45,14 +58,16 @@ class TwoPassPipeline[Config: PillarConfigProtocol](CapturePipelinePort[Config])
                 )
             case Routed():
                 _log.info("routed", extra={"pillars": sorted(routed.pillars)})
-                return await self._extract(routed, request)
+                return await self._extract(routed, request, tracked)
 
-    async def _extract(self, routed: Routed, request: CaptureRequest[Config]) -> Logged:
+    async def _extract(
+        self, routed: Routed, request: CaptureRequest, tracked: dict[str, TrackedPillar]
+    ) -> Logged:
         attempts = await extract_each(
             self._extractor,
             routed.mentions,
             routed.transcript,
-            request.profile,
+            tracked,
             media=request.media,
             briefing=request.briefing,
         )

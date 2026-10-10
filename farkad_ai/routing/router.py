@@ -3,7 +3,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Protocol
 
 from farkad_ai.models.port import ModelPort
 from farkad_ai.prompts import PromptAsset, briefed
@@ -50,10 +49,6 @@ class NotApplicable:
 RoutingOutcome = Routed | NotApplicable
 
 
-class TrackingProfileProtocol(Protocol):
-    def restrict(self, pillars: frozenset[str]) -> frozenset[str]: ...
-
-
 class Router:
     def __init__(
         self,
@@ -69,7 +64,7 @@ class Router:
 
     async def route(
         self,
-        profile: TrackingProfileProtocol,
+        tracked: frozenset[str],
         *,
         text: str = "",
         media: tuple[MediaBlob, ...] = (),
@@ -85,11 +80,9 @@ class Router:
         completion: Completion[PassOne] = await self._model.complete(
             prompt, schema=PassOne, tier=ModelTier.fast
         )
-        return self.decide(completion.value, profile, completion.usage)
+        return self.decide(completion.value, tracked, completion.usage)
 
-    def decide(
-        self, heard: PassOne, profile: TrackingProfileProtocol, usage: Usage
-    ) -> RoutingOutcome:
+    def decide(self, heard: PassOne, tracked: frozenset[str], usage: Usage) -> RoutingOutcome:
         if not heard.is_health_related:
             return NotApplicable(
                 transcript=heard.transcript,
@@ -100,7 +93,7 @@ class Router:
 
         known = [mention for mention in heard.mentions if self._registry.knows(mention.pillar)]
         named = frozenset(mention.pillar for mention in known)
-        pillars = profile.restrict(named)
+        pillars = named & tracked
         if not pillars:
             return NotApplicable(
                 transcript=heard.transcript,
