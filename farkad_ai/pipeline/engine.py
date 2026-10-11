@@ -7,7 +7,7 @@ from farkad_ai.extraction.extractor import INSTRUCTIONS as EXTRACTION
 from farkad_ai.extraction.extractor import PillarExtractor
 from farkad_ai.extraction.port import TrackedPillar
 from farkad_ai.models.port import ModelPort
-from farkad_ai.pipeline.specialists import Extracted, Failed, extract_each
+from farkad_ai.pipeline.specialists import Extracted, extract_each
 from farkad_ai.pipeline.types import (
     CaptureEnginePort,
     CaptureOutcome,
@@ -76,8 +76,8 @@ class CaptureEngine(CaptureEnginePort):
         usages = [routed.usage]
         for attempt in attempts:
             match attempt:
-                case Failed(pillar=pillar, because=because):
-                    refused.append(PillarRefused(pillar=pillar, because=because))
+                case PillarRefused():
+                    refused.append(attempt)
                 case Extracted(pillar=pillar, result=result):
                     usages.append(result.usage)
                     extracted.append(PillarEntries(pillar=pillar, entries=result.entries))
