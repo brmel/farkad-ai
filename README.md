@@ -71,8 +71,8 @@ Patterns from Anthropic's [Building effective agents](https://www.anthropic.com/
 
 | | Technique | Definition | Implementation |
 | :-: | --- | --- | --- |
-| ✅ | Long-term memory | Cross-session user preferences | Up to 40 stated facts and habits; captures receive max 300 chars: [`memory/`](farkad_ai/memory) |
-| ✅ | Few-shot examples | In-prompt demonstrations | Domain-specific prompt examples: [`prompts/assets/extraction.txt`](farkad_ai/prompts/assets/extraction.txt) |
+| ✅ | Long-term memory | Cross-session user preferences | Up to 40 stated facts, beside the habits the consumer counts; captures receive max 300 chars: [`memory/`](farkad_ai/memory) |
+| ✅ | Few-shot examples | In-prompt demonstrations | Each pillar's worked examples, supplied by the consumer as `TrackedPillar.examples`: [`extraction/port.py`](farkad_ai/extraction/port.py) |
 | ✅ | Prompt versioning | Cryptographic prompt tracking | SHA-256 asset content addressing: [`prompts/`](farkad_ai/prompts) |
 | | RAG | Vector search over external corpora | User memory sheets fit entirely in context |
 
@@ -134,7 +134,7 @@ outcome = await engine.capture(CaptureRequest(tracked=(pillar, ...), text="two e
 ```
 
 `CaptureEngine` routes once, extracts every tracked pillar the capture names side by side, and
-answers `Logged` or `NothingToLog`. The consumer supplies two things: a `ModelPort`, and each
+answers `Logged` or `NothingToLog`. The consumer supplies three things: a `ModelPort`, the catalogue Pass 1 routes over, and each
 `TrackedPillar` — its title, guidance, worked examples, entry schema and review. Its
 `routing_prompt` and `extraction_prompt` replace either stage's `PromptAsset`.
 
@@ -153,6 +153,7 @@ farkad_ai/
 ├── memory/       Fact and habit inference
 ├── prompts/      Content-addressed SHA-256 prompt assets
 ├── eval/         Gold dataset benchmark and scoring harness
+├── types.py      Shared values: prompts, tiers, media, usage, refusals
 └── cli.py        CLI entrypoints: prompts, route
 tests/            Offline tests against scripted answers
 ```
