@@ -1,5 +1,4 @@
-"""The shape of a counted habit; the counting needs the product's topic definitions and is not
-part of this package."""
+"""The shape of a counted habit; the consumer does the counting."""
 
 from __future__ import annotations
 

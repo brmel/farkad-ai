@@ -1,4 +1,3 @@
-# `security-extended` over the default set: on a package this small it costs minutes.
 name: codeql
 
 on:

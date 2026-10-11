@@ -1,5 +1,3 @@
-# A vulnerable pin here is a vulnerable pin in whatever installs `farkad-ai`. One grouped pull
-# request per ecosystem per week; majors stay out, so one blocked major holds back no minor.
 version: 2
 updates:
   - package-ecosystem: pip
