@@ -23,7 +23,6 @@ class AdaptiveExtractor(PillarExtractionPort):
         try:
             return await self._extractor.extract(context, tier=ModelTier.fast)
         except ModelUnavailableError as refusal:
-            # A quota, a key or an outage refuses both tiers; only a schema escalates.
             if refusal.because is not Unavailability.output_did_not_parse:
                 raise
             _log.info(
