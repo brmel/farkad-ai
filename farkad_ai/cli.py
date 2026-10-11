@@ -50,7 +50,8 @@ def build_parser() -> argparse.ArgumentParser:
     route.add_argument("--text", type=str, default="", help="Capture text")
     route.add_argument(
         "--provider",
-        choices=[provider.value for provider in ProviderName],
+        type=ProviderName,
+        choices=list(ProviderName),
         default=ProviderName.recorded,
     )
     route.add_argument("--fixtures", type=Path, help="Fixtures directory")

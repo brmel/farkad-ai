@@ -11,7 +11,8 @@ from farkad_ai.extraction.port import (
     PillarExtractionPort,
     TrackedPillar,
 )
-from farkad_ai.types import MediaBlob, ModelUnavailableError, Unavailability
+from farkad_ai.pipeline.types import PillarRefused
+from farkad_ai.types import MediaBlob, ModelUnavailableError
 
 _log = logging.getLogger(__name__)
 
@@ -22,13 +23,7 @@ class Extracted:
     result: ExtractionResult
 
 
-@dataclass(frozen=True, slots=True)
-class Failed:
-    pillar: str
-    because: Unavailability
-
-
-Attempt = Extracted | Failed
+Attempt = Extracted | PillarRefused
 
 
 async def extract_each(
@@ -82,4 +77,4 @@ async def _attempt(
                 "because": unavailable.because.value,
             },
         )
-        return Failed(pillar=pillar.pillar, because=unavailable.because)
+        return PillarRefused(pillar=pillar.pillar, because=unavailable.because)
