@@ -3,13 +3,11 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
-import logging
 import sys
 from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
-from farkad_ai.logging import configure_logging
 from farkad_ai.models.factory import ProviderName, create_model
 from farkad_ai.prompts import list_prompts
 from farkad_ai.routing.pass_one import PillarRegistryProtocol, PillarSpecProtocol
@@ -46,8 +44,6 @@ class DefaultRegistry(PillarRegistryProtocol):
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="farkad-ai", description="Farkad AI Engine")
-    p.add_argument("--verbose", action="store_true", help="Enable debug logging")
-    p.add_argument("--json-logs", action="store_true", help="Format logs as JSON")
     sub = p.add_subparsers(dest="command", required=True)
 
     route = sub.add_parser("route", help="Route capture")
@@ -100,16 +96,11 @@ def handle_prompts(args: argparse.Namespace) -> int:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
-    log_level = logging.DEBUG if args.verbose else logging.INFO
-    configure_logging(level=log_level, json_format=args.json_logs)
     match args.command:
         case "route":
             return handle_route(args)
-        case "prompts":
-            return handle_prompts(args)
         case _:
-            parser.print_help()
-            return 1
+            return handle_prompts(args)
 
 
 if __name__ == "__main__":

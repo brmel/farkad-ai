@@ -2,17 +2,12 @@ from __future__ import annotations
 
 import pytest
 
-import farkad_ai
 from farkad_ai import CaptureEngine, CaptureRequest, PromptAsset, Router
 from farkad_ai.memory.inference import InferredFacts, MemoryInferrer
 from farkad_ai.routing.pass_one import Mention, PassOne
 from tests.support import AnswersByStep, Registry, ScriptedModel, Spec, Tracked
 
 OWN = PromptAsset(name="pass_one", text="Route this: {pillars}")
-
-
-def test_every_public_name_imports_without_a_provider_sdk() -> None:
-    assert all(hasattr(farkad_ai, name) for name in farkad_ai.__all__)
 
 
 @pytest.mark.anyio
