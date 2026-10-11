@@ -39,7 +39,7 @@ Demonstrates production AI techniques, architectural boundaries, and deliberate 
 | ✅ | [Image understanding](https://ai.google.dev/gemini-api/docs/image-understanding) | Multimodal input parsing | Photos travel as `MediaBlob` parts beside the text: [`types.py`](farkad_ai/types.py) |
 | ✅ | [Thinking budget](https://ai.google.dev/gemini-api/docs/thinking) | Reasoning token allowance | A provider-neutral `Reasoning` level per tier ([`models/port.py`](farkad_ai/models/port.py)), mapped to Gemini's budget in [`models/vertex.py`](farkad_ai/models/vertex.py); an adapter that cannot honour it refuses |
 | ✅ | [LLM cascade](https://arxiv.org/abs/2305.05176) | Fast tier first, escalate on error | Escalates when compact output fails schema validation: [`extraction/adaptive.py`](farkad_ai/extraction/adaptive.py) |
-| | [Provider fallback](https://docs.litellm.ai/docs/proxy/reliability) | Redundant provider failover | Offered by [`models/fallback.py`](farkad_ai/models/fallback.py); the product runs one provider |
+| | [Provider fallback](https://docs.litellm.ai/docs/proxy/reliability) | Redundant provider failover | The product runs one provider; a second is another `ModelPort` adapter |
 | | Streaming | Incremental token delivery | Full structured payload required before UI rendering |
 | | Context caching | Reusing prompt prefixes | Prefix reuse savings do not justify cache lifecycle complexity |
 | | Batch inference | Asynchronous queued processing | Interactive user latency required |
