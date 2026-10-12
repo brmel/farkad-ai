@@ -1,11 +1,13 @@
 # Contributing
 
 - **A sentence the engine gets wrong**: open a [wrong extraction](https://github.com/brmel/farkad-ai/issues/new?template=wrong_extraction.yml)
-  issue with the exact words and what you expected. These become gold-set cases.
+  issue.
 - **A bug**: open a [bug report](https://github.com/brmel/farkad-ai/issues/new?template=bug_report.yml).
 - **An idea**: open an issue before writing code. Adapters for other providers and gold-set cases
   in more languages are welcome.
-- **A vulnerability**: follow [SECURITY.md](SECURITY.md), never a public issue.
+- **A vulnerability**: follow [SECURITY.md](SECURITY.md).
+
+A pull request holds one change and a test that fails without it.
 
 ## Setting up
 
@@ -18,8 +20,6 @@ ruff check . && ruff format --check . && mypy farkad_ai tests && pytest
 
 Tests run offline on scripted answers; no API key is needed. CI runs the same checks with no
 provider SDK installed, so run them in a venv holding only `.[dev]`.
-
-One change per pull request, with a test that fails without it.
 
 ## Releasing
 
