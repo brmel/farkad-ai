@@ -27,7 +27,7 @@ Attempt = Extracted | PillarRefused
 
 
 async def extract_each(
-    engine: PillarExtractionPort,
+    extractor: PillarExtractionPort,
     mentions: Mapping[str, tuple[str, ...]],
     transcript: str,
     tracked: Mapping[str, TrackedPillar],
@@ -38,7 +38,7 @@ async def extract_each(
         await asyncio.gather(
             *(
                 _attempt(
-                    engine,
+                    extractor,
                     tracked[pillar],
                     mentions[pillar],
                     transcript,
@@ -52,12 +52,13 @@ async def extract_each(
 
 
 async def _attempt(
-    engine: PillarExtractionPort,
+    extractor: PillarExtractionPort,
     pillar: TrackedPillar,
     said: tuple[str, ...],
     transcript: str,
-    media: tuple[MediaBlob, ...] = (),
-    briefing: str = "",
+    *,
+    media: tuple[MediaBlob, ...],
+    briefing: str,
 ) -> Attempt:
     context = ExtractionContext(
         pillar=pillar,
@@ -67,7 +68,7 @@ async def _attempt(
         briefing=briefing,
     )
     try:
-        return Extracted(pillar=pillar.pillar, result=await engine.extract(context))
+        return Extracted(pillar=pillar.pillar, result=await extractor.extract(context))
     except ModelUnavailableError as unavailable:
         _log.warning(
             "pillar extraction failed",

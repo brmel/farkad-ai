@@ -15,18 +15,21 @@ authors = [
 keywords = [
     "llm",
     "structured-output",
+    "structured-extraction",
     "multimodal",
     "gemini",
-    "evaluation",
-    "health",
+    "vertex-ai",
+    "pydantic",
+    "llm-evaluation",
+    "health-tracking",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "Intended Audience :: Healthcare Industry",
     "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
 ]
 dependencies = [
     "pydantic>=2.9,<3",
@@ -53,7 +56,6 @@ dev = [
 Homepage = "https://farkad.web.app"
 Repository = "https://github.com/brmel/farkad-ai"
 Issues = "https://github.com/brmel/farkad-ai/issues"
-Documentation = "https://github.com/brmel/farkad-ai#readme"
 
 [project.scripts]
 farkad-ai = "farkad_ai.cli:main"

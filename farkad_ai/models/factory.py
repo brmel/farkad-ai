@@ -24,11 +24,11 @@ def create_model(provider: ProviderName, *, fixtures_dir: Path | None) -> ModelP
 
             return VertexModel(genai.Client(vertexai=True))
         case ProviderName.openai:
-            from openai import AsyncOpenAI  # type: ignore[import-not-found]
+            from openai import AsyncOpenAI
 
             return OpenAIModel(AsyncOpenAI())
         case ProviderName.anthropic:
-            from anthropic import AsyncAnthropic  # type: ignore[import-not-found]
+            from anthropic import AsyncAnthropic
 
             return AnthropicModel(AsyncAnthropic())
         case ProviderName.recorded:

@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thank you. Cases like this become gold-set tests. Please leave out anything you would not want public.
+        Cases like this become gold-set tests. Leave out anything you would not want public.
   - type: textarea
     id: input
     attributes:
