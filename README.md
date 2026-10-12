@@ -3,47 +3,63 @@
 [![CI](https://github.com/brmel/farkad-ai/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/brmel/farkad-ai/actions/workflows/ci.yml)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 
-The extraction engine behind [Farkad](https://farkad.web.app): it turns a sentence, a voice note or
-a photo into typed health entries. One routing call reads the capture and names the pillars it
-mentions (food, water, sleep…); one extraction call per tracked pillar it names then runs in
-parallel and answers in the schema the consumer supplies. Storage, auth and billing stay with the consumer.
+One sentence about your day, typed, spoken or photographed, becomes typed health entries — in
+English, French, Arabic, or several of them at once. The engine behind
+[Farkad](https://farkad.web.app).
 
-## Install
+```text
+"شربت كأسين ماء et j'ai couru 5 kilometres"        Arabic, then French, in one breath
+
+route     water     ←  شربت كأسين ماء
+          exercise  ←  j'ai couru 5 kilometres
+extract   water     500 ml
+          exercise  cardio · 5,000 m
+```
+
+A recorded run on `gemini-3.5-flash-lite`: one routing call, then one extraction call per pillar,
+side by side. The transcript stays in the languages it was spoken in; it is never translated.
+
+## How it works
+
+1. **Route once.** One call transcribes the audio, keeps each part in its own language, and splits
+   the log into the pillars it mentions (food, water, sleep…).
+2. **Extract in parallel.** Each mentioned pillar gets its own call, constrained to the schema the
+   consumer supplies, with that pillar's guidance and examples in the user's units.
+3. **Validate, then escalate.** Every answer is parsed with Pydantic. One that fails is asked again
+   on the stronger tier. A refused pillar is reported with its reason; the others keep their
+   entries.
+
+Facts the user stated, such as "I'm vegan", are given back to every capture. Storage, auth and billing stay with the consumer.
+
+## Try it
 
 ```bash
 pip install "farkad-ai[google] @ git+https://github.com/brmel/farkad-ai"
+export GOOGLE_CLOUD_PROJECT=your-project GOOGLE_CLOUD_LOCATION=global
+farkad-ai route --provider vertex --text "two eggs, a big glass of water, and I slept badly"
 ```
 
-The core imports no provider SDK. Pick one as an extra: `google` (Gemini on Vertex AI),
-`anthropic` or `openai`.
+The core imports no provider SDK; pick one extra: `google` (Gemini on Vertex AI), `anthropic` or
+`openai`.
 
-## Usage
+## Use it
 
 ```python
-from google import genai
-
 from farkad_ai import CaptureEngine, CaptureRequest, Logged, NothingToLog
 from farkad_ai.models.vertex import VertexModel
 
 engine = CaptureEngine(VertexModel(genai.Client(vertexai=True)), catalogue)
-outcome = await engine.capture(CaptureRequest(tracked=(food, water), text="two eggs and a glass"))
 
-match outcome:
+match await engine.capture(CaptureRequest(tracked=(food, water), text="two eggs and a glass")):
     case Logged(extracted=extracted, refused=refused):
-        print(extracted, refused)
+        ...
     case NothingToLog(reason=reason):
-        print(reason)
+        ...
 ```
 
-`catalogue` is every pillar routing may name (`PillarRegistryProtocol`). Each tracked pillar is a
-`TrackedPillar`: title, guidance, worked examples, entry schema and a `review` of each entry.
-
-From the command line:
-
-```bash
-export GOOGLE_CLOUD_PROJECT=your-project GOOGLE_CLOUD_LOCATION=global
-farkad-ai route --provider vertex --text "two eggs, a big glass of water, and I slept badly"
-```
+The pillars are yours. `catalogue` is every pillar routing may name; each tracked pillar carries a
+title, guidance, worked examples, an entry schema and a review of each entry. `tests/support.py`
+builds small ones.
 
 ## AI techniques
 
