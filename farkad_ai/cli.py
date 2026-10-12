@@ -4,40 +4,16 @@ import argparse
 import asyncio
 import json
 import sys
-from collections.abc import Iterator
-from dataclasses import dataclass
 from pathlib import Path
 
+from farkad_ai.eval.run import RECORDINGS, evaluate, replace_recordings, report
+from farkad_ai.examples import EXAMPLE_PILLARS, ExampleCatalogue
 from farkad_ai.models.factory import ProviderName, create_model
+from farkad_ai.models.recorded import RecordingModel
 from farkad_ai.prompts import list_prompts
-from farkad_ai.routing.pass_one import PillarRegistryProtocol, PillarSpecProtocol
 from farkad_ai.routing.router import NotApplicable, Routed, Router
 
-
-@dataclass(frozen=True, slots=True)
-class CliPillarSpec:
-    pillar: str
-    intent: str
-
-
-CLI_SPECS: tuple[CliPillarSpec, ...] = (
-    CliPillarSpec("food", "meals, snacks, drinks that carry energy, and protein shakes"),
-    CliPillarSpec("water", "water, tea, black coffee and other drinks without energy"),
-    CliPillarSpec("exercise", "workouts, sport, movement"),
-    CliPillarSpec("sleep", "nights, naps and sleep quality"),
-    CliPillarSpec("supplements", "vitamins, minerals, creatine and the rest"),
-    CliPillarSpec("drugs", "medications and pharmaceuticals"),
-    CliPillarSpec("recovery", "sauna, cold plunge, breathwork and other deliberate recovery"),
-)
-CLI_PILLARS = frozenset(spec.pillar for spec in CLI_SPECS)
-
-
-class DefaultRegistry(PillarRegistryProtocol):
-    def __iter__(self) -> Iterator[PillarSpecProtocol]:
-        return iter(CLI_SPECS)
-
-    def knows(self, route: str) -> bool:
-        return route in CLI_PILLARS
+CLI_PILLARS = frozenset(pillar.pillar for pillar in EXAMPLE_PILLARS)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -46,16 +22,28 @@ def build_parser() -> argparse.ArgumentParser:
 
     route = commands.add_parser("route", help="Route capture")
     route.add_argument("--text", type=str, default="", help="Capture text")
-    route.add_argument(
+    add_provider(route)
+    route.add_argument("--fixtures", type=Path, help="Fixtures directory")
+
+    scored = commands.add_parser(
+        "eval", help="Score the example gold set: routing, fields and cost per language"
+    )
+    add_provider(scored)
+    scored.add_argument(
+        "--record", action="store_true", help="Replace the committed answers with this run's"
+    )
+
+    commands.add_parser("prompts", help="List active prompt assets and versions")
+    return parser
+
+
+def add_provider(command: argparse.ArgumentParser) -> None:
+    command.add_argument(
         "--provider",
         type=ProviderName,
         choices=list(ProviderName),
         default=ProviderName.recorded,
     )
-    route.add_argument("--fixtures", type=Path, help="Fixtures directory")
-
-    commands.add_parser("prompts", help="List active prompt assets and versions")
-    return parser
 
 
 def print_routing(args: argparse.Namespace) -> int:
@@ -64,7 +52,7 @@ def print_routing(args: argparse.Namespace) -> int:
     except (ValueError, ImportError) as error:
         sys.stderr.write(f"Error initializing model: {error}\n")
         return 1
-    outcome = asyncio.run(Router(model, DefaultRegistry()).route(CLI_PILLARS, text=args.text))
+    outcome = asyncio.run(Router(model, ExampleCatalogue()).route(CLI_PILLARS, text=args.text))
     match outcome:
         case Routed():
             answer = {
@@ -85,6 +73,21 @@ def print_routing(args: argparse.Namespace) -> int:
     return 0
 
 
+def print_eval(args: argparse.Namespace) -> int:
+    try:
+        model = create_model(args.provider, fixtures_dir=RECORDINGS)
+    except (ValueError, ImportError) as error:
+        sys.stderr.write(f"Error initializing model: {error}\n")
+        return 1
+    if not args.record:
+        sys.stdout.write(report(asyncio.run(evaluate(model))))
+        return 0
+    recorder = RecordingModel(model, RECORDINGS)
+    run = asyncio.run(evaluate(recorder))
+    sys.stdout.write(f"{report(run)}Recorded {replace_recordings(recorder)} answers\n")
+    return 0
+
+
 def print_prompts() -> int:
     for asset in list_prompts():
         sys.stdout.write(f"{asset.name:<15} (version: {asset.version}) [{len(asset.text)} chars]\n")
@@ -96,5 +99,7 @@ def main(argv: list[str] | None = None) -> int:
     match args.command:
         case "route":
             return print_routing(args)
+        case "eval":
+            return print_eval(args)
         case _:
             return print_prompts()

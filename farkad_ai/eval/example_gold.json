@@ -1,0 +1,116 @@
+{
+  "why": "Three sentences per language, scored against the example pillars in farkad_ai/examples.py. Only what the sentence states is scored: a name or a glass's volume the model must guess is left out. The code-switched sentences mix Arabic or Moroccan Darija with French, as they are spoken.",
+  "cases": [
+    {
+      "language": "en",
+      "utterance": "I drank 500 ml of water",
+      "routes": ["water"],
+      "expected": {"water": [{"category": "water", "volume_ml": 500}]}
+    },
+    {
+      "language": "en",
+      "utterance": "two eggs, a glass of water and a twenty minute walk",
+      "routes": ["exercise", "food", "water"],
+      "expected": {
+        "food": [{"count": 2}],
+        "water": [{"category": "water"}],
+        "exercise": [{"category": "walk", "duration_minutes": 20}]
+      }
+    },
+    {
+      "language": "en",
+      "utterance": "took 500mg of paracetamol and slept seven hours",
+      "routes": ["drugs", "sleep"],
+      "expected": {
+        "drugs": [{"dose_mg": 500}],
+        "sleep": [{"category": "night", "duration_minutes": 420}]
+      }
+    },
+    {
+      "language": "fr",
+      "utterance": "j'ai bu 500 ml d'eau et dormi sept heures",
+      "routes": ["sleep", "water"],
+      "expected": {
+        "water": [{"category": "water", "volume_ml": 500}],
+        "sleep": [{"category": "night", "duration_minutes": 420}]
+      }
+    },
+    {
+      "language": "fr",
+      "utterance": "deux œufs et un café",
+      "routes": ["food", "water"],
+      "expected": {"food": [{"count": 2}], "water": [{"category": "coffee"}]}
+    },
+    {
+      "language": "fr",
+      "utterance": "trente minutes de vélo ce matin",
+      "routes": ["exercise"],
+      "expected": {"exercise": [{"category": "cycle", "duration_minutes": 30}]}
+    },
+    {
+      "language": "ar",
+      "utterance": "أخذت 2000 وحدة من فيتامين د",
+      "routes": ["supplements"],
+      "expected": {"supplements": [{"category": "vitamin"}]}
+    },
+    {
+      "language": "ar",
+      "utterance": "عشرون دقيقة في الساونا",
+      "routes": ["recovery"],
+      "expected": {"recovery": [{"category": "sauna", "duration_minutes": 20}]}
+    },
+    {
+      "language": "ar",
+      "utterance": "ما هو الطقس",
+      "routes": []
+    },
+    {
+      "language": "es",
+      "utterance": "bebí dos vasos de agua",
+      "routes": ["water"],
+      "expected": {"water": [{"category": "water", "count": 2}]}
+    },
+    {
+      "language": "es",
+      "utterance": "corrí cinco kilómetros",
+      "routes": ["exercise"],
+      "expected": {"exercise": [{"category": "run", "distance_m": 5000}]}
+    },
+    {
+      "language": "es",
+      "utterance": "dormí una siesta de veinte minutos y tomé un ibuprofeno de 400 mg",
+      "routes": ["drugs", "sleep"],
+      "expected": {
+        "sleep": [{"category": "nap", "duration_minutes": 20}],
+        "drugs": [{"dose_mg": 400}]
+      }
+    },
+    {
+      "language": "code-switched",
+      "utterance": "شربت كأسين ماء et j'ai couru 5 kilometres",
+      "routes": ["exercise", "water"],
+      "expected": {
+        "water": [{"category": "water", "count": 2}],
+        "exercise": [{"category": "run", "distance_m": 5000}]
+      }
+    },
+    {
+      "language": "code-switched",
+      "utterance": "نعست غير خمس سوايع cette nuit, puis j'ai pris un café ce matin",
+      "routes": ["sleep", "water"],
+      "expected": {
+        "sleep": [{"category": "night", "duration_minutes": 300}],
+        "water": [{"category": "coffee"}]
+      }
+    },
+    {
+      "language": "code-switched",
+      "utterance": "مشيت ثلاثين دقيقة puis j'ai bu un grand verre d'eau",
+      "routes": ["exercise", "water"],
+      "expected": {
+        "exercise": [{"category": "walk", "duration_minutes": 30}],
+        "water": [{"category": "water"}]
+      }
+    }
+  ]
+}
