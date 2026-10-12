@@ -29,24 +29,22 @@ CLI_SPECS: tuple[CliPillarSpec, ...] = (
     CliPillarSpec("drugs", "medications and pharmaceuticals"),
     CliPillarSpec("recovery", "sauna, cold plunge, breathwork and other deliberate recovery"),
 )
+CLI_PILLARS = frozenset(spec.pillar for spec in CLI_SPECS)
 
 
 class DefaultRegistry(PillarRegistryProtocol):
-    def __init__(self) -> None:
-        self._known = frozenset(s.pillar for s in CLI_SPECS)
-
     def __iter__(self) -> Iterator[PillarSpecProtocol]:
         return iter(CLI_SPECS)
 
     def knows(self, route: str) -> bool:
-        return route in self._known
+        return route in CLI_PILLARS
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="farkad-ai", description="Farkad AI Engine")
-    sub = p.add_subparsers(dest="command", required=True)
+    parser = argparse.ArgumentParser(prog="farkad-ai", description="Farkad AI Engine")
+    commands = parser.add_subparsers(dest="command", required=True)
 
-    route = sub.add_parser("route", help="Route capture")
+    route = commands.add_parser("route", help="Route capture")
     route.add_argument("--text", type=str, default="", help="Capture text")
     route.add_argument(
         "--provider",
@@ -56,21 +54,20 @@ def build_parser() -> argparse.ArgumentParser:
     )
     route.add_argument("--fixtures", type=Path, help="Fixtures directory")
 
-    sub.add_parser("prompts", help="List active prompt assets and versions")
-    return p
+    commands.add_parser("prompts", help="List active prompt assets and versions")
+    return parser
 
 
-def handle_route(args: argparse.Namespace) -> int:
+def print_routing(args: argparse.Namespace) -> int:
     try:
         model = create_model(args.provider, fixtures_dir=args.fixtures)
     except (ValueError, ImportError) as error:
         sys.stderr.write(f"Error initializing model: {error}\n")
         return 1
-    every_pillar = frozenset(spec.pillar for spec in CLI_SPECS)
-    outcome = asyncio.run(Router(model, DefaultRegistry()).route(every_pillar, text=args.text))
+    outcome = asyncio.run(Router(model, DefaultRegistry()).route(CLI_PILLARS, text=args.text))
     match outcome:
         case Routed():
-            data = {
+            answer = {
                 "applicable": True,
                 "transcript": outcome.transcript,
                 "language": outcome.language,
@@ -78,27 +75,26 @@ def handle_route(args: argparse.Namespace) -> int:
                 "mentions": {pillar: list(said) for pillar, said in outcome.mentions.items()},
             }
         case NotApplicable():
-            data = {
+            answer = {
                 "applicable": False,
                 "transcript": outcome.transcript,
                 "language": outcome.language,
                 "reason": outcome.reason.value,
             }
-    sys.stdout.write(f"{json.dumps(data, indent=2)}\n")
+    sys.stdout.write(f"{json.dumps(answer, indent=2)}\n")
     return 0
 
 
-def handle_prompts(args: argparse.Namespace) -> int:
+def print_prompts() -> int:
     for asset in list_prompts():
         sys.stdout.write(f"{asset.name:<15} (version: {asset.version}) [{len(asset.text)} chars]\n")
     return 0
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = build_parser()
-    args = parser.parse_args(argv)
+    args = build_parser().parse_args(argv)
     match args.command:
         case "route":
-            return handle_route(args)
+            return print_routing(args)
         case _:
-            return handle_prompts(args)
+            return print_prompts()

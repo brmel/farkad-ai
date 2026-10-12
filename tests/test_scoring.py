@@ -1,7 +1,7 @@
 from farkad_ai.eval.scoring import RunScore, score_capture
 
 
-def test_score_capture_perfect_match() -> None:
+def test_a_capture_matching_every_field_scores_no_wrong_field() -> None:
     expected = {
         "nutrition": [{"name": "Apple", "calories": 95}],
     }
@@ -22,7 +22,7 @@ def test_score_capture_perfect_match() -> None:
     assert score.fields[0].is_match
 
 
-def test_score_capture_wrong_fields() -> None:
+def test_each_wrong_field_counts_against_field_accuracy() -> None:
     expected = {
         "nutrition": [{"name": "Apple", "calories": 95}],
     }

@@ -10,6 +10,11 @@ from farkad_ai.extraction.extractor import holds_nothing
 NUMERIC_TOLERANCE = 0.01
 
 
+class EmptyRunError(ValueError):
+    def __init__(self) -> None:
+        super().__init__("an eval run with no cases would score 100% and mean nothing")
+
+
 @dataclass(frozen=True, slots=True)
 class FieldScore:
     pillar: str
@@ -179,13 +184,13 @@ class RunScore:
 
 def _share(total: float, count: int) -> float:
     if count == 0:
-        raise ValueError("an eval run with no cases would score 100% and mean nothing")
+        raise EmptyRunError
     return total / count
 
 
 def _nearest_rank_percentile(values: list[float], share: float) -> float:
     if not values:
-        raise ValueError("an eval run with no cases would score 100% and mean nothing")
+        raise EmptyRunError
     ranked = sorted(values)
     index = math.ceil(share * len(ranked)) - 1
     return ranked[max(index, 0)]
