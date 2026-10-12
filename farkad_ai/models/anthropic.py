@@ -6,13 +6,11 @@ from collections.abc import Mapping
 from typing import Any
 
 try:
-    import anthropic  # type: ignore[import-not-found]
     from anthropic import APIError as AnthropicAPIError
     from anthropic import AsyncAnthropic
 
     _ANTHROPIC_AVAILABLE = True
 except ImportError:
-    anthropic = None
     AsyncAnthropic = Any
     AnthropicAPIError = Exception
     _ANTHROPIC_AVAILABLE = False

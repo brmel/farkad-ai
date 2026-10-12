@@ -1,163 +1,67 @@
-<div align="center">
-
 # farkad-ai
 
-The extraction engine behind [Farkad](https://farkad.web.app): converts sentences, audio, or photos into structured health entries.
-
 [![CI](https://github.com/brmel/farkad-ai/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/brmel/farkad-ai/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/brmel/farkad-ai/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/brmel/farkad-ai/actions/workflows/codeql.yml)
-[![Python 3.13](https://img.shields.io/badge/python-3.13-3776AB?logo=python&logoColor=white)](pyproject.toml)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
-[![Live demo](https://img.shields.io/badge/live%20demo-farkad.web.app-2ea44f)](https://farkad.web.app)
 
-[Try it live](#try-it-live) · [Design Choices](#design-choices) · [Stack](#stack) · [Quickstart](#quickstart) · [Contributing](CONTRIBUTING.md)
+The extraction engine behind [Farkad](https://farkad.web.app): it turns a sentence, a voice note or
+a photo into typed health entries. One routing call reads the capture and names the pillars it
+mentions (food, water, sleep…); one extraction call per named pillar then runs in parallel and
+answers in the schema the consumer supplies. Storage, auth and billing stay with the consumer.
 
-</div>
-
-## Try it live
-
-[**farkad.web.app**](https://farkad.web.app) and the mobile apps run this engine. A sentence like *"two eggs, a big glass of water, and I slept badly"* yields structured entries for food, water, and sleep.
-
-Production installs pinned releases from [GitHub Releases](https://github.com/brmel/farkad-ai/releases). This repository is the pure pipeline; storage, auth, and billing remain in the consumer backend.
-
-## Why this repository is public
-
-Demonstrates production AI techniques, architectural boundaries, and deliberate trade-offs in a shipped health product.
-
-## Design Choices
-
-✅ denotes utilized patterns; unmarked rows explain why alternatives were rejected.
-
-### In the product
-
-#### Models and inference
-
-| | Technique | Purpose | Implementation or Rationale |
-| :-: | --- | --- | --- |
-| ✅ | [Structured output](https://ai.google.dev/gemini-api/docs/structured-output) | Guaranteed JSON schemas | Gemini `response_schema`, Claude forced tool, OpenAI `response_format`: [`models/`](farkad_ai/models) |
-| ✅ | [Audio understanding](https://ai.google.dev/gemini-api/docs/audio) | Direct speech parsing without STT | Pass 1 transcribes and routes audio in one call: [`routing/`](farkad_ai/routing) |
-| ✅ | [Image understanding](https://ai.google.dev/gemini-api/docs/image-understanding) | Multimodal input parsing | Photos travel as `MediaBlob` parts beside the text: [`types.py`](farkad_ai/types.py) |
-| ✅ | [Thinking budget](https://ai.google.dev/gemini-api/docs/thinking) | Reasoning token allowance | A provider-neutral `Reasoning` level per tier ([`models/port.py`](farkad_ai/models/port.py)), mapped to Gemini's budget in [`models/vertex.py`](farkad_ai/models/vertex.py); an adapter that cannot honour it refuses |
-| ✅ | [LLM cascade](https://arxiv.org/abs/2305.05176) | Fast tier first, escalate on error | Escalates when compact output fails schema validation: [`extraction/adaptive.py`](farkad_ai/extraction/adaptive.py) |
-| | [Provider fallback](https://docs.litellm.ai/docs/proxy/reliability) | Redundant provider failover | The product runs one provider; a second is another `ModelPort` adapter |
-| | Streaming | Incremental token delivery | Full structured payload required before UI rendering |
-| | Context caching | Reusing prompt prefixes | Prefix reuse savings do not justify cache lifecycle complexity |
-| | Batch inference | Asynchronous queued processing | Interactive user latency required |
-| | Fine-tuning | Weight adaptation | Versioned prompts and golden datasets provide faster iteration |
-| | Self-hosted serving | On-premise model execution | Managed cloud endpoints prioritized |
-
-#### Workflow patterns
-
-Patterns from Anthropic's [Building effective agents](https://www.anthropic.com/research/building-effective-agents).
-
-| | Pattern | Mechanism | Implementation or Rationale |
-| :-: | --- | --- | --- |
-| ✅ | Prompt chaining | Sequential dependent execution | Pass 1 routing, then Pass 2 extraction: [`pipeline/engine.py`](farkad_ai/pipeline/engine.py) |
-| ✅ | Routing | Input classification to specialized prompts | Pass 1 maps text to active pillars: [`routing/`](farkad_ai/routing) |
-| ✅ | Parallelization | Concurrent independent calls | Parallel extraction across selected pillars: [`pipeline/specialists.py`](farkad_ai/pipeline/specialists.py) |
-| | Orchestrator-workers | Dynamic runtime task delegation | Fixed pillar domain boundaries make static dispatch faster and deterministic |
-| | Evaluator-optimizer | Critique and refinement loops | User validation and editing replaces autonomous review loops |
-
-#### Agents and tools
-
-| | Concept | Definition | Status |
-| :-: | --- | --- | --- |
-| | Autonomous agent | Model-directed step iteration | Deterministic pipelines are faster, cheaper, and reproducible |
-| | Tool calling | Model invokes external functions | Off for Gemini; Claude forced tools only deliver structured responses |
-| | Sub-agents | Autonomous agents delegating tasks | Specialist calls are parallel HTTP requests, not autonomous agents |
-| | MCP | Protocol connecting models to external tools | No external tools exposed during inference |
-
-#### Context and memory
-
-| | Technique | Definition | Implementation |
-| :-: | --- | --- | --- |
-| ✅ | Long-term memory | Cross-session user preferences | Up to 40 stated facts, beside the habits the consumer counts; captures receive max 300 chars: [`memory/`](farkad_ai/memory) |
-| ✅ | Few-shot examples | In-prompt demonstrations | Each pillar's worked examples, supplied by the consumer as `TrackedPillar.examples`: [`extraction/port.py`](farkad_ai/extraction/port.py) |
-| ✅ | Prompt versioning | Cryptographic prompt tracking | SHA-256 asset content addressing: [`prompts/`](farkad_ai/prompts) |
-| | RAG | Vector search over external corpora | User memory sheets fit entirely in context |
-
-#### Evaluation and operations
-
-| | Practice | Role | Implementation |
-| :-: | --- | --- | --- |
-| ✅ | Golden dataset | Regression evaluation | [`eval/scoring.py`](farkad_ai/eval/scoring.py) against [`eval/gold.json`](farkad_ai/eval/gold.json) |
-| ✅ | Record & replay | Deterministic offline test suite | [`models/recorded.py`](farkad_ai/models/recorded.py) |
-| ✅ | Guardrails | Input and output validation | Pass 1 filters non-health queries; Pydantic verifies schemas |
-| ✅ | Token tracking | Token and latency accounting | [`types.py`](farkad_ai/types.py) (`Usage`); billing logic isolated in backend |
-| ✅ | Human in the loop | Manual verification | All output remains editable by the user |
-
-## Stack
-
-- **Models:** Gemini on Vertex AI in production; Claude and OpenAI adapters behind the same port.
-- **SDKs:** `google-genai`, `anthropic`, `openai` (behind `ModelPort`).
-- **Runtime:** Python 3.13, Pydantic v2, AnyIO.
-- **Verification:** `mypy` (strict), `ruff`, `pytest`.
-
-## Quickstart
+## Install
 
 ```bash
-python3.13 -m venv .venv && source .venv/bin/activate
 pip install "farkad-ai[google] @ git+https://github.com/brmel/farkad-ai"
 ```
 
-Inspect versioned assets:
-```bash
-farkad-ai prompts
+The core imports no provider SDK. Pick one as an extra: `google` (Gemini on Vertex AI),
+`anthropic` or `openai`.
+
+## Usage
+
+```python
+from google import genai
+
+from farkad_ai import CaptureEngine, CaptureRequest, Logged, NothingToLog
+from farkad_ai.models.vertex import VertexModel
+
+engine = CaptureEngine(VertexModel(genai.Client(vertexai=True)), catalogue)
+outcome = await engine.capture(CaptureRequest(tracked=(food, water), text="two eggs and a glass"))
+
+match outcome:
+    case Logged(extracted=extracted, refused=refused):
+        print(extracted, refused)
+    case NothingToLog(reason=reason):
+        print(reason)
 ```
 
-Route a health utterance with Google Vertex AI:
+`catalogue` is every pillar routing may name (`PillarRegistryProtocol`). Each tracked pillar is a
+`TrackedPillar`: title, guidance, worked examples, entry schema and a `review` of each entry.
+
+From the command line:
+
 ```bash
 export GOOGLE_CLOUD_PROJECT=your-project GOOGLE_CLOUD_LOCATION=global
 farkad-ai route --provider vertex --text "two eggs, a big glass of water, and I slept badly"
 ```
 
-Output:
-```json
-{
-  "applicable": true,
-  "transcript": "two eggs, a big glass of water, and I slept badly",
-  "language": "en",
-  "pillars": ["food", "sleep", "water"],
-  "mentions": {
-    "food": ["two eggs"],
-    "sleep": ["I slept badly"],
-    "water": ["a big glass of water"]
-  }
-}
-```
+## AI techniques
 
-## Public interface
+| | Technique | Note |
+| :-: | --- | --- |
+| ✅ | [Structured output](https://ai.google.dev/gemini-api/docs/structured-output) | Every answer is validated against a Pydantic schema |
+| ✅ | [Multimodal input](https://ai.google.dev/gemini-api/docs/audio) (audio, image) | Audio is transcribed and routed in the same call |
+| ✅ | [Reasoning budget](https://ai.google.dev/gemini-api/docs/thinking) | Set per model tier |
+| ✅ | [Model cascade](https://arxiv.org/abs/2305.05176) | Fast tier first; the standard tier only when the answer fails validation |
+| ✅ | Provider-independent model port | Vertex AI, Anthropic, OpenAI, and record/replay for tests |
+| ✅ | Prompt versioning | A prompt's version is the hash of its text |
+| ✅ | Long-term memory | Facts the user states, given back to every capture |
+| ✅ | [Few-shot examples](https://arxiv.org/abs/2005.14165) | Per pillar, in the user's own units |
+| ✅ | Evaluation with a gold set | Routing, field accuracy and cost per capture |
+| | [RAG](https://arxiv.org/abs/2005.11401) | A user's memory fits in the prompt |
+| | Fine-tuning | Prompts and the gold set iterate faster |
+| | [Agents and tool calling](https://www.anthropic.com/research/building-effective-agents) | A fixed two-step pipeline is cheaper and reproducible |
+| | Streaming | An entry is shown only once it is complete |
+| | [Context caching](https://ai.google.dev/gemini-api/docs/caching) | The saving does not pay for managing a cache |
 
-```python
-engine = CaptureEngine(model, catalogue)
-outcome = await engine.capture(CaptureRequest(tracked=(pillar, ...), text="two eggs and a glass"))
-```
-
-`CaptureEngine` routes once, extracts every tracked pillar the capture names side by side, and
-answers `Logged` or `NothingToLog`. The consumer supplies three things: a `ModelPort`, the catalogue Pass 1 routes over, and each
-`TrackedPillar` — its title, guidance, worked examples, entry schema and review. Its
-`routing_prompt` and `extraction_prompt` replace either stage's `PromptAsset`.
-
-`from farkad_ai import …` is that provider-neutral core and imports no provider SDK. A provider
-is chosen explicitly — `farkad_ai.models.vertex`, `.anthropic` or `.openai` — and installed as
-its extra.
-
-## Repository layout
-
-```
-farkad_ai/
-├── routing/      Pass 1: applicability, language, pillar detection
-├── extraction/   Pass 2: typed entity extraction with adaptive cascade
-├── pipeline/     CaptureEngine: routing, then parallel specialists
-├── models/       Unified ModelPort (Vertex, Anthropic, OpenAI, Recorded)
-├── memory/       Fact and habit inference
-├── prompts/      Content-addressed SHA-256 prompt assets
-├── eval/         Gold dataset benchmark and scoring harness
-├── types.py      Shared values: prompts, tiers, media, usage, refusals
-└── cli.py        CLI entrypoints: prompts, route
-tests/            Offline tests against scripted answers
-```
-
-## Contributing & License
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md). Licensed under [Apache 2.0](LICENSE).
+[Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Apache 2.0](LICENSE)

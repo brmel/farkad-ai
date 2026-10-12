@@ -6,13 +6,11 @@ from collections.abc import Mapping
 from typing import Any
 
 try:
-    import openai  # type: ignore[import-not-found]
     from openai import APIError as OpenAIAPIError
     from openai import AsyncOpenAI
 
     _OPENAI_AVAILABLE = True
 except ImportError:
-    openai = None
     AsyncOpenAI = Any
     OpenAIAPIError = Exception
     _OPENAI_AVAILABLE = False

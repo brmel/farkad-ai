@@ -17,8 +17,6 @@ from farkad_ai.types import Completion, MediaBlob, ModelTier, PipelineStep, Prom
 
 
 class NothingToLogReason(StrEnum):
-    """Reason a capture logged nothing."""
-
     not_a_health_log = "not_a_health_log"
     no_enabled_pillar = "no_enabled_pillar"
 
@@ -29,17 +27,13 @@ class Routed:
     language: str
     pillars: frozenset[str]
     untracked: frozenset[str]
-    """What the intersection removed, so a partly untracked log still says so."""
     mentions: Mapping[str, tuple[str, ...]]
-    """What each tracked pillar records, decided once so no two pillars record one thing."""
     occurred_at_hint: StatedTime | None
     usage: Usage
 
 
 @dataclass(frozen=True, slots=True)
 class NotApplicable:
-    """No extraction call follows."""
-
     transcript: str
     language: str
     reason: NothingToLogReason

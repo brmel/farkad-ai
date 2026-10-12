@@ -11,15 +11,11 @@ from farkad_ai.types import MediaBlob, ModelTier, Usage
 
 @dataclass(frozen=True, slots=True)
 class Finding:
-    """Never rejects an entry; it lowers that field's confidence and asks for a look."""
-
     field: str
     reason: str
 
 
 class TrackedPillar(Protocol):
-    """A pillar as one user tracks it: everything extraction asks the consumer for."""
-
     @property
     def pillar(self) -> str: ...
 
@@ -52,8 +48,6 @@ class ExtractionContext:
 
 @dataclass(frozen=True, slots=True)
 class ExtractedEntry:
-    """A finding belongs to the entry it was found in, never to that entry's siblings."""
-
     values: dict[str, object]
     findings: tuple[Finding, ...]
 

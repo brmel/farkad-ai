@@ -25,8 +25,6 @@ class PillarEntries:
 
 @dataclass(frozen=True, slots=True)
 class PillarRefused:
-    """Reported beside the pillars that did come back, never instead of them."""
-
     pillar: str
     because: Unavailability
 
@@ -37,7 +35,6 @@ class Logged:
     language: str
     routes: frozenset[str]
     untracked: frozenset[str]
-    """Spoken about and not tracked, which a capture must say rather than drop."""
     occurred_at_hint: StatedTime | None
     extracted: tuple[PillarEntries, ...]
     refused: tuple[PillarRefused, ...]

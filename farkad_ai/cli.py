@@ -102,7 +102,3 @@ def main(argv: list[str] | None = None) -> int:
             return handle_route(args)
         case _:
             return handle_prompts(args)
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

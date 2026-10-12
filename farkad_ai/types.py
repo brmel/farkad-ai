@@ -15,8 +15,6 @@ class PipelineStep(StrEnum):
 
 
 class Reasoning(StrEnum):
-    """How much a model may think before answering, in words every provider can map."""
-
     none = "none"
     brief = "brief"
     thorough = "thorough"
@@ -28,8 +26,6 @@ class ModelTier(StrEnum):
 
 
 class InputModality(StrEnum):
-    """What a call carried, because a provider bills audio input at its own rate."""
-
     text = "text"
     audio = "audio"
     image = "image"
@@ -93,7 +89,6 @@ class Prompt:
 
     @property
     def input_modality(self) -> InputModality:
-        """Any audio makes it an audio call, whose input tokens are the dearer ones."""
         carried = {blob.content_type.modality for blob in self.media}
         if InputModality.audio in carried:
             return InputModality.audio
@@ -107,8 +102,6 @@ class Completion[T: BaseModel]:
 
 
 class Unavailability(StrEnum):
-    """A refusal passes with a retry; an unparseable or unpriced answer does not."""
-
     provider_refused = "provider_refused"
     unsupported_request = "unsupported_request"
     output_did_not_parse = "output_did_not_parse"
