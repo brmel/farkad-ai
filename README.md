@@ -7,14 +7,12 @@ The AI engine behind [Farkad](https://farkad.web.app), an app where you say what
 and it becomes a health log. I build it in the open to learn applied AI on a real product: each
 technique below is either used and measured, or left out with the reason.
 
-```text
-"شربت كأسين ماء et j'ai couru 5 kilometres"        Arabic, then French, in one sentence
+| You say | It logs |
+| --- | --- |
+| شربت كأسين ماء et j'ai couru 5 kilometres | **water** 500 ml · **exercise** cardio, 5,000 m |
 
-route     water     ←  شربت كأسين ماء
-          exercise  ←  j'ai couru 5 kilometres
-extract   water     500 ml
-          exercise  cardio · 5,000 m
-```
+Arabic, then French, in one sentence: each part goes to its topic, and the transcript keeps the
+words as they were said.
 
 ## How it works
 
