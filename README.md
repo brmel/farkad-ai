@@ -31,6 +31,25 @@ side by side. The transcript stays in the languages it was spoken in; it is neve
 
 Facts the user stated, such as "I'm vegan", are given back to every capture. Storage, auth and billing stay with the consumer.
 
+## Measured
+
+`farkad-ai eval` captures 15 sentences, three per language, with the example pillars in
+[`examples.py`](farkad_ai/examples.py), and scores them against
+[`example_gold.json`](farkad_ai/eval/example_gold.json). It replays answers recorded on
+`gemini-3.5-flash-lite` on 2026-10-12; `--provider vertex` runs it live.
+
+| Language | Captures | Routing | Fields | Cost per capture |
+| --- | --: | --: | --: | --: |
+| en | 3 | 100% | 100% | 0.123¢ |
+| fr | 3 | 100% | 100% | 0.112¢ |
+| ar | 3 | 100% | 100% | 0.079¢ |
+| es | 3 | 100% | 100% | 0.103¢ |
+| code-switched | 3 | 100% | 90% | 0.127¢ |
+| all | 15 | 100% | 97% | 0.109¢ |
+
+Cost is typed text at Vertex AI's list price. The one miss: "un café ce matin" came back
+without its count, so the coffee was not logged.
+
 ## Try it
 
 ```bash
