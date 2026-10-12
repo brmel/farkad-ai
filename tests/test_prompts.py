@@ -1,6 +1,11 @@
 from string import Formatter
 
+import pytest
+
+from farkad_ai.extraction.extractor import PillarExtractor
+from farkad_ai.extraction.port import ExtractionContext
 from farkad_ai.prompts import PromptAsset, list_prompts, prompt
+from tests.support import ScriptedModel, Tracked
 
 
 def test_a_prompt_is_versioned_by_its_text() -> None:
@@ -21,3 +26,16 @@ def test_every_brace_in_a_prompt_is_a_placeholder() -> None:
                 f"{asset.name}.txt has a literal brace around {field!r}. "
                 f"Write it as {{{{{field}}}}} if it is example text, not a placeholder."
             )
+
+
+@pytest.mark.anyio
+async def test_the_extraction_prompt_is_given_the_whole_log() -> None:
+    model = ScriptedModel({"entries": []})
+    context = ExtractionContext(
+        pillar=Tracked("water"), transcript="a glass and an egg", mentions=("a glass",)
+    )
+
+    await PillarExtractor(model).extract(context)
+
+    (asked,) = model.asked
+    assert "a glass and an egg" in asked.instructions

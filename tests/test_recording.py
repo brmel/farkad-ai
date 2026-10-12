@@ -12,8 +12,9 @@ from farkad_ai.models.recorded import (
     NoRecordedResponseError,
     RecordedModel,
     RecordingModel,
+    fingerprint,
 )
-from farkad_ai.types import Completion, ModelTier, PipelineStep, Prompt
+from farkad_ai.types import Completion, MediaBlob, MediaType, ModelTier, PipelineStep, Prompt
 from tests.support import a_usage
 
 pytestmark = pytest.mark.anyio
@@ -36,21 +37,22 @@ class QuotaLimitedModel:
         return Completion(value=schema(said=prompt.utterance), usage=a_usage(prompt.step))
 
 
+def said_back(utterance: str, *media: MediaBlob) -> Prompt:
+    return Prompt(
+        step=PipelineStep.routing,
+        instructions="say it back",
+        instructions_version="v1",
+        utterance=utterance,
+        media=media,
+    )
+
+
 async def record(
     model: QuotaLimitedModel, directory: Path, utterances: list[str]
 ) -> RecordingModel:
     recorder = RecordingModel(model, directory)
     for utterance in utterances:
-        await recorder.complete(
-            Prompt(
-                step=PipelineStep.routing,
-                instructions="say it back",
-                instructions_version="v1",
-                utterance=utterance,
-            ),
-            schema=Answer,
-            tier=ModelTier.fast,
-        )
+        await recorder.complete(said_back(utterance), schema=Answer, tier=ModelTier.fast)
     return recorder
 
 
@@ -113,3 +115,24 @@ async def test_a_question_asked_twice_in_a_run_is_answered_once(tmp_path: Path) 
     recorder = await record(QuotaLimitedModel(before_failing=1), tmp_path, ["one", "one"])
 
     assert recorder.commit() == 1
+
+
+def test_a_recording_is_keyed_by_its_tier_and_the_audio_it_carried() -> None:
+    key = fingerprint(said_back("one"), schema=Answer, tier=ModelTier.fast)
+    spoken = said_back("one", MediaBlob(content_type=MediaType.audio_aac, data=b"clip"))
+
+    assert key == fingerprint(said_back("one"), schema=Answer, tier=ModelTier.fast)
+    assert key != fingerprint(said_back("one"), schema=Answer, tier=ModelTier.standard)
+    assert key != fingerprint(spoken, schema=Answer, tier=ModelTier.fast)
+
+
+async def test_a_recorded_completion_replays_with_its_usage(tmp_path: Path) -> None:
+    recorder = RecordingModel(QuotaLimitedModel(before_failing=1), tmp_path)
+    recorded = await recorder.complete(said_back("one"), schema=Answer, tier=ModelTier.fast)
+    recorder.commit()
+
+    replayed = await RecordedModel(tmp_path).complete(
+        said_back("one"), schema=Answer, tier=ModelTier.fast
+    )
+
+    assert replayed == recorded
