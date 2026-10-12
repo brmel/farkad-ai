@@ -40,5 +40,4 @@ def list_prompts() -> tuple[PromptAsset, ...]:
 
 
 def briefed(instructions: str, briefing: str) -> str:
-    """Unchanged when there is nothing to add, so a recording made without it still replays."""
     return f"{instructions}\n\n{briefing}" if briefing else instructions

@@ -14,8 +14,6 @@ _log = logging.getLogger(__name__)
 
 
 class AdaptiveExtractor(PillarExtractionPort):
-    """Asks the fast tier first and the standard tier only when the fast answer did not parse."""
-
     def __init__(self, extractor: TieredExtractionPort) -> None:
         self._extractor = extractor
 
