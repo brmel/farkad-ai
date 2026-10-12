@@ -21,14 +21,3 @@ ruff check . && ruff format --check . && mypy farkad_ai tests && pytest
 Tests run offline on scripted answers; no API key is needed. CI runs the same checks twice: in a
 venv holding only `.[dev]`, where the core must import no provider SDK, and with
 `.[dev,google,anthropic,openai]`, where the adapters are type-checked against the real SDKs.
-
-## Releasing
-
-Releases are immutable: a wrong wheel is fixed by a new version.
-
-1. Bump `version` in `pyproject.toml`, merge to `main`, and wait for CI to pass.
-2. Tag the merge `vX.Y.Z` and push the tag.
-3. `git archive vX.Y.Z | tar -x -C <dir>`, then `uv build` in `<dir>`.
-4. `gh release create vX.Y.Z <dir>/dist/*`.
-5. Check that `curl -sL <wheel url> | shasum -a 256` matches the local wheel: consumers pin that
-   URL and digest.

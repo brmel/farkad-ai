@@ -17,13 +17,13 @@ CLI_PILLARS = frozenset(pillar.pillar for pillar in EXAMPLE_PILLARS)
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="farkad-ai", description="Farkad AI Engine")
+    parser = argparse.ArgumentParser(prog="farkad-ai", description="The AI engine behind Farkad")
     commands = parser.add_subparsers(dest="command", required=True)
 
-    route = commands.add_parser("route", help="Route capture")
-    route.add_argument("--text", type=str, default="", help="Capture text")
+    route = commands.add_parser("route", help="Name the topics one sentence mentions")
+    route.add_argument("--text", type=str, default="", help="The sentence to route")
     add_provider(route)
-    route.add_argument("--fixtures", type=Path, help="Fixtures directory")
+    route.add_argument("--fixtures", type=Path, help="Replay answers recorded in this directory")
 
     scored = commands.add_parser(
         "eval", help="Score the example gold set: routing, fields and cost per language"
