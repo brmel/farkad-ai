@@ -22,8 +22,6 @@ class NoRecordedResponseError(Exception):
 
 
 class UnrecordedModelError(Exception):
-    """The pin moved and the recordings did not, so a replay would score the old model."""
-
     def __init__(self, key: str, tier: ModelTier, *, pinned: str, recorded: str) -> None:
         super().__init__(
             f"the {tier} tier is pinned to {pinned}, but {key}.json holds {recorded}'s "
@@ -64,11 +62,6 @@ def fingerprint(prompt: Prompt, *, schema: type[BaseModel], tier: ModelTier) -> 
 
 
 class RecordedModel(ModelPort):
-    """Real responses, replayed; a missing recording fails loudly rather than being invented.
-
-    Given `pinned`, a recording made by another model than the tier's is refused too.
-    """
-
     def __init__(self, directory: Path, *, pinned: TierChoices | None = None) -> None:
         self._directory = directory
         self._pinned = pinned
@@ -116,8 +109,6 @@ class RecordedModel(ModelPort):
 
 
 class RecordingModel(ModelPort):
-    """Asks the live model once per question, so a run's recordings agree with each other."""
-
     def __init__(self, live: ModelPort, directory: Path) -> None:
         self._live = live
         self._directory = directory

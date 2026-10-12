@@ -139,7 +139,6 @@ def usage_of(
     model: str,
     latency_ms: int,
 ) -> Usage:
-    """Takes the prompt, because what a call carried decides its input rate."""
     metadata = response.usage_metadata
     if metadata is None:
         raise ModelUnavailableError(

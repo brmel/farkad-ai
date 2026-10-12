@@ -1,5 +1,3 @@
-"""The model decides what a sentence means; this decides what memory keeps."""
-
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
@@ -36,8 +34,6 @@ class OverlongFactError(ValueError):
 
 @dataclass(frozen=True, slots=True)
 class Disclosure:
-    """What a sentence revealed, as the model read it: one topic, one sentence."""
-
     subject: str
     category: MemoryCategory
     content: str
@@ -55,8 +51,6 @@ class Disclosure:
 
 @dataclass(frozen=True, slots=True)
 class Fact:
-    """One per subject, so a newer word on a topic replaces the older one by construction."""
-
     disclosure: Disclosure
     source: FactSource
     enabled: bool
@@ -99,8 +93,6 @@ type Learning = Remembered | Superseded | Confirmed | Declined
 
 
 def learn(known: Fact | None, heard: Disclosure, *, at: datetime) -> Learning:
-    """A switched-off fact is the user's refusal and a typed one is their own words: a model's
-    reading of a later sentence outranks neither."""
     if known is None:
         return Remembered(Fact(heard, FactSource.spoken, enabled=True, since=at))
     if not known.enabled:

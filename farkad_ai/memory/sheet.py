@@ -1,5 +1,3 @@
-"""What every capture is told about its speaker, inside a budget small enough to be free."""
-
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -19,7 +17,6 @@ FIRST_TOLD = (
 
 
 def core_sheet(facts: Iterable[Fact], habits: Iterable[HabitBaseline]) -> str:
-    """Constraints before habits, because a missed allergy costs more than a missed portion."""
     told = sorted(
         (fact for fact in facts if fact.enabled),
         key=lambda fact: (FIRST_TOLD.index(fact.disclosure.category), -fact.since.timestamp()),

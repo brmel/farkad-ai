@@ -1,5 +1,3 @@
-"""The shape of a counted habit; the consumer does the counting."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
