@@ -5,8 +5,8 @@
 
 The extraction engine behind [Farkad](https://farkad.web.app): it turns a sentence, a voice note or
 a photo into typed health entries. One routing call reads the capture and names the pillars it
-mentions (food, water, sleep…); one extraction call per named pillar then runs in parallel and
-answers in the schema the consumer supplies. Storage, auth and billing stay with the consumer.
+mentions (food, water, sleep…); one extraction call per tracked pillar it names then runs in
+parallel and answers in the schema the consumer supplies. Storage, auth and billing stay with the consumer.
 
 ## Install
 
