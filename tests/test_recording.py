@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -121,9 +122,14 @@ def test_a_recording_is_keyed_by_its_tier_and_the_audio_it_carried() -> None:
     key = fingerprint(said_back("one"), schema=Answer, tier=ModelTier.fast)
     spoken = said_back("one", MediaBlob(content_type=MediaType.audio_aac, data=b"clip"))
 
+    other_clip = said_back("one", MediaBlob(content_type=MediaType.audio_aac, data=b"other clip"))
+
     assert key == fingerprint(said_back("one"), schema=Answer, tier=ModelTier.fast)
     assert key != fingerprint(said_back("one"), schema=Answer, tier=ModelTier.standard)
     assert key != fingerprint(spoken, schema=Answer, tier=ModelTier.fast)
+    assert fingerprint(spoken, schema=Answer, tier=ModelTier.fast) != fingerprint(
+        other_clip, schema=Answer, tier=ModelTier.fast
+    )
 
 
 async def test_a_recorded_completion_replays_with_its_usage(tmp_path: Path) -> None:
@@ -136,3 +142,12 @@ async def test_a_recorded_completion_replays_with_its_usage(tmp_path: Path) -> N
     )
 
     assert replayed == recorded
+
+
+async def test_a_replayed_answer_carries_the_prompt_version_asked(tmp_path: Path) -> None:
+    (await record(QuotaLimitedModel(before_failing=1), tmp_path, ["one"])).commit()
+    asked = replace(said_back("one"), instructions_version="v2")
+
+    replayed = await RecordedModel(tmp_path).complete(asked, schema=Answer, tier=ModelTier.fast)
+
+    assert replayed.usage.prompt_version == "v2"
