@@ -18,8 +18,9 @@ pip install -e ".[dev]"
 ruff check . && ruff format --check . && mypy farkad_ai tests && pytest
 ```
 
-Tests run offline on scripted answers; no API key is needed. CI runs the same checks with no
-provider SDK installed, so run them in a venv holding only `.[dev]`.
+Tests run offline on scripted answers; no API key is needed. CI runs the same checks twice: in a
+venv holding only `.[dev]`, where the core must import no provider SDK, and with
+`.[dev,google,anthropic,openai]`, where the adapters are type-checked against the real SDKs.
 
 ## Releasing
 
