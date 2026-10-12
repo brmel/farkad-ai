@@ -1,13 +1,22 @@
 from datetime import time
 
 import pytest
+from pydantic import BaseModel
 
-from farkad_ai.extraction.port import Finding
+from farkad_ai.extraction.port import ExtractionContext, ExtractionResult, Finding
 from farkad_ai.pipeline.engine import CaptureEngine
+from farkad_ai.pipeline.specialists import extract_each
 from farkad_ai.pipeline.types import CaptureRequest, Logged, NothingToLog
 from farkad_ai.routing.pass_one import Mention, PassOne, StatedTime
 from farkad_ai.routing.router import NothingToLogReason
-from farkad_ai.types import ModelTier, PipelineStep, Unavailability
+from farkad_ai.types import (
+    Completion,
+    ModelTier,
+    ModelUnavailableError,
+    PipelineStep,
+    Prompt,
+    Unavailability,
+)
 from tests.support import AnswersByStep, Registry, Spec, Tracked
 
 pytestmark = pytest.mark.anyio
@@ -27,6 +36,24 @@ def heard(*said: tuple[str, str]) -> PassOne:
 
 def entries(*items: str | None) -> dict[str, object]:
     return {"entries": [{"pillar": "water", "item": item} for item in items]}
+
+
+class RefusesToHear(AnswersByStep):
+    def __init__(self, refused: str, **answers: BaseModel | dict[str, object]) -> None:
+        super().__init__(**answers)
+        self._refused = refused
+
+    async def complete[T: BaseModel](
+        self, prompt: Prompt, *, schema: type[T], tier: ModelTier
+    ) -> Completion[T]:
+        if prompt.utterance == self._refused:
+            raise ModelUnavailableError(tier, "model", Unavailability.provider_refused, "detail")
+        return await super().complete(prompt, schema=schema, tier=tier)
+
+
+class BrokenSpecialist:
+    async def extract(self, context: ExtractionContext) -> ExtractionResult:
+        raise KeyError("entries")
 
 
 async def captured(model: AnswersByStep, *tracked: Tracked) -> Logged | NothingToLog:
@@ -89,17 +116,28 @@ async def test_extraction_asks_the_fast_tier_first() -> None:
     assert [tier for _, tier in model.asked] == [ModelTier.fast, ModelTier.fast]
 
 
-async def test_a_refused_pillar_is_reported_with_why() -> None:
-    model = AnswersByStep(
-        routing=heard(("water", "a glass")), extraction=Unavailability.provider_refused
+async def test_a_refused_pillar_is_reported_with_why_and_the_other_keeps_its_entries() -> None:
+    model = RefusesToHear(
+        "an egg",
+        routing=heard(("water", "a glass"), ("food", "an egg")),
+        extraction=entries("glass"),
     )
 
-    outcome = await captured(model, WATER)
+    outcome = await captured(model, WATER, Tracked("food"))
 
-    assert isinstance(outcome, Logged) and outcome.extracted == ()
+    assert isinstance(outcome, Logged)
     assert [(r.pillar, r.because) for r in outcome.refused] == [
-        ("water", Unavailability.provider_refused)
+        ("food", Unavailability.provider_refused)
     ]
+    assert [
+        (extracted.pillar, [entry.values["item"] for entry in extracted.entries])
+        for extracted in outcome.extracted
+    ] == [("water", ["glass"])]
+
+
+async def test_a_bug_in_a_specialist_is_raised_not_reported_as_refused() -> None:
+    with pytest.raises(KeyError):
+        await extract_each(BrokenSpecialist(), {"water": ("a glass",)}, "a glass", {"water": WATER})
 
 
 async def test_a_capture_naming_no_tracked_pillar_logs_nothing() -> None:
