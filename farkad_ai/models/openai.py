@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import base64
 from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 try:
     from openai import APIError as OpenAIAPIError
@@ -10,9 +10,16 @@ try:
 
     _OPENAI_AVAILABLE = True
 except ImportError:
-    AsyncOpenAI = Any
-    OpenAIAPIError = Exception
+    AsyncOpenAI = Any  # type: ignore[assignment,misc]
+    OpenAIAPIError = Exception  # type: ignore[assignment,misc]
     _OPENAI_AVAILABLE = False
+
+if TYPE_CHECKING:
+    from openai.types.chat import (
+        ChatCompletionContentPartImageParam,
+        ChatCompletionContentPartParam,
+        ChatCompletionMessageParam,
+    )
 
 from pydantic import BaseModel
 
@@ -108,17 +115,22 @@ class OpenAIModel(ProviderModel):
         )
 
 
-def build_openai_messages(prompt: Prompt, *, tier: ModelTier, model: str) -> list[dict[str, Any]]:
-    system_message = {"role": "system", "content": prompt.instructions}
-    user_parts: list[dict[str, Any]] = []
+def build_openai_messages(
+    prompt: Prompt, *, tier: ModelTier, model: str
+) -> list[ChatCompletionMessageParam]:
+    user_parts: list[ChatCompletionContentPartParam] = []
     if prompt.utterance:
         user_parts.append({"type": "text", "text": prompt.utterance})
     user_parts.extend(image_part(blob, tier=tier, model=model) for blob in prompt.media)
-    user_message = {"role": "user", "content": user_parts or [{"type": "text", "text": "Input."}]}
-    return [system_message, user_message]
+    return [
+        {"role": "system", "content": prompt.instructions},
+        {"role": "user", "content": user_parts or [{"type": "text", "text": "Input."}]},
+    ]
 
 
-def image_part(blob: MediaBlob, *, tier: ModelTier, model: str) -> dict[str, Any]:
+def image_part(
+    blob: MediaBlob, *, tier: ModelTier, model: str
+) -> ChatCompletionContentPartImageParam:
     match blob.content_type:
         case MediaType.image_jpeg | MediaType.image_png:
             encoded = base64.b64encode(blob.data).decode("ascii")

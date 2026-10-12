@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import base64
 from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any, Literal
 
 try:
     from anthropic import APIError as AnthropicAPIError
@@ -10,9 +10,12 @@ try:
 
     _ANTHROPIC_AVAILABLE = True
 except ImportError:
-    AsyncAnthropic = Any
-    AnthropicAPIError = Exception
+    AsyncAnthropic = Any  # type: ignore[assignment,misc]
+    AnthropicAPIError = Exception  # type: ignore[assignment,misc]
     _ANTHROPIC_AVAILABLE = False
+
+if TYPE_CHECKING:
+    from anthropic.types import ImageBlockParam, MessageParam, TextBlockParam, ToolParam
 
 from pydantic import BaseModel
 
@@ -62,7 +65,7 @@ class AnthropicModel(ProviderModel):
     ) -> Any:
         model = choice.model
         tool_name = schema.__name__
-        tools = [
+        tools: list[ToolParam] = [
             {
                 "name": tool_name,
                 "description": f"Output schema for {tool_name}",
@@ -111,28 +114,32 @@ class AnthropicModel(ProviderModel):
         )
 
 
-def build_anthropic_messages(
-    prompt: Prompt, *, tier: ModelTier, model: str
-) -> list[dict[str, Any]]:
-    content: list[dict[str, Any]] = []
+def build_anthropic_messages(prompt: Prompt, *, tier: ModelTier, model: str) -> list[MessageParam]:
+    content: list[TextBlockParam | ImageBlockParam] = []
     if prompt.utterance:
         content.append({"type": "text", "text": prompt.utterance})
     content.extend(image_block(blob, tier=tier, model=model) for blob in prompt.media)
     return [{"role": "user", "content": content or [{"type": "text", "text": "Process input."}]}]
 
 
-def image_block(blob: MediaBlob, *, tier: ModelTier, model: str) -> dict[str, Any]:
+def image_block(blob: MediaBlob, *, tier: ModelTier, model: str) -> ImageBlockParam:
     match blob.content_type:
-        case MediaType.image_jpeg | MediaType.image_png:
-            return {
-                "type": "image",
-                "source": {
-                    "type": "base64",
-                    "media_type": blob.content_type.value,
-                    "data": base64.b64encode(blob.data).decode("ascii"),
-                },
-            }
+        case MediaType.image_jpeg:
+            return base64_image("image/jpeg", blob.data)
+        case MediaType.image_png:
+            return base64_image("image/png", blob.data)
         case MediaType.audio_aac:
             raise ModelUnavailableError(
                 tier, model, Unavailability.provider_refused, "audio input unsupported"
             )
+
+
+def base64_image(media_type: Literal["image/jpeg", "image/png"], data: bytes) -> ImageBlockParam:
+    return {
+        "type": "image",
+        "source": {
+            "type": "base64",
+            "media_type": media_type,
+            "data": base64.b64encode(data).decode("ascii"),
+        },
+    }
