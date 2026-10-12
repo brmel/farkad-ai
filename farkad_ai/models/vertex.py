@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import time
 from collections.abc import Mapping
 
 try:
@@ -15,11 +14,11 @@ except ImportError:
     APIError = Exception  # type: ignore[assignment,misc]
     _GENAI_AVAILABLE = False
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 
-from farkad_ai.models.port import ModelChoice, ModelPort, TierChoices, fixed
+from farkad_ai.models.port import ModelChoice, TierChoices, fixed
+from farkad_ai.models.provider import ProviderModel
 from farkad_ai.types import (
-    Completion,
     ModelTier,
     ModelUnavailableError,
     Prompt,
@@ -41,36 +40,53 @@ DEFAULT_CHOICES: Mapping[ModelTier, ModelChoice] = {
 }
 
 
-class VertexModel(ModelPort):
+def usage_of(
+    response: types.GenerateContentResponse,
+    *,
+    prompt: Prompt,
+    tier: ModelTier,
+    model: str,
+    latency_ms: int,
+) -> Usage:
+    metadata = response.usage_metadata
+    if metadata is None:
+        raise ModelUnavailableError(
+            tier, model, Unavailability.usage_not_reported, "no usage metadata on the response"
+        )
+    if metadata.prompt_token_count is None or metadata.candidates_token_count is None:
+        raise ModelUnavailableError(
+            tier, model, Unavailability.usage_not_reported, "the response counted no tokens"
+        )
+    input_tokens = metadata.prompt_token_count
+    # `thoughts_token_count` is absent, not zero, without thinking: https://googleapis.github.io/python-genai/
+    output_tokens = metadata.candidates_token_count + (metadata.thoughts_token_count or 0)
+    return Usage.answering(
+        prompt,
+        model=model,
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        latency_ms=latency_ms,
+    )
+
+
+class VertexModel(ProviderModel):
+    honoured_reasoning = THINKING_BUDGET
+
     def __init__(
         self,
         client: genai.Client,
         *,
         choices: TierChoices | None = None,
     ) -> None:
-        if not _GENAI_AVAILABLE:
-            raise RuntimeError(
-                "google-genai is required to use VertexModel. "
-                "Install with: pip install 'farkad-ai[google]'"
-            )
-        self._client = client
-        self._choices = choices or fixed(DEFAULT_CHOICES)
-
-    async def complete[T: BaseModel](
-        self, prompt: Prompt, *, schema: type[T], tier: ModelTier
-    ) -> Completion[T]:
-        choice = await self._choices(tier)
-        model = choice.model
-        started = time.monotonic()
-        response = await self._answered(prompt, schema=schema, tier=tier, choice=choice)
-        latency_ms = int((time.monotonic() - started) * 1000)
-        value = parsed_as(schema, response, tier=tier, model=model)
-        return Completion(
-            value=value,
-            usage=usage_of(response, prompt=prompt, tier=tier, model=model, latency_ms=latency_ms),
+        super().__init__(
+            sdk_installed=_GENAI_AVAILABLE,
+            sdk="google-genai",
+            extra="google",
+            choices=choices or fixed(DEFAULT_CHOICES),
         )
+        self._client = client
 
-    async def _answered(
+    async def _send(
         self,
         prompt: Prompt,
         *,
@@ -101,20 +117,12 @@ class VertexModel(ModelPort):
                 f"{type(error).__name__} {error.code}",
             ) from error
 
+    def _answer(
+        self, response: types.GenerateContentResponse, *, tier: ModelTier, model: str
+    ) -> object:
+        return response.parsed
 
-def parsed_as[T: BaseModel](
-    schema: type[T],
-    response: types.GenerateContentResponse,
-    *,
-    tier: ModelTier,
-    model: str,
-) -> T:
-    try:
-        return schema.model_validate(response.parsed)
-    except ValidationError as error:
-        raise ModelUnavailableError(
-            tier, model, Unavailability.output_did_not_parse, schema.__name__
-        ) from error
+    _usage = staticmethod(usage_of)
 
 
 def parts(prompt: Prompt) -> types.ContentListUnion:
@@ -129,32 +137,3 @@ def parts(prompt: Prompt) -> types.ContentListUnion:
     if not sent:
         sent.append(types.Part.from_text(text="Input."))
     return sent
-
-
-def usage_of(
-    response: types.GenerateContentResponse,
-    *,
-    prompt: Prompt,
-    tier: ModelTier,
-    model: str,
-    latency_ms: int,
-) -> Usage:
-    metadata = response.usage_metadata
-    if metadata is None:
-        raise ModelUnavailableError(
-            tier, model, Unavailability.usage_not_reported, "no usage metadata on the response"
-        )
-    if metadata.prompt_token_count is None or metadata.candidates_token_count is None:
-        raise ModelUnavailableError(
-            tier, model, Unavailability.usage_not_reported, "the response counted no tokens"
-        )
-    input_tokens = metadata.prompt_token_count
-    # `thoughts_token_count` is absent, not zero, without thinking: https://googleapis.github.io/python-genai/
-    output_tokens = metadata.candidates_token_count + (metadata.thoughts_token_count or 0)
-    return Usage.answering(
-        prompt,
-        model=model,
-        input_tokens=input_tokens,
-        output_tokens=output_tokens,
-        latency_ms=latency_ms,
-    )
