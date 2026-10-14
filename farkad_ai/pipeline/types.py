@@ -21,6 +21,7 @@ class CaptureRequest:
 class PillarEntries:
     pillar: str
     entries: tuple[ExtractedEntry, ...]
+    occurred_at_hint: StatedTime | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -35,7 +36,6 @@ class Logged:
     language: str
     routes: frozenset[str]
     untracked: frozenset[str]
-    occurred_at_hint: StatedTime | None
     extracted: tuple[PillarEntries, ...]
     refused: tuple[PillarRefused, ...]
     usages: tuple[Usage, ...]

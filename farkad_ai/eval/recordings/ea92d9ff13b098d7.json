@@ -2,7 +2,7 @@
   "tier": "fast",
   "schema": "LogBatch",
   "instructions": "Extract every supplement entry from what you are given, and nothing else.\n\nOne entry per product taken.\n\nWhat you are given is the part of a log that is supplement, one thing per line, in the words\nthe log used. Return one entry for each line \u2014 two only where a line is really two things.\nAn entry is that thing alone: its name and its amounts come from its own line.\n\nThe whole log, for what it says about when or how \u2014 never as more things to record, because\nthe rest of it is recorded elsewhere and recording it here would count it twice:\n\u0623\u062e\u0630\u062a 2000 \u0648\u062d\u062f\u0629 \u0645\u0646 \u0641\u064a\u062a\u0627\u0645\u064a\u0646 \u062f\n\nLeave a field out rather than inventing a value for it; a missing field is honest, a\nguessed one is not.\n\nA word the user actually said is not a guess. Read it onto the field's own scale: a\nfield described as 1 poor to 5 excellent has a value for \"badly\", and a stated size or\nintensity changes the amount you would otherwise have assumed \u2014 \"a big glass\" is more\nthan a glass. A count of servings is a stated amount too: \"one scoop\", \"a dose\", \"two\ncapsules\" is that many of the product's usual serving, so estimate the amount from it.\nOmitting is for what the user left unsaid, not for what they said without a number.\n\nWorked examples:\n\"a magnesium tablet\" \u2192 {\"category\": \"mineral\", \"name\": \"magnesium\"}",
-  "utterance": "2000 \u0648\u062d\u062f\u0629 \u0645\u0646 \u0641\u064a\u062a\u0627\u0645\u064a\u0646 \u062f",
+  "utterance": "\u0623\u062e\u0630\u062a 2000 \u0648\u062d\u062f\u0629 \u0645\u0646 \u0641\u064a\u062a\u0627\u0645\u064a\u0646 \u062f",
   "value": {
     "entries": [
       {
@@ -13,8 +13,8 @@
   },
   "usage": {
     "model": "gemini-3.5-flash-lite",
-    "input_tokens": 477,
+    "input_tokens": 481,
     "output_tokens": 38,
-    "latency_ms": 638
+    "latency_ms": 955
   }
 }
