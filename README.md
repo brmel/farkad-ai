@@ -42,15 +42,15 @@ words as they were said.
 ## Measured
 
 Fifteen example sentences, three per language, replayed from answers recorded on
-`gemini-3.5-flash-lite` on 2026-10-12:
+`gemini-3.5-flash-lite` on 2026-10-14:
 
 | Language | Routing | Fields | Cost per sentence |
 | --- | --: | --: | --: |
-| English | 100% | 100% | 0.123¢ |
-| French | 100% | 100% | 0.112¢ |
-| Arabic | 100% | 100% | 0.079¢ |
+| English | 100% | 100% | 0.124¢ |
+| French | 100% | 100% | 0.118¢ |
+| Arabic | 100% | 100% | 0.081¢ |
 | Spanish | 100% | 100% | 0.103¢ |
-| Mixed languages | 100% | 90% | 0.127¢ |
+| Mixed languages | 100% | 90% | 0.137¢ |
 
 The one miss: in a Darija and French sentence, the coffee was not logged.
 
