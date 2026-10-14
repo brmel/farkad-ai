@@ -8,6 +8,7 @@ from farkad_ai.models.port import ModelPort
 from farkad_ai.prompts import PromptAsset, briefed
 from farkad_ai.routing.pass_one import (
     INSTRUCTIONS,
+    Mention,
     PassOne,
     PillarRegistryProtocol,
     StatedTime,
@@ -28,7 +29,7 @@ class Routed:
     pillars: frozenset[str]
     untracked: frozenset[str]
     mentions: Mapping[str, tuple[str, ...]]
-    occurred_at_hint: StatedTime | None
+    occurred_at_hints: Mapping[str, StatedTime | None]
     usage: Usage
 
 
@@ -105,6 +106,11 @@ class Router:
                 pillar: tuple(mention.said for mention in known if mention.pillar == pillar)
                 for pillar in sorted(pillars)
             },
-            occurred_at_hint=heard.occurred_at_hint.stated() if heard.occurred_at_hint else None,
+            occurred_at_hints={pillar: _first_stated(known, pillar) for pillar in sorted(pillars)},
             usage=usage,
         )
+
+
+def _first_stated(mentions: list[Mention], pillar: str) -> StatedTime | None:
+    hints = (mention.occurred_at_hint for mention in mentions if mention.pillar == pillar)
+    return next((hint.stated() for hint in hints if hint is not None), None)

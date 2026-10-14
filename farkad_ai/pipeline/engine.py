@@ -80,14 +80,19 @@ class CaptureEngine(CaptureEnginePort):
                     refused.append(attempt)
                 case Extracted(pillar=pillar, result=result):
                     usages.append(result.usage)
-                    extracted.append(PillarEntries(pillar=pillar, entries=result.entries))
+                    extracted.append(
+                        PillarEntries(
+                            pillar=pillar,
+                            entries=result.entries,
+                            occurred_at_hint=routed.occurred_at_hints[pillar],
+                        )
+                    )
 
         return Logged(
             transcript=routed.transcript,
             language=routed.language,
             routes=routed.pillars,
             untracked=routed.untracked,
-            occurred_at_hint=routed.occurred_at_hint,
             extracted=tuple(extracted),
             refused=tuple(refused),
             usages=tuple(usages),
