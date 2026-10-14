@@ -17,15 +17,12 @@ pytestmark = pytest.mark.anyio
 REGISTRY = Registry(Spec("water", "tracks water intake"), Spec("food", "logs meals and snacks"))
 
 
-def heard(
-    *pillars: str, is_health_related: bool = True, occurred_at_hint: TimeHint | None = None
-) -> PassOne:
+def heard(*pillars: str, is_health_related: bool = True) -> PassOne:
     return PassOne(
         transcript="I drank two glasses of water",
         language="en",
         is_health_related=is_health_related,
         mentions=[Mention(pillar=pillar, said=f"some {pillar}") for pillar in pillars],
-        occurred_at_hint=occurred_at_hint,
     )
 
 
@@ -86,17 +83,28 @@ class TestTheRouterDecidesRatherThanTheModel:
         assert isinstance(outcome, NotApplicable)
         assert outcome.reason is NothingToLogReason.not_a_health_log
 
-    async def test_a_stated_time_is_kept_as_a_day_and_a_clock(self) -> None:
-        at_half_twelve = TimeHint(phrase="at 12:30", day_offset=0, clock=time(12, 30))
-
-        outcome = await routed(
-            heard("water", occurred_at_hint=at_half_twelve), frozenset({"water"})
+    async def test_a_stated_time_dates_only_the_mention_it_was_said_about(self) -> None:
+        answer = PassOne(
+            transcript="a coffee at eight, and two glasses of water",
+            language="en",
+            is_health_related=True,
+            mentions=[
+                Mention(
+                    pillar="food",
+                    said="a coffee at eight",
+                    occurred_at_hint=TimeHint(phrase="at eight", day_offset=0, clock=time(8, 0)),
+                ),
+                Mention(pillar="water", said="two glasses of water"),
+            ],
         )
+
+        outcome = await routed(answer, frozenset({"water", "food"}))
 
         assert isinstance(outcome, Routed)
-        assert outcome.occurred_at_hint == StatedTime(
-            phrase="at 12:30", day_offset=0, clock=time(12, 30)
-        )
+        assert outcome.occurred_at_hints == {
+            "food": StatedTime(phrase="at eight", day_offset=0, clock=time(8, 0)),
+            "water": None,
+        }
 
 
 async def test_the_model_is_told_every_pillar_the_registry_holds() -> None:

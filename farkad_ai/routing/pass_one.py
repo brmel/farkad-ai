@@ -56,6 +56,9 @@ class Mention(BaseModel):
     said: str = Field(
         description="Every word the user said about this one thing: what, how much, how, when"
     )
+    occurred_at_hint: TimeHint | None = Field(
+        default=None, description="When the user said this one thing happened, or null if unstated"
+    )
 
 
 class PassOne(BaseModel):
@@ -72,9 +75,6 @@ class PassOne(BaseModel):
     mentions: list[Mention] = Field(
         default_factory=list,
         description="Every thing the user logged, each once, under the one pillar that records it",
-    )
-    occurred_at_hint: TimeHint | None = Field(
-        default=None, description="When the user said it happened, or null if unstated"
     )
 
 
