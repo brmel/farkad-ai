@@ -2,11 +2,7 @@ import pytest
 from pydantic import BaseModel
 
 from farkad_ai.extraction.port import Finding
-from farkad_ai.pipeline.engine import CaptureEngine
-from farkad_ai.pipeline.port import CaptureRequest, Logged, NothingToLog
-from farkad_ai.routing.pass_one import Mention, PassOne
-from farkad_ai.routing.port import NothingToLogReason
-from farkad_ai.types import (
+from farkad_ai.models.port import (
     Completion,
     ModelTier,
     ModelUnavailableError,
@@ -14,6 +10,10 @@ from farkad_ai.types import (
     Prompt,
     Unavailability,
 )
+from farkad_ai.pipeline.engine import TwoPassCaptureEngine
+from farkad_ai.pipeline.port import CaptureRequest, Logged, NothingToLog
+from farkad_ai.routing.pass_one import Mention, PassOne
+from farkad_ai.routing.port import NothingToLogReason
 from tests.support import AnswersByStep, Registry, Spec, Tracked
 
 pytestmark = pytest.mark.anyio
@@ -58,7 +58,7 @@ class BreaksOnExtraction(AnswersByStep):
 
 
 async def captured(model: AnswersByStep, *tracked: Tracked) -> Logged | NothingToLog:
-    return await CaptureEngine(model, CATALOGUE).capture(
+    return await TwoPassCaptureEngine(model, CATALOGUE).capture(
         CaptureRequest(tracked=tracked, text="said")
     )
 

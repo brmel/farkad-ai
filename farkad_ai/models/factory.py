@@ -5,7 +5,7 @@ from pathlib import Path
 
 from farkad_ai.models.anthropic import AnthropicModel
 from farkad_ai.models.openai import OpenAIModel
-from farkad_ai.models.port import ModelPort
+from farkad_ai.models.port import Model
 from farkad_ai.models.recorded import RecordedModel
 from farkad_ai.models.vertex import VertexModel
 
@@ -17,7 +17,7 @@ class ProviderName(StrEnum):
     recorded = "recorded"
 
 
-def create_model(provider: ProviderName, *, fixtures_dir: Path | None) -> ModelPort:
+def create_model(provider: ProviderName, *, fixtures_dir: Path | None) -> Model:
     match provider:
         case ProviderName.vertex:
             from google import genai

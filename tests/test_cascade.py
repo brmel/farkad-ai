@@ -7,15 +7,15 @@ from farkad_ai.extraction.port import (
     ExtractedEntry,
     ExtractionContext,
     ExtractionResult,
-    TieredExtractionPort,
+    TieredExtractor,
 )
-from farkad_ai.types import ModelTier, ModelUnavailableError, PipelineStep, Unavailability
+from farkad_ai.models.port import ModelTier, ModelUnavailableError, PipelineStep, Unavailability
 from tests.support import Tracked, a_usage
 
 TWO_EGGS = ExtractionContext(pillar=Tracked("food"), transcript="two eggs", mentions=("two eggs",))
 
 
-class TierScript(TieredExtractionPort):
+class TierScript(TieredExtractor):
     def __init__(self, **answers: str | Unavailability) -> None:
         self._answers = answers
         self.asked: list[ModelTier] = []

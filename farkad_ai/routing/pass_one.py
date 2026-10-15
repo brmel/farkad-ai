@@ -7,14 +7,12 @@ from datetime import time
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from farkad_ai.prompts import PromptAsset, prompt
-from farkad_ai.routing.port import PillarRegistryProtocol, StatedTime
+from farkad_ai.routing.port import PillarRegistry, StatedTime
 
 INSTRUCTIONS = prompt("pass_one")
 
 
-def routing_instructions(
-    registry: PillarRegistryProtocol, asset: PromptAsset = INSTRUCTIONS
-) -> str:
+def routing_instructions(registry: PillarRegistry, asset: PromptAsset = INSTRUCTIONS) -> str:
     catalogue = "\n".join(f"- {spec.pillar}: {spec.intent}" for spec in registry)
     return asset.format(pillars=catalogue)
 

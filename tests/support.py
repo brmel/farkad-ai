@@ -7,10 +7,10 @@ from enum import StrEnum
 from pydantic import BaseModel
 
 from farkad_ai.extraction.port import Finding
-from farkad_ai.models.port import ModelPort
-from farkad_ai.types import (
+from farkad_ai.models.port import (
     Completion,
     InputModality,
+    Model,
     ModelTier,
     ModelUnavailableError,
     Prompt,
@@ -31,7 +31,7 @@ def a_usage(step: StrEnum) -> Usage:
     )
 
 
-class ScriptedModel(ModelPort):
+class ScriptedModel(Model):
     def __init__(self, answer: BaseModel | Mapping[str, object]) -> None:
         self._answer = answer
         self.asked: list[Prompt] = []
@@ -78,7 +78,7 @@ class Tracked:
         return self.flagged
 
 
-class AnswersByStep(ModelPort):
+class AnswersByStep(Model):
     """Answers each step with its own script; an `Unavailability` refuses that step."""
 
     def __init__(self, **answers: BaseModel | Mapping[str, object] | Unavailability) -> None:
