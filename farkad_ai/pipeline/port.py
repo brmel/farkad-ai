@@ -4,8 +4,8 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from farkad_ai.extraction.port import ExtractedEntry, TrackedPillar
+from farkad_ai.models.port import MediaBlob, Unavailability, Usage
 from farkad_ai.routing.port import NothingToLogReason, StatedTime
-from farkad_ai.types import MediaBlob, Unavailability, Usage
 
 
 @dataclass(frozen=True, slots=True)
@@ -51,5 +51,5 @@ class NothingToLog:
 CaptureOutcome = Logged | NothingToLog
 
 
-class CaptureEnginePort(Protocol):
+class CaptureEngine(Protocol):
     async def capture(self, request: CaptureRequest) -> CaptureOutcome: ...

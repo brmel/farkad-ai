@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from farkad_ai.types import Usage
+from farkad_ai.models.port import Usage
 
 
 @dataclass(frozen=True, slots=True)

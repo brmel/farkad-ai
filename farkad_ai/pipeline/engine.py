@@ -9,12 +9,12 @@ from farkad_ai.extraction.extractor import PillarExtractor
 from farkad_ai.extraction.port import (
     ExtractionContext,
     ExtractionResult,
-    PillarExtractionPort,
+    Extractor,
     TrackedPillar,
 )
-from farkad_ai.models.port import ModelPort
+from farkad_ai.models.port import Model, ModelUnavailableError
 from farkad_ai.pipeline.port import (
-    CaptureEnginePort,
+    CaptureEngine,
     CaptureOutcome,
     CaptureRequest,
     Logged,
@@ -24,20 +24,19 @@ from farkad_ai.pipeline.port import (
 )
 from farkad_ai.prompts import PromptAsset
 from farkad_ai.routing.pass_one import INSTRUCTIONS as ROUTING
-from farkad_ai.routing.port import NotApplicable, PillarRegistryProtocol, Routed
+from farkad_ai.routing.port import NotApplicable, PillarRegistry, Routed
 from farkad_ai.routing.router import Router
-from farkad_ai.types import ModelUnavailableError
 
 _log = logging.getLogger(__name__)
 
 
-class CaptureEngine(CaptureEnginePort):
+class TwoPassCaptureEngine(CaptureEngine):
     """Routes a capture once, then extracts each tracked pillar it names, side by side."""
 
     def __init__(
         self,
-        model: ModelPort,
-        catalogue: PillarRegistryProtocol,
+        model: Model,
+        catalogue: PillarRegistry,
         *,
         routing_prompt: PromptAsset = ROUTING,
         extraction_prompt: PromptAsset = EXTRACTION,
@@ -111,7 +110,7 @@ class CaptureEngine(CaptureEnginePort):
 
 
 async def _attempt(
-    extractor: PillarExtractionPort, context: ExtractionContext
+    extractor: Extractor, context: ExtractionContext
 ) -> ExtractionResult | PillarRefused:
     try:
         return await extractor.extract(context)

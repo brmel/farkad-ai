@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel
 
+from farkad_ai.models.port import Completion, MediaBlob, MediaType, ModelTier, PipelineStep, Prompt
 from farkad_ai.models.recorded import (
     SCHEMA_CHANGED,
     NoRecordedResponseError,
@@ -15,7 +16,6 @@ from farkad_ai.models.recorded import (
     RecordingModel,
     fingerprint,
 )
-from farkad_ai.types import Completion, MediaBlob, MediaType, ModelTier, PipelineStep, Prompt
 from tests.support import a_usage
 
 pytestmark = pytest.mark.anyio

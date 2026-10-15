@@ -2,7 +2,7 @@ import pytest
 
 from farkad_ai.eval.pricing import UnpricedModelError, cost_cents
 from farkad_ai.eval.scoring import RunScore, score_capture
-from farkad_ai.types import InputModality, Usage
+from farkad_ai.models.port import InputModality, Usage
 
 
 @pytest.mark.parametrize(
