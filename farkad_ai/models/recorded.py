@@ -44,23 +44,6 @@ SCHEMA_CHANGED = (
 )
 
 
-def fingerprint(prompt: Prompt, *, schema: type[BaseModel], tier: ModelTier) -> str:
-    canonical = json.dumps(
-        {
-            "tier": tier.value,
-            "schema": schema.model_json_schema(),
-            "instructions": prompt.instructions,
-            "utterance": prompt.utterance,
-            "media": [
-                {"content_type": blob.content_type, "sha256": hashlib.sha256(blob.data).hexdigest()}
-                for blob in prompt.media
-            ],
-        },
-        sort_keys=True,
-    )
-    return hashlib.sha256(canonical.encode()).hexdigest()[:16]
-
-
 class RecordedModel(ModelPort):
     def __init__(self, directory: Path, *, pinned: TierChoices | None = None) -> None:
         self._directory = directory
@@ -144,3 +127,20 @@ class RecordingModel(ModelPort):
         for key, recording in self._pending.items():
             (self._directory / f"{key}.json").write_text(recording)
         return len(self._pending)
+
+
+def fingerprint(prompt: Prompt, *, schema: type[BaseModel], tier: ModelTier) -> str:
+    canonical = json.dumps(
+        {
+            "tier": tier.value,
+            "schema": schema.model_json_schema(),
+            "instructions": prompt.instructions,
+            "utterance": prompt.utterance,
+            "media": [
+                {"content_type": blob.content_type, "sha256": hashlib.sha256(blob.data).hexdigest()}
+                for blob in prompt.media
+            ],
+        },
+        sort_keys=True,
+    )
+    return hashlib.sha256(canonical.encode()).hexdigest()[:16]

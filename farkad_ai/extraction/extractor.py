@@ -20,34 +20,6 @@ INSTRUCTIONS = prompt("extraction")
 UNSTATED_FIELDS = frozenset({"pillar", "category"})
 
 
-def holds_nothing(entry: Mapping[str, object]) -> bool:
-    return not any(
-        value is not None for name, value in entry.items() if name not in UNSTATED_FIELDS
-    )
-
-
-def fill(asset: PromptAsset, pillar: TrackedPillar, *, briefing: str = "", **values: object) -> str:
-    rendered = asset.format(
-        title=pillar.title, guidance=pillar.guidance, examples=pillar.examples, **values
-    )
-    return briefed(rendered, briefing)
-
-
-@lru_cache(maxsize=512)
-def answer_schema(entry: type[BaseModel]) -> type[BaseModel]:
-    one: Any = entry
-    return create_model(
-        "LogBatch",
-        __config__=ConfigDict(extra="forbid"),
-        entries=(list[one], Field(description="Every entry this utterance produced")),
-    )
-
-
-def entries_answered(completion: Completion[BaseModel]) -> list[dict[str, object]]:
-    answered: list[dict[str, object]] = completion.value.model_dump(mode="json")["entries"]
-    return [entry for entry in answered if not holds_nothing(entry)]
-
-
 class PillarExtractor:
     def __init__(self, model: ModelPort, *, instructions: PromptAsset = INSTRUCTIONS) -> None:
         self._model = model
@@ -78,3 +50,31 @@ class PillarExtractor:
             ),
             usage=completion.usage,
         )
+
+
+def fill(asset: PromptAsset, pillar: TrackedPillar, *, briefing: str = "", **values: object) -> str:
+    rendered = asset.format(
+        title=pillar.title, guidance=pillar.guidance, examples=pillar.examples, **values
+    )
+    return briefed(rendered, briefing)
+
+
+@lru_cache(maxsize=512)
+def answer_schema(entry: type[BaseModel]) -> type[BaseModel]:
+    one: Any = entry
+    return create_model(
+        "LogBatch",
+        __config__=ConfigDict(extra="forbid"),
+        entries=(list[one], Field(description="Every entry this utterance produced")),
+    )
+
+
+def entries_answered(completion: Completion[BaseModel]) -> list[dict[str, object]]:
+    answered: list[dict[str, object]] = completion.value.model_dump(mode="json")["entries"]
+    return [entry for entry in answered if not holds_nothing(entry)]
+
+
+def holds_nothing(entry: Mapping[str, object]) -> bool:
+    return not any(
+        value is not None for name, value in entry.items() if name not in UNSTATED_FIELDS
+    )

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from farkad_ai.extraction.adaptive import AdaptiveExtractor
+from farkad_ai.extraction.cascade import CascadingExtractor
 from farkad_ai.extraction.port import (
     ExtractedEntry,
     ExtractionContext,
@@ -37,7 +37,7 @@ class TierScript(TieredExtractionPort):
 async def test_the_fast_tier_answers_when_it_can() -> None:
     script = TierScript(fast="fast", standard="standard")
 
-    result = await AdaptiveExtractor(script).extract(TWO_EGGS)
+    result = await CascadingExtractor(script).extract(TWO_EGGS)
 
     assert result.entries[0].values["item"] == "fast"
     assert script.asked == [ModelTier.fast]
@@ -47,7 +47,7 @@ async def test_the_fast_tier_answers_when_it_can() -> None:
 async def test_an_answer_that_did_not_parse_escalates_to_standard() -> None:
     script = TierScript(fast=Unavailability.output_did_not_parse, standard="standard")
 
-    result = await AdaptiveExtractor(script).extract(TWO_EGGS)
+    result = await CascadingExtractor(script).extract(TWO_EGGS)
 
     assert result.entries[0].values["item"] == "standard"
     assert script.asked == [ModelTier.fast, ModelTier.standard]
@@ -63,7 +63,7 @@ async def test_a_refusal_neither_tier_can_answer_is_never_paid_for_twice() -> No
         script = TierScript(fast=because, standard="standard")
 
         with pytest.raises(ModelUnavailableError):
-            await AdaptiveExtractor(script).extract(TWO_EGGS)
+            await CascadingExtractor(script).extract(TWO_EGGS)
         assert script.asked == [ModelTier.fast]
 
 
@@ -74,5 +74,5 @@ async def test_both_tiers_unparsed_is_a_refusal() -> None:
     )
 
     with pytest.raises(ModelUnavailableError):
-        await AdaptiveExtractor(script).extract(TWO_EGGS)
+        await CascadingExtractor(script).extract(TWO_EGGS)
     assert script.asked == [ModelTier.fast, ModelTier.standard]

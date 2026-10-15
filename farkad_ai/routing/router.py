@@ -1,47 +1,17 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
-from dataclasses import dataclass
-from enum import StrEnum
-
 from farkad_ai.models.port import ModelPort
 from farkad_ai.prompts import PromptAsset, briefed
-from farkad_ai.routing.pass_one import (
-    INSTRUCTIONS,
-    Mention,
-    PassOne,
+from farkad_ai.routing.pass_one import INSTRUCTIONS, Mention, PassOne, routing_instructions
+from farkad_ai.routing.port import (
+    NotApplicable,
+    NothingToLogReason,
     PillarRegistryProtocol,
+    Routed,
+    RoutingOutcome,
     StatedTime,
-    routing_instructions,
 )
 from farkad_ai.types import Completion, MediaBlob, ModelTier, PipelineStep, Prompt, Usage
-
-
-class NothingToLogReason(StrEnum):
-    not_a_health_log = "not_a_health_log"
-    no_enabled_pillar = "no_enabled_pillar"
-
-
-@dataclass(frozen=True, slots=True)
-class Routed:
-    transcript: str
-    language: str
-    pillars: frozenset[str]
-    untracked: frozenset[str]
-    mentions: Mapping[str, tuple[str, ...]]
-    occurred_at_hints: Mapping[str, StatedTime | None]
-    usage: Usage
-
-
-@dataclass(frozen=True, slots=True)
-class NotApplicable:
-    transcript: str
-    language: str
-    reason: NothingToLogReason
-    usage: Usage
-
-
-RoutingOutcome = Routed | NotApplicable
 
 
 class Router:
@@ -75,9 +45,9 @@ class Router:
         completion: Completion[PassOne] = await self._model.complete(
             prompt, schema=PassOne, tier=ModelTier.fast
         )
-        return self.decide(completion.value, tracked, completion.usage)
+        return self._decide(completion.value, tracked, completion.usage)
 
-    def decide(self, heard: PassOne, tracked: frozenset[str], usage: Usage) -> RoutingOutcome:
+    def _decide(self, heard: PassOne, tracked: frozenset[str], usage: Usage) -> RoutingOutcome:
         if not heard.is_health_related:
             return NotApplicable(
                 transcript=heard.transcript,

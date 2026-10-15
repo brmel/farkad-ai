@@ -13,7 +13,7 @@ from farkad_ai.types import ModelTier, ModelUnavailableError, Unavailability
 _log = logging.getLogger(__name__)
 
 
-class AdaptiveExtractor(PillarExtractionPort):
+class CascadingExtractor(PillarExtractionPort):
     def __init__(self, extractor: TieredExtractionPort) -> None:
         self._extractor = extractor
 

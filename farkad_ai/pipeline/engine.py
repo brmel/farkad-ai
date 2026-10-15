@@ -1,14 +1,19 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 
-from farkad_ai.extraction.adaptive import AdaptiveExtractor
+from farkad_ai.extraction.cascade import CascadingExtractor
 from farkad_ai.extraction.extractor import INSTRUCTIONS as EXTRACTION
 from farkad_ai.extraction.extractor import PillarExtractor
-from farkad_ai.extraction.port import TrackedPillar
+from farkad_ai.extraction.port import (
+    ExtractionContext,
+    ExtractionResult,
+    PillarExtractionPort,
+    TrackedPillar,
+)
 from farkad_ai.models.port import ModelPort
-from farkad_ai.pipeline.specialists import Extracted, extract_each
-from farkad_ai.pipeline.types import (
+from farkad_ai.pipeline.port import (
     CaptureEnginePort,
     CaptureOutcome,
     CaptureRequest,
@@ -19,8 +24,9 @@ from farkad_ai.pipeline.types import (
 )
 from farkad_ai.prompts import PromptAsset
 from farkad_ai.routing.pass_one import INSTRUCTIONS as ROUTING
-from farkad_ai.routing.pass_one import PillarRegistryProtocol
-from farkad_ai.routing.router import NotApplicable, Routed, Router
+from farkad_ai.routing.port import NotApplicable, PillarRegistryProtocol, Routed
+from farkad_ai.routing.router import Router
+from farkad_ai.types import ModelUnavailableError
 
 _log = logging.getLogger(__name__)
 
@@ -37,7 +43,7 @@ class CaptureEngine(CaptureEnginePort):
         extraction_prompt: PromptAsset = EXTRACTION,
     ) -> None:
         self._router = Router(model, catalogue, instructions=routing_prompt)
-        self._extractor = AdaptiveExtractor(PillarExtractor(model, instructions=extraction_prompt))
+        self._extractor = CascadingExtractor(PillarExtractor(model, instructions=extraction_prompt))
 
     async def capture(self, request: CaptureRequest) -> CaptureOutcome:
         tracked = {pillar.pillar: pillar for pillar in request.tracked}
@@ -63,13 +69,18 @@ class CaptureEngine(CaptureEnginePort):
     async def _extract(
         self, routed: Routed, request: CaptureRequest, tracked: dict[str, TrackedPillar]
     ) -> Logged:
-        attempts = await extract_each(
-            self._extractor,
-            routed.mentions,
-            routed.transcript,
-            tracked,
-            media=request.media,
-            briefing=request.briefing,
+        contexts = [
+            ExtractionContext(
+                pillar=tracked[pillar],
+                transcript=routed.transcript,
+                mentions=said,
+                media=request.media,
+                briefing=request.briefing,
+            )
+            for pillar, said in sorted(routed.mentions.items())
+        ]
+        attempts = await asyncio.gather(
+            *(_attempt(self._extractor, context) for context in contexts)
         )
         extracted: list[PillarEntries] = []
         refused: list[PillarRefused] = []
@@ -78,12 +89,12 @@ class CaptureEngine(CaptureEnginePort):
             match attempt:
                 case PillarRefused():
                     refused.append(attempt)
-                case Extracted(pillar=pillar, result=result):
-                    usages.append(result.usage)
+                case ExtractionResult(pillar=pillar, entries=entries, usage=usage):
+                    usages.append(usage)
                     extracted.append(
                         PillarEntries(
                             pillar=pillar,
-                            entries=result.entries,
+                            entries=entries,
                             occurred_at_hint=routed.occurred_at_hints[pillar],
                         )
                     )
@@ -97,3 +108,20 @@ class CaptureEngine(CaptureEnginePort):
             refused=tuple(refused),
             usages=tuple(usages),
         )
+
+
+async def _attempt(
+    extractor: PillarExtractionPort, context: ExtractionContext
+) -> ExtractionResult | PillarRefused:
+    try:
+        return await extractor.extract(context)
+    except ModelUnavailableError as unavailable:
+        _log.warning(
+            "pillar extraction failed",
+            extra={
+                "pillar": context.pillar.pillar,
+                "model": unavailable.model,
+                "because": unavailable.because.value,
+            },
+        )
+        return PillarRefused(pillar=context.pillar.pillar, because=unavailable.because)

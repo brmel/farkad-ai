@@ -4,8 +4,7 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from farkad_ai.extraction.port import ExtractedEntry, TrackedPillar
-from farkad_ai.routing.pass_one import StatedTime
-from farkad_ai.routing.router import NothingToLogReason
+from farkad_ai.routing.port import NothingToLogReason, StatedTime
 from farkad_ai.types import MediaBlob, Unavailability, Usage
 
 

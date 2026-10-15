@@ -9,7 +9,7 @@ technique below is either used and measured, or left out with the reason.
 
 | You say | It logs |
 | --- | --- |
-| شربت كأسين ماء et j'ai couru 5 kilometres | **water** 500 ml · **exercise** cardio, 5,000 m |
+| شربت كأسين ماء et j'ai couru 5 kilometres | **water** 2 glasses, 400 ml · **exercise** run, 5,000 m |
 
 Arabic, then French, in one sentence: each part goes to its topic, and the transcript keeps the
 words as they were said.
@@ -19,8 +19,8 @@ words as they were said.
 1. **Route once.** One model call transcribes the audio, keeps each part in the language it was
    spoken in, and names the topics it mentions: food, water, sleep, exercise…
 2. **Extract in parallel.** Each topic gets its own call, answering in a schema the app supplies.
-3. **Validate, then escalate.** Every answer is checked against its schema; one that fails is asked
-   again on a stronger model.
+3. **Validate, then escalate.** Every answer is checked against its schema; a topic whose answer
+   fails is asked again, of a stronger model or of the same one given time to reason.
 
 ## AI techniques
 
@@ -66,5 +66,19 @@ farkad-ai eval
 `farkad-ai eval --provider vertex` runs it live on your Google Cloud project, and
 `farkad-ai route --provider vertex --text "two eggs and a glass of water"` routes your own sentence.
 Install the `google`, `anthropic` or `openai` extra for the provider you use.
+
+## Layout
+
+In the order a capture flows through `farkad_ai/`. Where a package has a `port.py`, it holds the
+types that cross its boundary.
+
+- `pipeline/`: `CaptureEngine`, which routes a capture once and extracts each topic it names
+- `routing/`: the one call that transcribes the capture and names its topics
+- `extraction/`: one call per topic, in the app's schema, escalated when the answer does not parse
+- `memory/`: facts the user states, and the short sheet given back to every capture
+- `models/`: adapters for Gemini on Vertex AI, Claude and GPT, and the replay of recorded answers
+- `eval/`: the gold set, its recorded answers, scoring and pricing
+- `prompts/`: the prompt texts, each versioned by a hash of its text
+- `cli.py`: `farkad-ai route`, `eval` and `prompts`
 
 [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Apache 2.0](LICENSE)

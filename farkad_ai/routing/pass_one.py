@@ -1,26 +1,22 @@
+"""Docstrings and descriptions here reach the model in its answer schema: they are prompt text."""
+
 from __future__ import annotations
 
-from collections.abc import Iterator
-from dataclasses import dataclass
 from datetime import time
-from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from farkad_ai.prompts import PromptAsset, prompt
+from farkad_ai.routing.port import PillarRegistryProtocol, StatedTime
 
 INSTRUCTIONS = prompt("pass_one")
 
 
-@dataclass(frozen=True, slots=True)
-class StatedTime:
-    phrase: str
-    day_offset: int
-    clock: time | None
-
-    @property
-    def names_a_day(self) -> bool:
-        return self.day_offset != 0
+def routing_instructions(
+    registry: PillarRegistryProtocol, asset: PromptAsset = INSTRUCTIONS
+) -> str:
+    catalogue = "\n".join(f"- {spec.pillar}: {spec.intent}" for spec in registry)
+    return asset.format(pillars=catalogue)
 
 
 class TimeHint(BaseModel):
@@ -76,23 +72,3 @@ class PassOne(BaseModel):
         default_factory=list,
         description="Every thing the user logged, each once, under the one pillar that records it",
     )
-
-
-class PillarSpecProtocol(Protocol):
-    @property
-    def pillar(self) -> str: ...
-
-    @property
-    def intent(self) -> str: ...
-
-
-class PillarRegistryProtocol(Protocol):
-    def __iter__(self) -> Iterator[PillarSpecProtocol]: ...
-    def knows(self, route: str) -> bool: ...
-
-
-def routing_instructions(
-    registry: PillarRegistryProtocol, asset: PromptAsset = INSTRUCTIONS
-) -> str:
-    catalogue = "\n".join(f"- {spec.pillar}: {spec.intent}" for spec in registry)
-    return asset.format(pillars=catalogue)

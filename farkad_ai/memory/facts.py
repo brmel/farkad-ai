@@ -92,18 +92,6 @@ class Declined:
 type Learning = Remembered | Superseded | Confirmed | Declined
 
 
-def learn(known: Fact | None, heard: Disclosure, *, at: datetime) -> Learning:
-    if known is None:
-        return Remembered(Fact(heard, FactSource.spoken, enabled=True, since=at))
-    if not known.enabled:
-        return Declined(heard, Refusal.switched_off)
-    if known.source is FactSource.entered:
-        return Declined(heard, Refusal.written_by_user)
-    if known.disclosure.said == heard.said:
-        return Confirmed(replace(known, since=at))
-    return Superseded(replace(known, disclosure=heard, since=at), replaced=known)
-
-
 def learn_all(
     known: Mapping[str, Fact], heard: Iterable[Disclosure], *, at: datetime
 ) -> tuple[Learning, ...]:
@@ -121,3 +109,15 @@ def learn_all(
                 pass
         learned.append(learning)
     return tuple(learned)
+
+
+def learn(known: Fact | None, heard: Disclosure, *, at: datetime) -> Learning:
+    if known is None:
+        return Remembered(Fact(heard, FactSource.spoken, enabled=True, since=at))
+    if not known.enabled:
+        return Declined(heard, Refusal.switched_off)
+    if known.source is FactSource.entered:
+        return Declined(heard, Refusal.written_by_user)
+    if known.disclosure.said == heard.said:
+        return Confirmed(replace(known, since=at))
+    return Superseded(replace(known, disclosure=heard, since=at), replaced=known)
