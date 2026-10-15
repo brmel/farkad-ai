@@ -10,7 +10,7 @@
     "mentions": [
       {
         "pillar": "drugs",
-        "said": "took 500mg of paracetamol",
+        "said": "500mg of paracetamol",
         "occurred_at_hint": null
       },
       {
@@ -23,7 +23,7 @@
   "usage": {
     "model": "gemini-3.5-flash-lite",
     "input_tokens": 1545,
-    "output_tokens": 129,
-    "latency_ms": 1004
+    "output_tokens": 127,
+    "latency_ms": 919
   }
 }

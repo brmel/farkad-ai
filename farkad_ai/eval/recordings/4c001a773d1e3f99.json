@@ -15,7 +15,7 @@
       },
       {
         "pillar": "exercise",
-        "said": "et j'ai couru 5 kilometres",
+        "said": "j'ai couru 5 kilometres",
         "occurred_at_hint": null
       }
     ]
@@ -23,7 +23,7 @@
   "usage": {
     "model": "gemini-3.5-flash-lite",
     "input_tokens": 1548,
-    "output_tokens": 135,
-    "latency_ms": 1242
+    "output_tokens": 134,
+    "latency_ms": 950
   }
 }
