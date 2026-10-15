@@ -1,24 +1,31 @@
 from __future__ import annotations
 
-from farkad_ai.models.port import ModelPort
+from farkad_ai.models.port import (
+    Completion,
+    MediaBlob,
+    Model,
+    ModelTier,
+    PipelineStep,
+    Prompt,
+    Usage,
+)
 from farkad_ai.prompts import PromptAsset, briefed
 from farkad_ai.routing.pass_one import INSTRUCTIONS, Mention, PassOne, routing_instructions
 from farkad_ai.routing.port import (
     NotApplicable,
     NothingToLogReason,
-    PillarRegistryProtocol,
+    PillarRegistry,
     Routed,
     RoutingOutcome,
     StatedTime,
 )
-from farkad_ai.types import Completion, MediaBlob, ModelTier, PipelineStep, Prompt, Usage
 
 
 class Router:
     def __init__(
         self,
-        model: ModelPort,
-        registry: PillarRegistryProtocol,
+        model: Model,
+        registry: PillarRegistry,
         *,
         instructions: PromptAsset = INSTRUCTIONS,
     ) -> None:

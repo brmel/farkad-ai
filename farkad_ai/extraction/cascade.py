@@ -5,16 +5,16 @@ import logging
 from farkad_ai.extraction.port import (
     ExtractionContext,
     ExtractionResult,
-    PillarExtractionPort,
-    TieredExtractionPort,
+    Extractor,
+    TieredExtractor,
 )
-from farkad_ai.types import ModelTier, ModelUnavailableError, Unavailability
+from farkad_ai.models.port import ModelTier, ModelUnavailableError, Unavailability
 
 _log = logging.getLogger(__name__)
 
 
-class CascadingExtractor(PillarExtractionPort):
-    def __init__(self, extractor: TieredExtractionPort) -> None:
+class CascadingExtractor(Extractor):
+    def __init__(self, extractor: TieredExtractor) -> None:
         self._extractor = extractor
 
     async def extract(self, context: ExtractionContext) -> ExtractionResult:

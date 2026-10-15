@@ -7,19 +7,21 @@ from typing import Any
 
 from pydantic import BaseModel, ValidationError
 
-from farkad_ai.models.port import ModelChoice, ModelPort, TierChoices
-from farkad_ai.types import (
+from farkad_ai.models.port import (
     Completion,
+    Model,
+    ModelChoice,
     ModelTier,
     ModelUnavailableError,
     Prompt,
     Reasoning,
+    TierChoices,
     Unavailability,
     Usage,
 )
 
 
-class ProviderModel(ModelPort):
+class ProviderModel(Model):
     honoured_reasoning: Collection[Reasoning]
 
     def __init__(self, *, sdk_installed: bool, sdk: str, extra: str, choices: TierChoices) -> None:

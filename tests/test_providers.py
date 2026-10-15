@@ -5,11 +5,11 @@ from pydantic import BaseModel
 
 from farkad_ai.models.anthropic import AnthropicModel
 from farkad_ai.models.openai import OpenAIModel
-from farkad_ai.models.port import ModelChoice, fixed
-from farkad_ai.types import (
+from farkad_ai.models.port import (
     InputModality,
     MediaBlob,
     MediaType,
+    ModelChoice,
     ModelTier,
     ModelUnavailableError,
     PipelineStep,
@@ -17,6 +17,7 @@ from farkad_ai.types import (
     Reasoning,
     Unavailability,
     Usage,
+    fixed,
 )
 
 ADAPTERS = [

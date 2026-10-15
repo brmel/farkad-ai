@@ -24,7 +24,7 @@ from farkad_ai.memory.facts import (
 from farkad_ai.memory.habits import HabitBaseline, UsualAmount
 from farkad_ai.memory.inference import NOTHING_KNOWN, MemoryInferrer, subject_named
 from farkad_ai.memory.sheet import SHEET_CHARACTERS, core_sheet
-from farkad_ai.types import PipelineStep
+from farkad_ai.models.port import PipelineStep
 from tests.support import ScriptedModel, a_usage
 
 MONDAY = datetime(2026, 9, 21, 8, tzinfo=UTC)

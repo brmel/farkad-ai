@@ -15,14 +15,25 @@ from farkad_ai.memory.facts import Disclosure, Fact, FactSource, MemoryCategory
 from farkad_ai.memory.habits import HabitBaseline, UsualAmount
 from farkad_ai.memory.inference import Inference, MemoryInferrer
 from farkad_ai.models.port import (
+    Completion,
+    InputModality,
+    MediaBlob,
+    MediaType,
+    Model,
     ModelChoice,
-    ModelPort,
+    ModelTier,
+    ModelUnavailableError,
+    PipelineStep,
+    Prompt,
+    Reasoning,
     TierChoices,
+    Unavailability,
+    Usage,
     fixed,
 )
-from farkad_ai.pipeline.engine import CaptureEngine
+from farkad_ai.pipeline.engine import TwoPassCaptureEngine
 from farkad_ai.pipeline.port import (
-    CaptureEnginePort,
+    CaptureEngine,
     CaptureOutcome,
     CaptureRequest,
     Logged,
@@ -38,30 +49,16 @@ from farkad_ai.prompts import (
 from farkad_ai.routing.port import (
     NotApplicable,
     NothingToLogReason,
-    PillarRegistryProtocol,
-    PillarSpecProtocol,
+    PillarRegistry,
+    PillarSpec,
     Routed,
     RoutingOutcome,
     StatedTime,
 )
 from farkad_ai.routing.router import Router
-from farkad_ai.types import (
-    Completion,
-    InputModality,
-    MediaBlob,
-    MediaType,
-    ModelTier,
-    ModelUnavailableError,
-    PipelineStep,
-    Prompt,
-    Reasoning,
-    Unavailability,
-    Usage,
-)
 
 __all__ = [
     "CaptureEngine",
-    "CaptureEnginePort",
     "CaptureOutcome",
     "CaptureRequest",
     "Completion",
@@ -80,8 +77,8 @@ __all__ = [
     "MediaType",
     "MemoryCategory",
     "MemoryInferrer",
+    "Model",
     "ModelChoice",
-    "ModelPort",
     "ModelTier",
     "ModelUnavailableError",
     "NotApplicable",
@@ -90,8 +87,8 @@ __all__ = [
     "PillarEntries",
     "PillarExtractor",
     "PillarRefused",
-    "PillarRegistryProtocol",
-    "PillarSpecProtocol",
+    "PillarRegistry",
+    "PillarSpec",
     "PipelineStep",
     "Prompt",
     "PromptAsset",
@@ -102,6 +99,7 @@ __all__ = [
     "StatedTime",
     "TierChoices",
     "TrackedPillar",
+    "TwoPassCaptureEngine",
     "Unavailability",
     "Usage",
     "UsualAmount",

@@ -6,10 +6,10 @@ from datetime import time
 from enum import StrEnum
 from typing import Protocol
 
-from farkad_ai.types import Usage
+from farkad_ai.models.port import Usage
 
 
-class PillarSpecProtocol(Protocol):
+class PillarSpec(Protocol):
     @property
     def pillar(self) -> str: ...
 
@@ -17,8 +17,8 @@ class PillarSpecProtocol(Protocol):
     def intent(self) -> str: ...
 
 
-class PillarRegistryProtocol(Protocol):
-    def __iter__(self) -> Iterator[PillarSpecProtocol]: ...
+class PillarRegistry(Protocol):
+    def __iter__(self) -> Iterator[PillarSpec]: ...
     def knows(self, route: str) -> bool: ...
 
 

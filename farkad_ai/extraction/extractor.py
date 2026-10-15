@@ -12,16 +12,15 @@ from farkad_ai.extraction.port import (
     ExtractionResult,
     TrackedPillar,
 )
-from farkad_ai.models.port import ModelPort
+from farkad_ai.models.port import Completion, Model, ModelTier, PipelineStep, Prompt
 from farkad_ai.prompts import PromptAsset, briefed, prompt
-from farkad_ai.types import Completion, ModelTier, PipelineStep, Prompt
 
 INSTRUCTIONS = prompt("extraction")
 UNSTATED_FIELDS = frozenset({"pillar", "category"})
 
 
 class PillarExtractor:
-    def __init__(self, model: ModelPort, *, instructions: PromptAsset = INSTRUCTIONS) -> None:
+    def __init__(self, model: Model, *, instructions: PromptAsset = INSTRUCTIONS) -> None:
         self._model = model
         self._asset = instructions
 
