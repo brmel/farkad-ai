@@ -10,12 +10,12 @@
     "mentions": [
       {
         "pillar": "sleep",
-        "said": "siesta de veinte minutos",
+        "said": "dorm\u00ed una siesta de veinte minutos",
         "occurred_at_hint": null
       },
       {
         "pillar": "drugs",
-        "said": "un ibuprofeno de 400 mg",
+        "said": "tom\u00e9 un ibuprofeno de 400 mg",
         "occurred_at_hint": null
       }
     ]
@@ -23,7 +23,7 @@
   "usage": {
     "model": "gemini-3.5-flash-lite",
     "input_tokens": 1553,
-    "output_tokens": 139,
-    "latency_ms": 1015
+    "output_tokens": 144,
+    "latency_ms": 1010
   }
 }

@@ -13,13 +13,13 @@
         "said": "\u0646\u0639\u0633\u062a \u063a\u064a\u0631 \u062e\u0645\u0633 \u0633\u0648\u0627\u064a\u0639 cette nuit",
         "occurred_at_hint": {
           "phrase": "cette nuit",
-          "day_offset": -1,
+          "day_offset": 0,
           "clock": "22:00:00"
         }
       },
       {
         "pillar": "water",
-        "said": "pris un caf\u00e9 ce matin",
+        "said": "un caf\u00e9 ce matin",
         "occurred_at_hint": {
           "phrase": "ce matin",
           "day_offset": 0,
@@ -31,7 +31,7 @@
   "usage": {
     "model": "gemini-3.5-flash-lite",
     "input_tokens": 1550,
-    "output_tokens": 219,
-    "latency_ms": 1206
+    "output_tokens": 218,
+    "latency_ms": 1250
   }
 }

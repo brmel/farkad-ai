@@ -9,7 +9,7 @@ technique below is either used and measured, or left out with the reason.
 
 | You say | It logs |
 | --- | --- |
-| شربت كأسين ماء et j'ai couru 5 kilometres | **water** 2 glasses, 400 ml · **exercise** run, 5,000 m |
+| شربت كأسين ماء et j'ai couru 5 kilometres | **water** 2 glasses, 500 ml · **exercise** run, 5,000 m |
 
 Arabic, then French, in one sentence: each part goes to its topic, and the transcript keeps the
 words as they were said.
@@ -42,17 +42,15 @@ words as they were said.
 ## Measured
 
 Fifteen example sentences, three per language, replayed from answers recorded on
-`gemini-3.5-flash-lite` on 2026-10-14:
+`gemini-3.5-flash-lite` on 2026-10-15:
 
 | Language | Routing | Fields | Cost per sentence |
 | --- | --: | --: | --: |
-| English | 100% | 100% | 0.124¢ |
-| French | 100% | 100% | 0.118¢ |
+| English | 100% | 100% | 0.127¢ |
+| French | 100% | 100% | 0.117¢ |
 | Arabic | 100% | 100% | 0.081¢ |
-| Spanish | 100% | 100% | 0.103¢ |
-| Mixed languages | 100% | 90% | 0.137¢ |
-
-The one miss: in a Darija and French sentence, the coffee was not logged.
+| Spanish | 100% | 100% | 0.100¢ |
+| Mixed languages | 100% | 100% | 0.139¢ |
 
 ## Try it
 
