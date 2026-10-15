@@ -1,4 +1,4 @@
-"""The model docstrings here reach Gemini as schema descriptions, so they are prompt text."""
+"""Docstrings and descriptions here reach the model in its answer schema: they are prompt text."""
 
 from __future__ import annotations
 

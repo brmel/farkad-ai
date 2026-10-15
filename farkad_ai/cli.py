@@ -11,9 +11,21 @@ from farkad_ai.examples import EXAMPLE_PILLARS, ExampleCatalogue
 from farkad_ai.models.factory import ProviderName, create_model
 from farkad_ai.models.recorded import RecordingModel
 from farkad_ai.prompts import list_prompts
-from farkad_ai.routing.router import NotApplicable, Routed, Router
+from farkad_ai.routing.port import NotApplicable, Routed
+from farkad_ai.routing.router import Router
 
 CLI_PILLARS = frozenset(pillar.pillar for pillar in EXAMPLE_PILLARS)
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+    match args.command:
+        case "route":
+            return print_routing(args)
+        case "eval":
+            return print_eval(args)
+        case _:
+            return print_prompts()
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -92,14 +104,3 @@ def print_prompts() -> int:
     for asset in list_prompts():
         sys.stdout.write(f"{asset.name:<15} (version: {asset.version}) [{len(asset.text)} chars]\n")
     return 0
-
-
-def main(argv: list[str] | None = None) -> int:
-    args = build_parser().parse_args(argv)
-    match args.command:
-        case "route":
-            return print_routing(args)
-        case "eval":
-            return print_eval(args)
-        case _:
-            return print_prompts()

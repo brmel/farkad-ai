@@ -1,20 +1,19 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from farkad_ai.eval.pricing import cost_cents
 from farkad_ai.eval.scoring import CaptureScore, RunScore, score_capture
 from farkad_ai.examples import EXAMPLE_PILLARS, ExampleCatalogue
 from farkad_ai.models.port import ModelPort
 from farkad_ai.models.recorded import RecordingModel
 from farkad_ai.pipeline.engine import CaptureEngine
-from farkad_ai.pipeline.types import CaptureRequest, Logged, NothingToLog
-from farkad_ai.types import Usage
+from farkad_ai.pipeline.port import CaptureRequest, Logged, NothingToLog
 
 RECORDINGS = Path(__file__).parent / "recordings"
 GOLD = Path(__file__).parent / "example_gold.json"
@@ -45,42 +44,19 @@ class GoldSet(BaseModel):
 
 
 @dataclass(frozen=True, slots=True)
-class TokenPrice:
-    input_usd_per_million: float
-    output_usd_per_million: float
-
-    def cents(self, usage: Usage) -> float:
-        dollars = (
-            usage.input_tokens * self.input_usd_per_million
-            + usage.output_tokens * self.output_usd_per_million
-        ) / 1_000_000
-        return dollars * 100
-
-
-# Vertex AI's list price for text input: https://cloud.google.com/vertex-ai/generative-ai/pricing
-PRICES: Mapping[str, TokenPrice] = {"gemini-3.5-flash-lite": TokenPrice(0.30, 2.50)}
-
-
-class UnpricedModelError(Exception):
-    def __init__(self, model: str) -> None:
-        super().__init__(f"no price for {model}; add it to PRICES to measure its cost")
-        self.model = model
-
-
-def cost_cents(usage: Usage) -> float:
-    if usage.model not in PRICES:
-        raise UnpricedModelError(usage.model)
-    return PRICES[usage.model].cents(usage)
-
-
-@dataclass(frozen=True, slots=True)
 class Scored:
     case: GoldCase
     score: CaptureScore
     models: frozenset[str]
 
 
-async def score_case(engine: CaptureEngine, case: GoldCase) -> Scored:
+async def evaluate(model: ModelPort, gold: Path = GOLD) -> tuple[Scored, ...]:
+    engine = CaptureEngine(model, ExampleCatalogue())
+    cases = GoldSet.model_validate(json.loads(gold.read_text(encoding="utf-8"))).cases
+    return tuple([await _score_case(engine, case) for case in cases])
+
+
+async def _score_case(engine: CaptureEngine, case: GoldCase) -> Scored:
     outcome = await engine.capture(CaptureRequest(tracked=EXAMPLE_PILLARS, text=case.utterance))
     match outcome:
         case Logged(routes=routes, extracted=extracted):
@@ -98,12 +74,6 @@ async def score_case(engine: CaptureEngine, case: GoldCase) -> Scored:
     return Scored(case, score, frozenset(usage.model for usage in outcome.usages))
 
 
-async def evaluate(model: ModelPort, gold: Path = GOLD) -> tuple[Scored, ...]:
-    engine = CaptureEngine(model, ExampleCatalogue())
-    cases = GoldSet.model_validate(json.loads(gold.read_text(encoding="utf-8"))).cases
-    return tuple([await score_case(engine, case) for case in cases])
-
-
 def replace_recordings(recorder: RecordingModel) -> int:
     for stale in RECORDINGS.glob("*.json"):
         stale.unlink()
@@ -116,18 +86,18 @@ def report(run: tuple[Scored, ...]) -> str:
         "| --- | --: | --: | --: | --: |",
     ]
     for language in Language:
-        rows.append(row(language.value, [each for each in run if each.case.language is language]))
-    rows.append(row("all", list(run)))
+        rows.append(_row(language.value, [each for each in run if each.case.language is language]))
+    rows.append(_row("all", list(run)))
     models = sorted(frozenset().union(*(each.models for each in run)))
     return (
         "\n".join(
-            [*rows, "", f"Model: {', '.join(models)}", *(f"Miss: {miss}" for miss in misses(run))]
+            [*rows, "", f"Model: {', '.join(models)}", *(f"Miss: {miss}" for miss in _misses(run))]
         )
         + "\n"
     )
 
 
-def row(label: str, scored: list[Scored]) -> str:
+def _row(label: str, scored: list[Scored]) -> str:
     score = RunScore(tuple(each.score for each in scored))
     return (
         f"| {label} | {len(scored)} | {score.routing_accuracy:.0%} | "
@@ -135,7 +105,7 @@ def row(label: str, scored: list[Scored]) -> str:
     )
 
 
-def misses(run: tuple[Scored, ...]) -> list[str]:
+def _misses(run: tuple[Scored, ...]) -> list[str]:
     found = []
     for each in run:
         score = each.score

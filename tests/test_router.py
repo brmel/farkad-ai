@@ -2,14 +2,15 @@ from datetime import time
 
 import pytest
 
-from farkad_ai.routing.pass_one import Mention, PassOne, StatedTime, TimeHint
-from farkad_ai.routing.router import (
+from farkad_ai.routing.pass_one import Mention, PassOne, TimeHint
+from farkad_ai.routing.port import (
     NotApplicable,
     NothingToLogReason,
     Routed,
-    Router,
     RoutingOutcome,
+    StatedTime,
 )
+from farkad_ai.routing.router import Router
 from tests.support import Registry, ScriptedModel, Spec
 
 pytestmark = pytest.mark.anyio
@@ -114,3 +115,8 @@ async def test_the_model_is_told_every_pillar_the_registry_holds() -> None:
 
     told = model.asked[0].instructions
     assert [spec for spec in REGISTRY if f"- {spec.pillar}: {spec.intent}" not in told] == []
+
+
+def test_a_stated_time_names_a_day_only_when_it_is_not_today() -> None:
+    assert not StatedTime(phrase="at 3pm", day_offset=0, clock=time(15, 0)).names_a_day
+    assert StatedTime(phrase="yesterday at 3pm", day_offset=-1, clock=time(15, 0)).names_a_day

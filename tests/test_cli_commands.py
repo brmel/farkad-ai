@@ -5,7 +5,7 @@ from farkad_ai.cli import main
 from farkad_ai.eval.run import Language
 
 
-def test_cli_prompts_lists_all_prompt_assets() -> None:
+def test_prompts_lists_every_prompt_asset() -> None:
     stdout = StringIO()
     with patch("sys.stdout", stdout):
         code = main(["prompts"])

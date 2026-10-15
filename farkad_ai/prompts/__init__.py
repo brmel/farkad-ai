@@ -4,12 +4,9 @@ from dataclasses import dataclass
 from hashlib import sha256
 from importlib.resources import files
 
+ASSETS = files("farkad_ai.prompts.assets")
+SUFFIX = ".txt"
 VERSION_LENGTH = 12
-KNOWN_PROMPTS: tuple[str, ...] = (
-    "pass_one",
-    "extraction",
-    "memory_inference",
-)
 
 
 @dataclass(frozen=True, slots=True)
@@ -26,17 +23,15 @@ class PromptAsset:
 
 
 def prompt(name: str) -> PromptAsset:
-    text = (
-        files("farkad_ai.prompts.assets")
-        .joinpath(f"{name}.txt")
-        .read_text(encoding="utf-8")
-        .strip()
-    )
+    text = ASSETS.joinpath(f"{name}{SUFFIX}").read_text(encoding="utf-8").strip()
     return PromptAsset(name=name, text=text)
 
 
 def list_prompts() -> tuple[PromptAsset, ...]:
-    return tuple(prompt(name) for name in KNOWN_PROMPTS)
+    names = sorted(
+        entry.name.removesuffix(SUFFIX) for entry in ASSETS.iterdir() if entry.name.endswith(SUFFIX)
+    )
+    return tuple(prompt(name) for name in names)
 
 
 def briefed(instructions: str, briefing: str) -> str:

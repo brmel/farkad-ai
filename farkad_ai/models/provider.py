@@ -30,9 +30,6 @@ class ProviderModel(ModelPort):
             )
         self._choices = choices
 
-    async def model_for(self, tier: ModelTier) -> str:
-        return (await self._chosen(tier)).model
-
     async def complete[T: BaseModel](
         self, prompt: Prompt, *, schema: type[T], tier: ModelTier
     ) -> Completion[T]:

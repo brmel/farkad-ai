@@ -1,14 +1,11 @@
-from datetime import time
-
 import pytest
 from pydantic import BaseModel
 
-from farkad_ai.extraction.port import ExtractionContext, ExtractionResult, Finding
+from farkad_ai.extraction.port import Finding
 from farkad_ai.pipeline.engine import CaptureEngine
-from farkad_ai.pipeline.specialists import extract_each
-from farkad_ai.pipeline.types import CaptureRequest, Logged, NothingToLog
-from farkad_ai.routing.pass_one import Mention, PassOne, StatedTime
-from farkad_ai.routing.router import NothingToLogReason
+from farkad_ai.pipeline.port import CaptureRequest, Logged, NothingToLog
+from farkad_ai.routing.pass_one import Mention, PassOne
+from farkad_ai.routing.port import NothingToLogReason
 from farkad_ai.types import (
     Completion,
     ModelTier,
@@ -51,20 +48,19 @@ class RefusesToHear(AnswersByStep):
         return await super().complete(prompt, schema=schema, tier=tier)
 
 
-class BrokenSpecialist:
-    async def extract(self, context: ExtractionContext) -> ExtractionResult:
-        raise KeyError("entries")
+class BreaksOnExtraction(AnswersByStep):
+    async def complete[T: BaseModel](
+        self, prompt: Prompt, *, schema: type[T], tier: ModelTier
+    ) -> Completion[T]:
+        if prompt.step is PipelineStep.extraction:
+            raise KeyError("entries")
+        return await super().complete(prompt, schema=schema, tier=tier)
 
 
 async def captured(model: AnswersByStep, *tracked: Tracked) -> Logged | NothingToLog:
     return await CaptureEngine(model, CATALOGUE).capture(
         CaptureRequest(tracked=tracked, text="said")
     )
-
-
-def test_stated_time_names_a_day_invariant() -> None:
-    assert not StatedTime(phrase="at 3pm", day_offset=0, clock=time(15, 0)).names_a_day
-    assert StatedTime(phrase="yesterday at 3pm", day_offset=-1, clock=time(15, 0)).names_a_day
 
 
 async def test_each_tracked_pillar_named_comes_back_with_its_entries() -> None:
@@ -136,8 +132,10 @@ async def test_a_refused_pillar_is_reported_with_why_and_the_other_keeps_its_ent
 
 
 async def test_a_bug_in_a_specialist_is_raised_not_reported_as_refused() -> None:
+    model = BreaksOnExtraction(routing=heard(("water", "a glass")))
+
     with pytest.raises(KeyError):
-        await extract_each(BrokenSpecialist(), {"water": ("a glass",)}, "a glass", {"water": WATER})
+        await captured(model, WATER)
 
 
 async def test_a_capture_naming_no_tracked_pillar_logs_nothing() -> None:

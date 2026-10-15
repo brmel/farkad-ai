@@ -19,30 +19,30 @@ from farkad_ai.types import (
     Usage,
 )
 
+ADAPTERS = [
+    pytest.param(AnthropicModel, "farkad_ai.models.anthropic._ANTHROPIC_AVAILABLE", id="anthropic"),
+    pytest.param(OpenAIModel, "farkad_ai.models.openai._OPENAI_AVAILABLE", id="openai"),
+]
+
 
 class HealthFact(BaseModel):
     category: str
     amount: int
 
 
-def test_missing_anthropic_dependency_raises_clear_error() -> None:
+@pytest.mark.parametrize(("adapter", "sdk_installed"), ADAPTERS)
+def test_an_adapter_without_its_sdk_says_what_to_install(
+    adapter: type[AnthropicModel] | type[OpenAIModel], sdk_installed: str
+) -> None:
     with (
-        patch("farkad_ai.models.anthropic._ANTHROPIC_AVAILABLE", False),
-        pytest.raises(RuntimeError, match="anthropic is required"),
+        patch(sdk_installed, False),
+        pytest.raises(RuntimeError, match=f"is required to use {adapter.__name__}"),
     ):
-        AnthropicModel(Mock())
-
-
-def test_missing_openai_dependency_raises_clear_error() -> None:
-    with (
-        patch("farkad_ai.models.openai._OPENAI_AVAILABLE", False),
-        pytest.raises(RuntimeError, match="openai is required"),
-    ):
-        OpenAIModel(Mock())
+        adapter(Mock())
 
 
 @pytest.mark.anyio
-async def test_anthropic_model_parses_tool_response() -> None:
+async def test_an_anthropic_tool_answer_is_parsed_and_counted() -> None:
     client = Mock()
     mock_tool_block = Mock()
     mock_tool_block.type = "tool_use"
@@ -59,7 +59,6 @@ async def test_anthropic_model_parses_tool_response() -> None:
 
     with patch("farkad_ai.models.anthropic._ANTHROPIC_AVAILABLE", True):
         adapter = AnthropicModel(client)
-        assert await adapter.model_for(ModelTier.fast) == "claude-haiku-4-5-20251001"
 
         prompt = Prompt(
             step=PipelineStep.routing,
@@ -73,10 +72,11 @@ async def test_anthropic_model_parses_tool_response() -> None:
         assert completion.value.amount == 250
         assert completion.usage.input_tokens == 40
         assert completion.usage.output_tokens == 15
+        assert client.messages.create.call_args.kwargs["model"] == "claude-haiku-4-5-20251001"
 
 
 @pytest.mark.anyio
-async def test_openai_model_parses_structured_response() -> None:
+async def test_an_openai_structured_answer_is_parsed_and_counted() -> None:
     client = Mock()
     mock_choice = Mock()
     mock_choice.message = Mock()
@@ -96,7 +96,6 @@ async def test_openai_model_parses_structured_response() -> None:
 
     with patch("farkad_ai.models.openai._OPENAI_AVAILABLE", True):
         adapter = OpenAIModel(client)
-        assert await adapter.model_for(ModelTier.standard) == "gpt-4o"
 
         prompt = Prompt(
             step=PipelineStep.extraction,
@@ -110,6 +109,7 @@ async def test_openai_model_parses_structured_response() -> None:
         assert completion.value.amount == 8
         assert completion.usage.input_tokens == 50
         assert completion.usage.output_tokens == 20
+        assert client.beta.chat.completions.parse.call_args.kwargs["model"] == "gpt-4o"
 
 
 @pytest.mark.parametrize(
@@ -136,15 +136,16 @@ def test_a_calls_usage_says_what_it_carried(
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize("adapter", [AnthropicModel, OpenAIModel])
+@pytest.mark.parametrize(("adapter", "sdk_installed"), ADAPTERS)
 async def test_a_reasoning_level_the_adapter_cannot_honour_is_refused_not_ignored(
-    adapter: type[AnthropicModel] | type[OpenAIModel],
+    adapter: type[AnthropicModel] | type[OpenAIModel], sdk_installed: str
 ) -> None:
     thinking = fixed({ModelTier.standard: ModelChoice("some-model", Reasoning.brief)})
-    module = adapter.__module__
-    flag = "_ANTHROPIC_AVAILABLE" if adapter is AnthropicModel else "_OPENAI_AVAILABLE"
-    with patch(f"{module}.{flag}", True):
+    with patch(sdk_installed, True):
         model = adapter(Mock(), choices=thinking)
-        with pytest.raises(ModelUnavailableError) as refused:
-            await model.model_for(ModelTier.standard)
+    asked = Prompt(step=PipelineStep.extraction, instructions="Extract", instructions_version="v1")
+
+    with pytest.raises(ModelUnavailableError) as refused:
+        await model.complete(asked, schema=HealthFact, tier=ModelTier.standard)
+
     assert refused.value.because is Unavailability.unsupported_request
