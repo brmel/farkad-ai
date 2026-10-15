@@ -15,7 +15,7 @@
       },
       {
         "pillar": "water",
-        "said": "puis j'ai bu un grand verre d'eau",
+        "said": "un grand verre d'eau",
         "occurred_at_hint": null
       }
     ]
@@ -23,7 +23,7 @@
   "usage": {
     "model": "gemini-3.5-flash-lite",
     "input_tokens": 1549,
-    "output_tokens": 138,
-    "latency_ms": 1143
+    "output_tokens": 132,
+    "latency_ms": 1329
   }
 }
