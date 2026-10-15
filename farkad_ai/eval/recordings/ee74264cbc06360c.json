@@ -10,7 +10,7 @@
     "mentions": [
       {
         "pillar": "water",
-        "said": "dos vasos de agua",
+        "said": "beb\u00ed dos vasos de agua",
         "occurred_at_hint": null
       }
     ]
@@ -18,7 +18,7 @@
   "usage": {
     "model": "gemini-3.5-flash-lite",
     "input_tokens": 1538,
-    "output_tokens": 81,
-    "latency_ms": 1009
+    "output_tokens": 83,
+    "latency_ms": 780
   }
 }

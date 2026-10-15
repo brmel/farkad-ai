@@ -19,6 +19,6 @@
     "model": "gemini-3.5-flash-lite",
     "input_tokens": 1546,
     "output_tokens": 100,
-    "latency_ms": 991
+    "latency_ms": 989
   }
 }

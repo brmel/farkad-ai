@@ -1,5 +1,5 @@
 {
-  "why": "Three sentences per language, scored against the example pillars in farkad_ai/examples.py. Only what the sentence states is scored: a name or a glass's volume the model must guess is left out. The code-switched sentences mix Arabic or Moroccan Darija with French, as they are spoken.",
+  "why": "Three sentences per language, scored against the example pillars in farkad_ai/examples.py. Only what the sentence states or the example pillar declares is scored, such as a glass's 250 ml: a name or a big glass's volume the model must guess is left out. The code-switched sentences mix Arabic or Moroccan Darija with French, as they are spoken.",
   "cases": [
     {
       "language": "en",
@@ -13,7 +13,7 @@
       "routes": ["exercise", "food", "water"],
       "expected": {
         "food": [{"count": 2}],
-        "water": [{"category": "water"}],
+        "water": [{"category": "water", "volume_ml": 250}],
         "exercise": [{"category": "walk", "duration_minutes": 20}]
       }
     },
@@ -68,7 +68,7 @@
       "language": "es",
       "utterance": "bebí dos vasos de agua",
       "routes": ["water"],
-      "expected": {"water": [{"category": "water", "count": 2}]}
+      "expected": {"water": [{"category": "water", "count": 2, "volume_ml": 500}]}
     },
     {
       "language": "es",
@@ -90,7 +90,7 @@
       "utterance": "شربت كأسين ماء et j'ai couru 5 kilometres",
       "routes": ["exercise", "water"],
       "expected": {
-        "water": [{"category": "water", "count": 2}],
+        "water": [{"category": "water", "count": 2, "volume_ml": 500}],
         "exercise": [{"category": "run", "distance_m": 5000}]
       }
     },

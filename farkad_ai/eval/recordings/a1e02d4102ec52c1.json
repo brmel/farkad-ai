@@ -2,7 +2,7 @@
   "tier": "fast",
   "schema": "LogBatch",
   "instructions": "Extract every medication entry from what you are given, and nothing else.\n\nOne entry per medication taken.\n\nWhat you are given is the part of a log that is medication, one thing per line, in the words\nthe log used. Return one entry for each line \u2014 two only where a line is really two things.\nAn entry is that thing alone: its name and its amounts come from its own line.\n\nThe whole log, for what it says about when or how \u2014 never as more things to record, because\nthe rest of it is recorded elsewhere and recording it here would count it twice:\ndorm\u00ed una siesta de veinte minutos y tom\u00e9 un ibuprofeno de 400 mg\n\nLeave a field out rather than inventing a value for it; a missing field is honest, a\nguessed one is not.\n\nA word the user actually said is not a guess. Read it onto the field's own scale: a\nfield described as 1 poor to 5 excellent has a value for \"badly\", and a stated size or\nintensity changes the amount you would otherwise have assumed \u2014 \"a big glass\" is more\nthan a glass. A count of servings is a stated amount too: \"one scoop\", \"a dose\", \"two\ncapsules\" is that many of the product's usual serving, so estimate the amount from it.\nOmitting is for what the user left unsaid, not for what they said without a number.\n\nWorked examples:\n\"an aspirin of 300 mg\" \u2192 {\"name\": \"aspirin\", \"dose_mg\": 300}",
-  "utterance": "un ibuprofeno de 400 mg",
+  "utterance": "tom\u00e9 un ibuprofeno de 400 mg",
   "value": {
     "entries": [
       {
@@ -13,8 +13,8 @@
   },
   "usage": {
     "model": "gemini-3.5-flash-lite",
-    "input_tokens": 484,
+    "input_tokens": 486,
     "output_tokens": 21,
-    "latency_ms": 746
+    "latency_ms": 1307
   }
 }

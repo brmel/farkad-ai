@@ -113,7 +113,8 @@ EXAMPLE_PILLARS: tuple[ExamplePillar, ...] = (
         "water",
         "water, tea, black coffee and other drinks without energy",
         "drink",
-        "A glass is 250 ml and a cup 200 ml unless the user said otherwise.",
+        "A glass is 250 ml and a cup 200 ml unless the user said otherwise. كأس and كاس are "
+        "glasses, as are verre and vaso; a cup is a tasse, taza or فنجان.",
         '"a big glass of water" → {"category": "water", "count": 1, "volume_ml": 350}',
         WaterEntry,
     ),
