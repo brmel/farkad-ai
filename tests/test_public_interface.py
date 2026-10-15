@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from farkad_ai import CaptureEngine, CaptureRequest, PromptAsset, Router
+from farkad_ai import CaptureRequest, PromptAsset, Router, TwoPassCaptureEngine
 from farkad_ai.memory.inference import InferredFacts, MemoryInferrer
 from farkad_ai.routing.pass_one import Mention, PassOne
 from tests.support import AnswersByStep, Registry, ScriptedModel, Spec, Tracked
@@ -42,7 +42,7 @@ async def test_the_engine_extracts_with_the_prompt_it_is_given() -> None:
         ),
         extraction={"entries": []},
     )
-    engine = CaptureEngine(model, Registry(Spec("water", "drinks")), extraction_prompt=own)
+    engine = TwoPassCaptureEngine(model, Registry(Spec("water", "drinks")), extraction_prompt=own)
 
     await engine.capture(CaptureRequest(tracked=(Tracked("water", title="Water"),), text="x"))
 

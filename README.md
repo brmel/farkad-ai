@@ -68,13 +68,16 @@ Install the `google`, `anthropic` or `openai` extra for the provider you use.
 ## Layout
 
 In the order a capture flows through `farkad_ai/`. Where a package has a `port.py`, it holds the
-types that cross its boundary.
+types that cross its boundary. An interface there is named for the role it plays, with no `Port`
+or `Protocol` suffix since `port.py` already says it is one, and an implementation for how it plays
+it: `Model` and `RecordedModel`, `CaptureEngine` and `TwoPassCaptureEngine`.
 
-- `pipeline/`: `CaptureEngine`, which routes a capture once and extracts each topic it names
+- `pipeline/`: `TwoPassCaptureEngine`, which routes a capture once and extracts each topic it names
 - `routing/`: the one call that transcribes the capture and names its topics
 - `extraction/`: one call per topic, in the app's schema, escalated when the answer does not parse
 - `memory/`: facts the user states, and the short sheet given back to every capture
-- `models/`: adapters for Gemini on Vertex AI, Claude and GPT, and the replay of recorded answers
+- `models/`: the `Model` every stage calls, with the prompt, completion and usage it speaks in;
+  adapters for Gemini on Vertex AI, Claude and GPT; and the replay of recorded answers
 - `eval/`: the gold set, its recorded answers, scoring and pricing
 - `prompts/`: the prompt texts, each versioned by a hash of its text
 - `cli.py`: `farkad-ai route`, `eval` and `prompts`

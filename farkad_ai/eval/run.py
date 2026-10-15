@@ -10,9 +10,9 @@ from pydantic import BaseModel, ConfigDict, Field
 from farkad_ai.eval.pricing import cost_cents
 from farkad_ai.eval.scoring import CaptureScore, RunScore, score_capture
 from farkad_ai.examples import EXAMPLE_PILLARS, ExampleCatalogue
-from farkad_ai.models.port import ModelPort
+from farkad_ai.models.port import Model
 from farkad_ai.models.recorded import RecordingModel
-from farkad_ai.pipeline.engine import CaptureEngine
+from farkad_ai.pipeline.engine import TwoPassCaptureEngine
 from farkad_ai.pipeline.port import CaptureRequest, Logged, NothingToLog
 
 RECORDINGS = Path(__file__).parent / "recordings"
@@ -50,13 +50,13 @@ class Scored:
     models: frozenset[str]
 
 
-async def evaluate(model: ModelPort, gold: Path = GOLD) -> tuple[Scored, ...]:
-    engine = CaptureEngine(model, ExampleCatalogue())
+async def evaluate(model: Model, gold: Path = GOLD) -> tuple[Scored, ...]:
+    engine = TwoPassCaptureEngine(model, ExampleCatalogue())
     cases = GoldSet.model_validate(json.loads(gold.read_text(encoding="utf-8"))).cases
     return tuple([await _score_case(engine, case) for case in cases])
 
 
-async def _score_case(engine: CaptureEngine, case: GoldCase) -> Scored:
+async def _score_case(engine: TwoPassCaptureEngine, case: GoldCase) -> Scored:
     outcome = await engine.capture(CaptureRequest(tracked=EXAMPLE_PILLARS, text=case.utterance))
     match outcome:
         case Logged(routes=routes, extracted=extracted):

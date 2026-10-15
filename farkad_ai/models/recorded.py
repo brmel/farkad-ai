@@ -6,8 +6,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from farkad_ai.models.port import ModelPort, TierChoices
-from farkad_ai.types import Completion, ModelTier, Prompt, Usage
+from farkad_ai.models.port import Completion, Model, ModelTier, Prompt, TierChoices, Usage
 
 
 class NoRecordedResponseError(Exception):
@@ -44,7 +43,7 @@ SCHEMA_CHANGED = (
 )
 
 
-class RecordedModel(ModelPort):
+class RecordedModel(Model):
     def __init__(self, directory: Path, *, pinned: TierChoices | None = None) -> None:
         self._directory = directory
         self._pinned = pinned
@@ -91,8 +90,8 @@ class RecordedModel(ModelPort):
         return None
 
 
-class RecordingModel(ModelPort):
-    def __init__(self, live: ModelPort, directory: Path) -> None:
+class RecordingModel(Model):
+    def __init__(self, live: Model, directory: Path) -> None:
         self._live = live
         self._directory = directory
         self._pending: dict[str, str] = {}

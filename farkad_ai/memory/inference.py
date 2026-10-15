@@ -14,9 +14,8 @@ from farkad_ai.memory.facts import (
     Fact,
     MemoryCategory,
 )
-from farkad_ai.models.port import ModelPort
+from farkad_ai.models.port import Model, ModelTier, PipelineStep, Prompt, Usage
 from farkad_ai.prompts import PromptAsset, prompt
-from farkad_ai.types import ModelTier, PipelineStep, Prompt, Usage
 
 INSTRUCTIONS = prompt("memory_inference")
 MAX_SUBJECT_CHARACTERS = 40
@@ -53,7 +52,7 @@ class Inference:
 
 
 class MemoryInferrer:
-    def __init__(self, model: ModelPort, *, instructions: PromptAsset = INSTRUCTIONS) -> None:
+    def __init__(self, model: Model, *, instructions: PromptAsset = INSTRUCTIONS) -> None:
         self._model = model
         self._asset = instructions
 
