@@ -20,11 +20,14 @@ pytestmark = pytest.mark.anyio
 CATALOGUE = (Spec("water", "tracks water intake"), Spec("food", "logs meals and snacks"))
 
 
-def heard(*pillars: str, is_health_related: bool = True) -> PassOne:
+def heard(
+    *pillars: str, is_health_related: bool = True, states_a_lasting_fact: bool = False
+) -> PassOne:
     return PassOne(
         transcript="I drank two glasses of water",
         language="en",
         is_health_related=is_health_related,
+        states_a_lasting_fact=states_a_lasting_fact,
         mentions=[Mention(pillar=pillar, said=f"some {pillar}") for pillar in pillars],
     )
 
@@ -46,6 +49,7 @@ class TestTheRouterDecidesRatherThanTheModel:
             transcript="a smoothie, a scoop of whey and a dose of creatine",
             language="en",
             is_health_related=True,
+            states_a_lasting_fact=False,
             mentions=[
                 Mention(pillar="food", said="a smoothie"),
                 Mention(pillar="water", said="a glass of water"),
@@ -91,6 +95,7 @@ class TestTheRouterDecidesRatherThanTheModel:
             transcript="a coffee at eight, and two glasses of water",
             language="en",
             is_health_related=True,
+            states_a_lasting_fact=False,
             mentions=[
                 Mention(
                     pillar="food",
@@ -108,6 +113,22 @@ class TestTheRouterDecidesRatherThanTheModel:
             "food": StatedTime(phrase="at eight", day_offset=0, time_of_day=time(8, 0)),
             "water": None,
         }
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        heard("water", states_a_lasting_fact=True),
+        heard("food", states_a_lasting_fact=True),
+        heard(is_health_related=False, states_a_lasting_fact=True),
+    ],
+)
+async def test_a_lasting_fact_is_reported_whether_or_not_anything_is_logged(
+    answer: PassOne,
+) -> None:
+    outcome = await routed(answer, frozenset({"water"}))
+
+    assert outcome.states_a_lasting_fact
 
 
 async def test_the_model_is_told_every_pillar_the_catalogue_holds() -> None:

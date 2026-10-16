@@ -17,9 +17,28 @@ from farkad_ai.prompts import PromptAsset, prompt
 INSTRUCTIONS = prompt("memory_inference")
 MAX_SUBJECT_CHARACTERS = 40
 NOTHING_KNOWN = "(nothing yet)"
+NOTHING_SWITCHED_OFF = "(none)"
 CONTENT_DESCRIPTION = "The fact as one short sentence, in the language it was said"
 
 _log = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True, slots=True)
+class StatedDay:
+    phrase: str
+    day_offset: int
+
+
+class InferredEnd(BaseModel):
+    """When the person said the fact stops applying."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    phrase: str = Field(description="Their words for the end, exactly as said")
+    day_offset: int = Field(description="Days from today to the last day it applies")
+
+    def stated(self) -> StatedDay:
+        return StatedDay(phrase=self.phrase, day_offset=self.day_offset)
 
 
 class InferredFact(BaseModel):
@@ -30,6 +49,12 @@ class InferredFact(BaseModel):
     subject: str = Field(description="snake_case topic in English; reuse a known one")
     category: str
     content: str = Field(description=CONTENT_DESCRIPTION)
+    until: InferredEnd | None = Field(
+        default=None, description="Only when the person bounded the fact in time; null otherwise"
+    )
+    asked_to_remember: bool = Field(
+        description="True only when the person explicitly asked for this to be remembered"
+    )
 
 
 class InferredFacts(BaseModel):
@@ -41,8 +66,15 @@ class InferredFacts(BaseModel):
 
 
 @dataclass(frozen=True, slots=True)
+class Statement[Category: StrEnum]:
+    disclosure: Disclosure[Category]
+    until: StatedDay | None
+    asked_to_remember: bool
+
+
+@dataclass(frozen=True, slots=True)
 class Inference[Category: StrEnum]:
-    disclosures: tuple[Disclosure[Category], ...]
+    statements: tuple[Statement[Category], ...]
     usage: Usage
 
 
@@ -60,13 +92,17 @@ class MemoryInferrer[Category: StrEnum]:
         self._schema = _answer_schema(categories, max_content_characters)
         self._asset = instructions
 
-    async def infer(self, said: str, known: Iterable[Fact[Category]]) -> Inference[Category]:
+    async def infer(
+        self, said: str, known: Iterable[Fact[Category]], *, switched_off: Iterable[str]
+    ) -> Inference[Category]:
         known = tuple(known)
         completion = await self._model.complete(
             Prompt(
                 step=PipelineStep.memory,
                 instructions=self._asset.format(
-                    categories=_either(self._categories), known=_listed(known)
+                    categories=_either(self._categories),
+                    known=_listed(known),
+                    switched_off=", ".join(switched_off) or NOTHING_SWITCHED_OFF,
                 ),
                 instructions_version=self._asset.version,
                 utterance=said,
@@ -76,22 +112,26 @@ class MemoryInferrer[Category: StrEnum]:
         )
         subjects = _subjects_of(known)
         return Inference(
-            disclosures=tuple(
-                disclosure
+            statements=tuple(
+                statement
                 for inferred in completion.value.facts
-                if (disclosure := self._disclosed(inferred, subjects)) is not None
+                if (statement := self._stated(inferred, subjects)) is not None
             ),
             usage=completion.usage,
         )
 
-    def _disclosed(
+    def _stated(
         self, inferred: InferredFact, known: Mapping[str, str]
-    ) -> Disclosure[Category] | None:
+    ) -> Statement[Category] | None:
         subject = known.get(inferred.subject.casefold()) or subject_named(inferred.subject)
         if not subject or not inferred.content.strip():
             _log.warning("inferred fact dropped: no usable subject or content")
             return None
-        return Disclosure(subject, self._categories(inferred.category), inferred.content.strip())
+        return Statement(
+            Disclosure(subject, self._categories(inferred.category), inferred.content.strip()),
+            until=None if inferred.until is None else inferred.until.stated(),
+            asked_to_remember=inferred.asked_to_remember,
+        )
 
 
 def subject_named(said: str) -> str:

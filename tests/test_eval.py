@@ -14,6 +14,7 @@ A_GLASS = PassOne(
     transcript="a glass",
     language="en",
     is_health_related=True,
+    states_a_lasting_fact=False,
     mentions=[Mention(pillar="water", said="a glass")],
 )
 
@@ -64,7 +65,13 @@ async def test_a_refusal_other_than_an_unparsed_answer_is_raised() -> None:
 
 async def test_the_example_eval_reports_tokens_for_a_model_of_any_provider() -> None:
     model = AnswersByStep(
-        routing=PassOne(transcript="", language="en", is_health_related=False, mentions=[])
+        routing=PassOne(
+            transcript="",
+            language="en",
+            is_health_related=False,
+            states_a_lasting_fact=False,
+            mentions=[],
+        )
     )
 
     table = report(await evaluate_examples(model))
