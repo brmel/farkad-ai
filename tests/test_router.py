@@ -6,6 +6,7 @@ from farkad_ai.routing.pass_one import Mention, PassOne, TimeHint
 from farkad_ai.routing.port import (
     NotApplicable,
     NothingToLogReason,
+    PartOfDay,
     Routed,
     RoutingOutcome,
     StatedTime,
@@ -103,7 +104,7 @@ class TestTheRouterDecidesRatherThanTheModel:
 
         assert isinstance(outcome, Routed)
         assert outcome.occurred_at_hints == {
-            "food": StatedTime(phrase="at eight", day_offset=0, clock=time(8, 0)),
+            "food": StatedTime(phrase="at eight", day_offset=0, time_of_day=time(8, 0)),
             "water": None,
         }
 
@@ -118,5 +119,30 @@ async def test_the_model_is_told_every_pillar_the_registry_holds() -> None:
 
 
 def test_a_stated_time_names_a_day_only_when_it_is_not_today() -> None:
-    assert not StatedTime(phrase="at 3pm", day_offset=0, clock=time(15, 0)).names_a_day
-    assert StatedTime(phrase="yesterday at 3pm", day_offset=-1, clock=time(15, 0)).names_a_day
+    assert not StatedTime(phrase="at 3pm", day_offset=0, time_of_day=time(15, 0)).names_a_day
+    assert StatedTime(phrase="yesterday at 3pm", day_offset=-1, time_of_day=time(15, 0)).names_a_day
+
+
+@pytest.mark.parametrize(
+    ("hint", "time_of_day"),
+    [
+        (
+            TimeHint(phrase="this afternoon", day_offset=0, part_of_day=PartOfDay.afternoon),
+            PartOfDay.afternoon,
+        ),
+        (
+            TimeHint(
+                phrase="at six this evening",
+                day_offset=0,
+                clock=time(18, 0),
+                part_of_day=PartOfDay.evening,
+            ),
+            time(18, 0),
+        ),
+        (TimeHint(phrase="yesterday", day_offset=-1), None),
+    ],
+)
+def test_the_consumer_is_given_the_hour_said_else_the_part_of_the_day_said(
+    hint: TimeHint, time_of_day: time | PartOfDay | None
+) -> None:
+    assert hint.stated().time_of_day == time_of_day

@@ -95,10 +95,7 @@ class ExamplePillar:
     guidance: str
     examples: str
     entry_schema: type[BaseModel]
-
-    @property
-    def label_fields(self) -> frozenset[str]:
-        return frozenset({"category"})
+    label_fields: frozenset[str] = frozenset()
 
     def review(self, entry: Mapping[str, object]) -> Iterable[Finding]:
         return ()
@@ -110,16 +107,16 @@ EXAMPLE_PILLARS: tuple[ExamplePillar, ...] = (
         "meals, snacks, drinks that carry energy, and protein shakes",
         "food",
         "One entry per thing eaten.",
-        '"two eggs" → {"name": "eggs", "count": 2}',
+        '"half a pizza" → {"name": "pizza", "count": 0.5}',
         FoodEntry,
     ),
     ExamplePillar(
         "water",
         "water, tea, black coffee and other drinks without energy",
         "drink",
-        "A glass is 250 ml and a cup 200 ml unless the user said otherwise. كأس and كاس are "
-        "glasses, as are verre and vaso; a cup is a tasse, taza or فنجان.",
-        '"a big glass of water" → {"category": "water", "count": 1, "volume_ml": 350}',
+        "A glass is 250 ml and a cup 200 ml unless the user said otherwise. A container word "
+        "in any language is the container it names.",
+        '"a cup of mint tea" → {"category": "tea", "count": 1, "volume_ml": 200}',
         WaterEntry,
     ),
     ExamplePillar(
@@ -127,8 +124,7 @@ EXAMPLE_PILLARS: tuple[ExamplePillar, ...] = (
         "workouts, sport, movement",
         "exercise",
         "Distances in metres, durations in minutes.",
-        '"ran 3 km in 20 minutes" → {"category": "run", "distance_m": 3000, '
-        '"duration_minutes": 20}',
+        '"swam 1.5 km" → {"category": "swim", "distance_m": 1500}',
         ExerciseEntry,
     ),
     ExamplePillar(
@@ -136,7 +132,7 @@ EXAMPLE_PILLARS: tuple[ExamplePillar, ...] = (
         "nights, naps and sleep quality",
         "sleep",
         "A night is the main sleep; anything shorter during the day is a nap.",
-        '"slept six hours" → {"category": "night", "duration_minutes": 360}',
+        '"a two-hour nap" → {"category": "nap", "duration_minutes": 120}',
         SleepEntry,
     ),
     ExamplePillar(
@@ -144,7 +140,7 @@ EXAMPLE_PILLARS: tuple[ExamplePillar, ...] = (
         "vitamins, minerals, creatine and the rest",
         "supplement",
         "One entry per product taken.",
-        '"a magnesium tablet" → {"category": "mineral", "name": "magnesium"}',
+        '"beta-alanine before my workout" → {"category": "performance", "name": "beta-alanine"}',
         SupplementEntry,
     ),
     ExamplePillar(
@@ -152,7 +148,7 @@ EXAMPLE_PILLARS: tuple[ExamplePillar, ...] = (
         "medications and pharmaceuticals",
         "medication",
         "One entry per medication taken.",
-        '"an aspirin of 300 mg" → {"name": "aspirin", "dose_mg": 300}',
+        '"levothyroxine, 50 micrograms" → {"name": "levothyroxine", "dose_mg": 0.05}',
         DrugEntry,
     ),
     ExamplePillar(
@@ -160,7 +156,7 @@ EXAMPLE_PILLARS: tuple[ExamplePillar, ...] = (
         "sauna, cold plunge, breathwork and other deliberate recovery",
         "recovery session",
         "Durations in minutes.",
-        '"ten minutes of breathwork" → {"category": "breathwork", "duration_minutes": 10}',
+        '"a quarter of an hour of foam rolling" → {"category": "other", "duration_minutes": 15}',
         RecoveryEntry,
     ),
 )

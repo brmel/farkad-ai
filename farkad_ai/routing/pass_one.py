@@ -7,7 +7,7 @@ from datetime import time
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from farkad_ai.prompts import PromptAsset, prompt
-from farkad_ai.routing.port import PillarRegistry, StatedTime
+from farkad_ai.routing.port import PartOfDay, PillarRegistry, StatedTime
 
 INSTRUCTIONS = prompt("pass_one")
 
@@ -18,9 +18,10 @@ def routing_instructions(registry: PillarRegistry, asset: PromptAsset = INSTRUCT
 
 
 class TimeHint(BaseModel):
-    """A time the user stated, split into the two parts a model is reliable at: which day
-    relative to today, and what time of day. It is never asked for a date: the calendar
-    arithmetic stays with the consumer, so a misheard word cannot become the year 2019."""
+    """A time the user stated, split into the parts a model is reliable at: which day
+    relative to today, and the hour or the part of the day they named. It is never asked for
+    a date or for a clock the user did not say: the calendar arithmetic stays with the
+    consumer, so a misheard word cannot become the year 2019."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -28,7 +29,12 @@ class TimeHint(BaseModel):
     day_offset: int = Field(description="0 for today, -1 for yesterday, -7 for this day last week")
     clock: time | None = Field(
         default=None,
-        description="Local time of day as HH:MM, or null if only a day was said",
+        description="Local time of day as HH:MM, only from an hour the user said; null otherwise",
+    )
+    part_of_day: PartOfDay | None = Field(
+        default=None,
+        description="The part of the day the user named, or the one a meal they named is eaten "
+        "in, when they said no hour; null otherwise",
     )
 
     @field_validator("clock")
@@ -38,7 +44,11 @@ class TimeHint(BaseModel):
         return clock.replace(tzinfo=None) if clock else clock
 
     def stated(self) -> StatedTime:
-        return StatedTime(phrase=self.phrase, day_offset=self.day_offset, clock=self.clock)
+        return StatedTime(
+            phrase=self.phrase,
+            day_offset=self.day_offset,
+            time_of_day=self.clock if self.clock is not None else self.part_of_day,
+        )
 
 
 class Mention(BaseModel):

@@ -22,11 +22,19 @@ class PillarRegistry(Protocol):
     def knows(self, route: str) -> bool: ...
 
 
+class PartOfDay(StrEnum):
+    morning = "morning"
+    midday = "midday"
+    afternoon = "afternoon"
+    evening = "evening"
+    night = "night"
+
+
 @dataclass(frozen=True, slots=True)
 class StatedTime:
     phrase: str
     day_offset: int
-    clock: time | None
+    time_of_day: time | PartOfDay | None
 
     @property
     def names_a_day(self) -> bool:

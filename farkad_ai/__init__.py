@@ -32,6 +32,7 @@ from farkad_ai.models.port import (
     fixed,
 )
 from farkad_ai.pipeline.engine import TwoPassCaptureEngine
+from farkad_ai.pipeline.photo import photo_briefing
 from farkad_ai.pipeline.port import (
     CaptureEngine,
     CaptureOutcome,
@@ -49,6 +50,7 @@ from farkad_ai.prompts import (
 from farkad_ai.routing.port import (
     NotApplicable,
     NothingToLogReason,
+    PartOfDay,
     PillarRegistry,
     PillarSpec,
     Routed,
@@ -83,6 +85,7 @@ __all__ = [
     "NotApplicable",
     "NothingToLog",
     "NothingToLogReason",
+    "PartOfDay",
     "PillarEntries",
     "PillarExtractor",
     "PillarRefused",
@@ -107,5 +110,6 @@ __all__ = [
     "entries_answered",
     "fill",
     "fixed",
+    "photo_briefing",
     "prompt",
 ]
