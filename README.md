@@ -47,11 +47,11 @@ Fifteen example sentences, three per language, replayed from answers recorded on
 
 | Language | Routing | Fields | Tokens per sentence (in / out) |
 | --- | --: | --: | --: |
-| English | 100% | 100% | 2,817 / 205 |
-| French | 100% | 100% | 2,656 / 195 |
-| Arabic | 100% | 100% | 2,116 / 111 |
-| Spanish | 100% | 100% | 2,477 / 167 |
-| Mixed languages | 100% | 100% | 2,879 / 241 |
+| English | 100% | 100% | 2,873 / 206 |
+| French | 100% | 100% | 2,711 / 192 |
+| Arabic | 100% | 100% | 2,172 / 111 |
+| Spanish | 100% | 100% | 2,531 / 166 |
+| Mixed languages | 100% | 100% | 2,934 / 239 |
 
 ## Try it
 
