@@ -7,11 +7,11 @@ import sys
 from pathlib import Path
 
 from farkad_ai.eval.example import RECORDINGS, evaluate_examples, report
-from farkad_ai.examples import EXAMPLE_PILLARS, ExampleCatalogue
+from farkad_ai.examples import EXAMPLE_PILLARS
 from farkad_ai.models.factory import ProviderName, create_model
 from farkad_ai.models.recorded import RecordingModel
 from farkad_ai.prompts import list_prompts
-from farkad_ai.routing.port import NotApplicable, Routed
+from farkad_ai.routing.port import NothingToLog, Routed
 from farkad_ai.routing.router import Router
 
 CLI_PILLARS = frozenset(pillar.pillar for pillar in EXAMPLE_PILLARS)
@@ -64,17 +64,17 @@ def print_routing(args: argparse.Namespace) -> int:
     except (ValueError, ImportError) as error:
         sys.stderr.write(f"Error initializing model: {error}\n")
         return 1
-    outcome = asyncio.run(Router(model, ExampleCatalogue()).route(CLI_PILLARS, text=args.text))
+    outcome = asyncio.run(Router(model, EXAMPLE_PILLARS).route(CLI_PILLARS, text=args.text))
     match outcome:
         case Routed():
             answer = {
                 "applicable": True,
                 "transcript": outcome.transcript,
                 "language": outcome.language,
-                "pillars": sorted(outcome.pillars),
+                "pillars": sorted(outcome.routes),
                 "mentions": {pillar: list(said) for pillar, said in outcome.mentions.items()},
             }
-        case NotApplicable():
+        case NothingToLog():
             answer = {
                 "applicable": False,
                 "transcript": outcome.transcript,

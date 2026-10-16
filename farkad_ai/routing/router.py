@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
+
 from farkad_ai.models.port import (
     Completion,
     MediaBlob,
@@ -12,9 +14,9 @@ from farkad_ai.models.port import (
 from farkad_ai.prompts import PromptAsset, briefed
 from farkad_ai.routing.pass_one import INSTRUCTIONS, Mention, PassOne, routing_instructions
 from farkad_ai.routing.port import (
-    NotApplicable,
+    NothingToLog,
     NothingToLogReason,
-    PillarRegistry,
+    PillarSpec,
     Routed,
     RoutingOutcome,
     StatedTime,
@@ -25,14 +27,15 @@ class Router:
     def __init__(
         self,
         model: Model,
-        registry: PillarRegistry,
+        catalogue: Iterable[PillarSpec],
         *,
         instructions: PromptAsset = INSTRUCTIONS,
     ) -> None:
+        specs = tuple(catalogue)
         self._model = model
-        self._registry = registry
+        self._known = frozenset(spec.pillar for spec in specs)
         self._asset = instructions
-        self._instructions = routing_instructions(registry, instructions)
+        self._instructions = routing_instructions(specs, instructions)
 
     async def route(
         self,
@@ -56,34 +59,34 @@ class Router:
 
     def _decide(self, heard: PassOne, tracked: frozenset[str], usage: Usage) -> RoutingOutcome:
         if not heard.is_health_related:
-            return NotApplicable(
+            return NothingToLog(
                 transcript=heard.transcript,
                 language=heard.language,
                 reason=NothingToLogReason.not_a_health_log,
-                usage=usage,
+                usages=(usage,),
             )
 
-        known = [mention for mention in heard.mentions if self._registry.knows(mention.pillar)]
+        known = [mention for mention in heard.mentions if mention.pillar in self._known]
         named = frozenset(mention.pillar for mention in known)
-        pillars = named & tracked
-        if not pillars:
-            return NotApplicable(
+        routes = named & tracked
+        if not routes:
+            return NothingToLog(
                 transcript=heard.transcript,
                 language=heard.language,
                 reason=NothingToLogReason.no_enabled_pillar,
-                usage=usage,
+                usages=(usage,),
             )
 
         return Routed(
             transcript=heard.transcript,
             language=heard.language,
-            pillars=pillars,
-            untracked=named - pillars,
+            routes=routes,
+            untracked=named - routes,
             mentions={
                 pillar: tuple(mention.said for mention in known if mention.pillar == pillar)
-                for pillar in sorted(pillars)
+                for pillar in sorted(routes)
             },
-            occurred_at_hints={pillar: _first_stated(known, pillar) for pillar in sorted(pillars)},
+            occurred_at_hints={pillar: _first_stated(known, pillar) for pillar in sorted(routes)},
             usage=usage,
         )
 

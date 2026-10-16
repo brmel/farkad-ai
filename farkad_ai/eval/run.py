@@ -10,8 +10,8 @@ from farkad_ai.eval.scoring import CaptureScore, score_capture
 from farkad_ai.extraction.port import TrackedPillar
 from farkad_ai.models.port import Model, ModelUnavailableError, Unavailability
 from farkad_ai.pipeline.engine import TwoPassCaptureEngine
-from farkad_ai.pipeline.port import CaptureRequest, Logged, NothingToLog
-from farkad_ai.routing.port import PillarRegistry
+from farkad_ai.pipeline.port import CaptureRequest, Logged
+from farkad_ai.routing.port import NothingToLog, PillarSpec
 
 
 class GoldCase(BaseModel):
@@ -31,7 +31,7 @@ class Scored[Case: GoldCase]:
 
 async def evaluate[Case: GoldCase](
     model: Model,
-    catalogue: PillarRegistry,
+    catalogue: Iterable[PillarSpec],
     tracked: tuple[TrackedPillar, ...],
     cases: Iterable[Case],
 ) -> tuple[Scored[Case], ...]:
