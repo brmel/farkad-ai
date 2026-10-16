@@ -33,9 +33,10 @@ class TwoPassCaptureEngine(CaptureEngine):
         catalogue: Iterable[PillarSpec],
         *,
         routing_prompt: PromptAsset = ROUTING,
+        routing_rules: tuple[str, ...] = (),
         extraction_prompt: PromptAsset = EXTRACTION,
     ) -> None:
-        self._router = Router(model, catalogue, instructions=routing_prompt)
+        self._router = Router(model, catalogue, instructions=routing_prompt, rules=routing_rules)
         self._extractor = PillarExtractor(model, instructions=extraction_prompt)
 
     async def capture(self, request: CaptureRequest) -> CaptureOutcome:

@@ -11,10 +11,25 @@ from farkad_ai.prompts import PromptAsset, prompt
 from farkad_ai.routing.port import PartOfDay, PillarSpec, StatedTime
 
 INSTRUCTIONS = prompt("pass_one")
+RULES = prompt("pass_one_rules")
 
 
-def routing_instructions(catalogue: Iterable[PillarSpec], asset: PromptAsset = INSTRUCTIONS) -> str:
-    return asset.format(pillars="\n".join(f"- {spec.pillar}: {spec.intent}" for spec in catalogue))
+def routing_instructions(
+    catalogue: Iterable[PillarSpec],
+    asset: PromptAsset = INSTRUCTIONS,
+    *,
+    rules: tuple[str, ...] = (),
+) -> str:
+    instructions = asset.format(
+        pillars=_listed(f"{spec.pillar}: {spec.intent}" for spec in catalogue)
+    )
+    if not rules:
+        return instructions
+    return f"{instructions}\n\n{RULES.format(rules=_listed(rules))}"
+
+
+def _listed(lines: Iterable[str]) -> str:
+    return "\n".join(f"- {line}" for line in lines)
 
 
 class TimeHint(BaseModel):
