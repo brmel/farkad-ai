@@ -21,7 +21,7 @@ from farkad_ai.models.port import (
     Usage,
     fixed,
 )
-from farkad_ai.models.provider import ProviderModel
+from farkad_ai.models.provider import PLACEHOLDER_INPUT, ProviderModel
 
 DEFAULT_CHOICES: Mapping[ModelTier, ModelChoice] = {
     ModelTier.fast: ModelChoice("claude-haiku-4-5-20251001"),
@@ -105,7 +105,7 @@ def _messages(prompt: Prompt, *, tier: ModelTier, model: str) -> list[MessagePar
     if prompt.utterance:
         content.append({"type": "text", "text": prompt.utterance})
     content.extend(_image_block(blob, tier=tier, model=model) for blob in prompt.media)
-    return [{"role": "user", "content": content or [{"type": "text", "text": "Process input."}]}]
+    return [{"role": "user", "content": content or [{"type": "text", "text": PLACEHOLDER_INPUT}]}]
 
 
 def _image_block(blob: MediaBlob, *, tier: ModelTier, model: str) -> ImageBlockParam:

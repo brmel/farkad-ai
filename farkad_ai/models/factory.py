@@ -14,27 +14,43 @@ class ProviderName(StrEnum):
     recorded = "recorded"
 
 
-def create_model(provider: ProviderName, *, fixtures_dir: Path | None) -> Model:
+class MissingCredentialsError(Exception):
+    def __init__(self, provider: ProviderName, remedy: str) -> None:
+        super().__init__(f"the {provider} provider needs {remedy}")
+
+
+def create_model(provider: ProviderName, *, fixtures_dir: Path) -> Model:
     match provider:
         case ProviderName.vertex:
             from google import genai
+            from google.auth.exceptions import DefaultCredentialsError
 
             from farkad_ai.models.vertex import VertexModel
 
-            return VertexModel(genai.Client(vertexai=True))
+            try:
+                return VertexModel(genai.Client(vertexai=True))
+            except (DefaultCredentialsError, ValueError) as error:
+                raise MissingCredentialsError(
+                    provider,
+                    "GOOGLE_CLOUD_PROJECT set and `gcloud auth application-default login`",
+                ) from error
         case ProviderName.openai:
-            from openai import AsyncOpenAI
+            from openai import AsyncOpenAI, OpenAIError
 
             from farkad_ai.models.openai import OpenAIModel
 
-            return OpenAIModel(AsyncOpenAI())
+            try:
+                return OpenAIModel(AsyncOpenAI())
+            except OpenAIError as error:
+                raise MissingCredentialsError(provider, "OPENAI_API_KEY set") from error
         case ProviderName.anthropic:
             from anthropic import AsyncAnthropic
 
             from farkad_ai.models.anthropic import AnthropicModel
 
-            return AnthropicModel(AsyncAnthropic())
+            client = AsyncAnthropic()
+            if client.api_key is None and client.auth_token is None and client.credentials is None:
+                raise MissingCredentialsError(provider, "ANTHROPIC_API_KEY set")
+            return AnthropicModel(client)
         case ProviderName.recorded:
-            if fixtures_dir is None:
-                raise ValueError("fixtures_dir is required for recorded provider")
             return RecordedModel(fixtures_dir)
