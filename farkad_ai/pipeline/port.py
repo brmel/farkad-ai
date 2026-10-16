@@ -33,6 +33,7 @@ class PillarRefused:
 class Logged:
     transcript: str
     language: str
+    states_a_lasting_fact: bool
     routes: frozenset[str]
     untracked: frozenset[str]
     extracted: tuple[PillarEntries, ...]

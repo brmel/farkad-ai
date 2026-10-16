@@ -17,7 +17,8 @@ words as they were said.
 ## How it works
 
 1. **Route once.** One model call transcribes the audio, keeps each part in the language it was
-   spoken in, and names the topics it mentions: food, water, sleep, exercise…
+   spoken in, names the topics it mentions: food, water, sleep, exercise…, and says whether it
+   states a lasting fact about the person, the only sentences worth learning from.
 2. **Extract in parallel.** Each topic gets its own call, answering in a schema the app supplies.
 3. **Validate, then escalate.** Every answer is checked against its schema; a topic whose answer
    fails is asked again, of a stronger model or of the same one given time to reason.
@@ -31,7 +32,7 @@ words as they were said.
 | ✅ | [Model cascade](https://arxiv.org/abs/2305.05176) | A fast model first; the stronger one only when the answer fails validation |
 | ✅ | [Reasoning budget](https://ai.google.dev/gemini-api/docs/thinking) | Chosen per model tier, measured in tokens |
 | ✅ | [Few-shot examples](https://arxiv.org/abs/2005.14165) | Worked examples per topic, in the user's own units |
-| ✅ | Long-term memory | Facts the user states, such as "I'm vegan", are given back to every capture |
+| ✅ | Long-term memory | Facts the user states, such as "I'm vegan", are given back to every capture as data, never as instructions |
 | ✅ | Evaluation with a gold set | Accuracy and tokens per language, below |
 | ✅ | Several model providers | Gemini, Claude and GPT behind one interface |
 | | [RAG](https://arxiv.org/abs/2005.11401) | A user's memory fits in the prompt |
@@ -46,11 +47,11 @@ Fifteen example sentences, three per language, replayed from answers recorded on
 
 | Language | Routing | Fields | Tokens per sentence (in / out) |
 | --- | --: | --: | --: |
-| English | 100% | 100% | 2,626 / 181 |
-| French | 100% | 100% | 2,465 / 180 |
-| Arabic | 100% | 100% | 1,925 / 101 |
-| Spanish | 100% | 100% | 2,284 / 153 |
-| Mixed languages | 100% | 100% | 2,687 / 206 |
+| English | 100% | 100% | 2,807 / 205 |
+| French | 100% | 100% | 2,646 / 190 |
+| Arabic | 100% | 100% | 2,106 / 107 |
+| Spanish | 100% | 100% | 2,465 / 165 |
+| Mixed languages | 100% | 100% | 2,869 / 236 |
 
 ## Try it
 
@@ -77,7 +78,7 @@ already says it is one, and an implementation for how it plays it: `Model` and `
   and `photo_briefing`, which reads a photo as a log
 - `routing/`: the one call that transcribes the capture and names its topics
 - `extraction/`: one call per topic, in the app's schema, escalated when the answer does not parse
-- `memory/`: facts the user states, and the short sheet given back to every capture
+- `memory/`: facts the user states, and the sheet of them given back to every capture
 - `models/`: the `Model` every stage calls, with the prompt, completion and usage it speaks in;
   adapters for Gemini on Vertex AI, Claude and GPT; and the replay of recorded answers
 - `eval/`: the gold set, its recorded answers, and the runner that scores any catalogue's own

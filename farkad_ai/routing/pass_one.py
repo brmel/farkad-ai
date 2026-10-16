@@ -76,6 +76,10 @@ class PassOne(BaseModel):
         description="BCP-47 tag the sentence begins in; the transcript may mix languages"
     )
     is_health_related: bool = Field(description="False for anything that is not a log")
+    states_a_lasting_fact: bool = Field(
+        description="True when the person states something about themselves that stays true "
+        "beyond this one log; false for a log of what happened"
+    )
     mentions: list[Mention] = Field(
         default_factory=list,
         description="Every thing the user logged, each once, under the one pillar that records it",
