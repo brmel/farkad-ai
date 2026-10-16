@@ -3,7 +3,7 @@ from datetime import time
 import pytest
 
 from farkad_ai.prompts import PromptAsset
-from farkad_ai.routing.pass_one import Mention, PassOne, TimeHint
+from farkad_ai.routing.pass_one import INSTRUCTIONS, RULES, Mention, PassOne, TimeHint
 from farkad_ai.routing.port import (
     NothingToLog,
     NothingToLogReason,
@@ -148,6 +148,29 @@ async def test_the_router_routes_with_the_prompt_it_is_given() -> None:
 
     assert model.asked[0].instructions.startswith("Route this: - water: tracks water intake")
     assert model.asked[0].instructions_version == own.version
+
+
+CATALOGUE_LISTED = "- water: tracks water intake\n- food: logs meals and snacks"
+
+
+async def test_a_catalogue_without_rules_is_told_only_the_pillar_list() -> None:
+    model = ScriptedModel(heard("water"))
+
+    await Router(model, CATALOGUE).route(frozenset({"water"}), text="water")
+
+    assert model.asked[0].instructions == INSTRUCTIONS.text.replace("{pillars}", CATALOGUE_LISTED)
+
+
+async def test_routing_rules_are_told_once_in_order_under_their_heading_after_the_pillars() -> None:
+    rules = ("plain coffee is water", "coffee with milk is food")
+    model = ScriptedModel(heard("water"))
+
+    await Router(model, CATALOGUE, rules=rules).route(frozenset({"water"}), text="water")
+
+    told = model.asked[0].instructions
+    heading = RULES.text.replace("{rules}", "- plain coffee is water\n- coffee with milk is food")
+    assert told == f"{INSTRUCTIONS.text.replace('{pillars}', CATALOGUE_LISTED)}\n\n{heading}"
+    assert [told.count(rule) for rule in rules] == [1, 1]
 
 
 def test_a_stated_time_names_a_day_only_when_it_is_not_today() -> None:
