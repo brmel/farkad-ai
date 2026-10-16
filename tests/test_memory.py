@@ -23,6 +23,7 @@ from farkad_ai.memory.habits import HabitBaseline, UsualAmount
 from farkad_ai.memory.inference import NOTHING_KNOWN, MemoryInferrer, subject_named
 from farkad_ai.memory.sheet import SHEET_CHARACTERS, core_sheet
 from farkad_ai.models.port import Model, PipelineStep
+from farkad_ai.prompts import PromptAsset
 from tests.support import ScriptedModel, a_usage
 
 
@@ -246,3 +247,14 @@ class TestTheModelIsToldWhatIsKnown:
         )
 
         assert told in model.asked[0].instructions
+
+    @pytest.mark.anyio
+    async def test_memory_infers_with_the_prompt_it_is_given(self) -> None:
+        own = PromptAsset(name="memory_inference", text="Known: {known}")
+        model = ScriptedModel({"facts": []})
+
+        await MemoryInferrer(
+            model, categories=Only, max_content_characters=250, instructions=own
+        ).infer("I'm vegan", ())
+
+        assert model.asked[0].instructions_version == own.version

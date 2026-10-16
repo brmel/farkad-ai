@@ -2,29 +2,23 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import Iterable
 
-from farkad_ai.extraction.cascade import CascadingExtractor
 from farkad_ai.extraction.extractor import INSTRUCTIONS as EXTRACTION
 from farkad_ai.extraction.extractor import PillarExtractor
-from farkad_ai.extraction.port import (
-    ExtractionContext,
-    ExtractionResult,
-    Extractor,
-    TrackedPillar,
-)
+from farkad_ai.extraction.port import ExtractionContext, ExtractionResult, TrackedPillar
 from farkad_ai.models.port import Model, ModelUnavailableError
 from farkad_ai.pipeline.port import (
     CaptureEngine,
     CaptureOutcome,
     CaptureRequest,
     Logged,
-    NothingToLog,
     PillarEntries,
     PillarRefused,
 )
 from farkad_ai.prompts import PromptAsset
 from farkad_ai.routing.pass_one import INSTRUCTIONS as ROUTING
-from farkad_ai.routing.port import NotApplicable, PillarRegistry, Routed
+from farkad_ai.routing.port import NothingToLog, PillarSpec, Routed
 from farkad_ai.routing.router import Router
 
 _log = logging.getLogger(__name__)
@@ -36,13 +30,13 @@ class TwoPassCaptureEngine(CaptureEngine):
     def __init__(
         self,
         model: Model,
-        catalogue: PillarRegistry,
+        catalogue: Iterable[PillarSpec],
         *,
         routing_prompt: PromptAsset = ROUTING,
         extraction_prompt: PromptAsset = EXTRACTION,
     ) -> None:
         self._router = Router(model, catalogue, instructions=routing_prompt)
-        self._extractor = CascadingExtractor(PillarExtractor(model, instructions=extraction_prompt))
+        self._extractor = PillarExtractor(model, instructions=extraction_prompt)
 
     async def capture(self, request: CaptureRequest) -> CaptureOutcome:
         tracked = {pillar.pillar: pillar for pillar in request.tracked}
@@ -53,16 +47,11 @@ class TwoPassCaptureEngine(CaptureEngine):
             briefing=request.briefing,
         )
         match routed:
-            case NotApplicable():
+            case NothingToLog():
                 _log.info("nothing to log in this capture", extra={"reason": routed.reason})
-                return NothingToLog(
-                    transcript=routed.transcript,
-                    language=routed.language,
-                    reason=routed.reason,
-                    usages=(routed.usage,),
-                )
+                return routed
             case Routed():
-                _log.info("routed", extra={"pillars": sorted(routed.pillars)})
+                _log.info("routed", extra={"pillars": sorted(routed.routes)})
                 return await self._extract(routed, request, tracked)
 
     async def _extract(
@@ -101,7 +90,7 @@ class TwoPassCaptureEngine(CaptureEngine):
         return Logged(
             transcript=routed.transcript,
             language=routed.language,
-            routes=routed.pillars,
+            routes=routed.routes,
             untracked=routed.untracked,
             extracted=tuple(extracted),
             refused=tuple(refused),
@@ -110,10 +99,10 @@ class TwoPassCaptureEngine(CaptureEngine):
 
 
 async def _attempt(
-    extractor: Extractor, context: ExtractionContext
+    extractor: PillarExtractor, context: ExtractionContext
 ) -> ExtractionResult | PillarRefused:
     try:
-        return await extractor.extract(context)
+        return await extractor.extract_escalating(context)
     except ModelUnavailableError as unavailable:
         _log.warning(
             "pillar extraction failed",

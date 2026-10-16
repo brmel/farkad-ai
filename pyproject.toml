@@ -84,8 +84,6 @@ select = ["E", "F", "I", "N", "UP", "B", "SIM", "RUF"]
 python_version = "3.13"
 strict = true
 packages = ["farkad_ai"]
-# An optional adapter's ignore is needed without its SDK and redundant with it.
-warn_unused_ignores = false
 
 [[tool.mypy.overrides]]
 module = ["google.*", "anthropic.*", "openai.*"]

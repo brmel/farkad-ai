@@ -55,10 +55,6 @@ class CaptureScore:
         return tuple(score for score in self.fields if not score.is_match)
 
     @property
-    def unexpected_flags(self) -> frozenset[str]:
-        return self.flagged - self.expected_flags
-
-    @property
     def validators_agree(self) -> bool:
         return self.flagged == self.expected_flags
 
@@ -137,16 +133,6 @@ class RunScore:
         return _share(
             sum(1 for capture in self.captures if capture.validators_agree),
             len(self.captures),
-        )
-
-    @property
-    def unexpected_flags(self) -> tuple[str, ...]:
-        return tuple(
-            sorted(
-                f"{capture.utterance[:32]}: {flag}"
-                for capture in self.captures
-                for flag in capture.unexpected_flags
-            )
         )
 
     @property

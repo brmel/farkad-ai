@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 
@@ -47,17 +47,6 @@ class ScriptedModel(Model):
 class Spec:
     pillar: str
     intent: str
-
-
-class Registry:
-    def __init__(self, *specs: Spec) -> None:
-        self._specs = specs
-
-    def __iter__(self) -> Iterator[Spec]:
-        return iter(self._specs)
-
-    def knows(self, route: str) -> bool:
-        return any(spec.pillar == route for spec in self._specs)
 
 
 class Item(BaseModel):
