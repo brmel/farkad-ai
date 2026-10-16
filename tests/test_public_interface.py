@@ -1,11 +1,18 @@
 from __future__ import annotations
 
+from enum import StrEnum
+
 import pytest
 
 from farkad_ai import CaptureRequest, PromptAsset, Router, TwoPassCaptureEngine
-from farkad_ai.memory.inference import InferredFacts, MemoryInferrer
+from farkad_ai.memory.inference import MemoryInferrer
 from farkad_ai.routing.pass_one import Mention, PassOne
 from tests.support import AnswersByStep, Registry, ScriptedModel, Spec, Tracked
+
+
+class Topic(StrEnum):
+    diet = "diet"
+
 
 OWN = PromptAsset(name="pass_one", text="Route this: {pillars}")
 
@@ -25,8 +32,9 @@ async def test_the_router_routes_with_the_prompt_it_is_given() -> None:
 @pytest.mark.anyio
 async def test_memory_infers_with_the_prompt_it_is_given() -> None:
     own = PromptAsset(name="memory_inference", text="Known: {known}")
-    model = ScriptedModel(InferredFacts(facts=[]))
-    await MemoryInferrer(model, instructions=own).infer("I'm vegan", ())
+    model = ScriptedModel({"facts": []})
+    inferrer = MemoryInferrer(model, categories=Topic, max_content_characters=250, instructions=own)
+    await inferrer.infer("I'm vegan", ())
     assert model.asked[0].instructions_version == own.version
 
 

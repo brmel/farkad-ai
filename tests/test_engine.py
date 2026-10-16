@@ -104,6 +104,15 @@ async def test_an_entry_that_holds_nothing_is_dropped_and_findings_stay_on_their
     assert entry.values["item"] == "glass" and entry.stale_fields == frozenset({"item"})
 
 
+async def test_which_fields_only_label_an_entry_is_the_pillars_to_declare() -> None:
+    labelled_by_item = Tracked("water", label_fields=frozenset({"pillar", "item"}))
+    model = AnswersByStep(routing=heard(("water", "a glass")), extraction=entries("glass"))
+
+    outcome = await captured(model, labelled_by_item)
+
+    assert isinstance(outcome, Logged) and outcome.extracted[0].entries == ()
+
+
 async def test_extraction_asks_the_fast_tier_first() -> None:
     model = AnswersByStep(routing=heard(("water", "a glass")), extraction=entries("glass"))
 

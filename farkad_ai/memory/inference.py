@@ -5,21 +5,19 @@ from __future__ import annotations
 import logging
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
+from enum import StrEnum
+from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, create_model
 
-from farkad_ai.memory.facts import (
-    MAX_CONTENT_CHARACTERS,
-    Disclosure,
-    Fact,
-    MemoryCategory,
-)
+from farkad_ai.memory.facts import Disclosure, Fact
 from farkad_ai.models.port import Model, ModelTier, PipelineStep, Prompt, Usage
 from farkad_ai.prompts import PromptAsset, prompt
 
 INSTRUCTIONS = prompt("memory_inference")
 MAX_SUBJECT_CHARACTERS = 40
 NOTHING_KNOWN = "(nothing yet)"
+CONTENT_DESCRIPTION = "The fact as one short sentence, in the language it was said"
 
 _log = logging.getLogger(__name__)
 
@@ -30,11 +28,8 @@ class InferredFact(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     subject: str = Field(description="snake_case topic in English; reuse a known one")
-    category: MemoryCategory
-    content: str = Field(
-        max_length=MAX_CONTENT_CHARACTERS,
-        description="The fact as one short sentence, in the language it was said",
-    )
+    category: str
+    content: str = Field(description=CONTENT_DESCRIPTION)
 
 
 class InferredFacts(BaseModel):
@@ -46,36 +41,57 @@ class InferredFacts(BaseModel):
 
 
 @dataclass(frozen=True, slots=True)
-class Inference:
-    disclosures: tuple[Disclosure, ...]
+class Inference[Category: StrEnum]:
+    disclosures: tuple[Disclosure[Category], ...]
     usage: Usage
 
 
-class MemoryInferrer:
-    def __init__(self, model: Model, *, instructions: PromptAsset = INSTRUCTIONS) -> None:
+class MemoryInferrer[Category: StrEnum]:
+    def __init__(
+        self,
+        model: Model,
+        *,
+        categories: type[Category],
+        max_content_characters: int,
+        instructions: PromptAsset = INSTRUCTIONS,
+    ) -> None:
         self._model = model
+        self._categories = categories
+        self._schema = _answer_schema(categories, max_content_characters)
         self._asset = instructions
 
-    async def infer(self, said: str, known: Iterable[Fact]) -> Inference:
+    async def infer(self, said: str, known: Iterable[Fact[Category]]) -> Inference[Category]:
         known = tuple(known)
         completion = await self._model.complete(
             Prompt(
                 step=PipelineStep.memory,
-                instructions=self._asset.format(known=_listed(known)),
+                instructions=self._asset.format(
+                    categories=_either(self._categories), known=_listed(known)
+                ),
                 instructions_version=self._asset.version,
                 utterance=said,
             ),
-            schema=InferredFacts,
+            schema=self._schema,
             tier=ModelTier.fast,
         )
+        subjects = _subjects_of(known)
         return Inference(
             disclosures=tuple(
                 disclosure
                 for inferred in completion.value.facts
-                if (disclosure := _disclosed(inferred, _subjects_of(known))) is not None
+                if (disclosure := self._disclosed(inferred, subjects)) is not None
             ),
             usage=completion.usage,
         )
+
+    def _disclosed(
+        self, inferred: InferredFact, known: Mapping[str, str]
+    ) -> Disclosure[Category] | None:
+        subject = known.get(inferred.subject.casefold()) or subject_named(inferred.subject)
+        if not subject or not inferred.content.strip():
+            _log.warning("inferred fact dropped: no usable subject or content")
+            return None
+        return Disclosure(subject, self._categories(inferred.category), inferred.content.strip())
 
 
 def subject_named(said: str) -> str:
@@ -86,18 +102,32 @@ def subject_named(said: str) -> str:
     return "_".join(words)[:MAX_SUBJECT_CHARACTERS].strip("_")
 
 
-def _subjects_of(known: Iterable[Fact]) -> dict[str, str]:
+def _answer_schema(categories: type[StrEnum], max_content_characters: int) -> type[InferredFacts]:
+    fact = create_model(
+        InferredFact.__name__,
+        __base__=InferredFact,
+        __doc__=InferredFact.__doc__,
+        category=(categories, ...),
+        content=(str, Field(max_length=max_content_characters, description=CONTENT_DESCRIPTION)),
+    )
+    each: Any = fact
+    return create_model(
+        InferredFacts.__name__,
+        __base__=InferredFacts,
+        __doc__=InferredFacts.__doc__,
+        facts=(list[each], ...),
+    )
+
+
+def _either(categories: type[StrEnum]) -> str:
+    *first, last = (category.value for category in categories)
+    return f"{', '.join(first)} or {last}" if first else last
+
+
+def _subjects_of(known: Iterable[Fact[StrEnum]]) -> dict[str, str]:
     return {fact.subject.casefold(): fact.subject for fact in known}
 
 
-def _disclosed(inferred: InferredFact, known: Mapping[str, str]) -> Disclosure | None:
-    subject = known.get(inferred.subject.casefold()) or subject_named(inferred.subject)
-    if not subject or not inferred.content.strip():
-        _log.warning("inferred fact dropped: no usable subject or content")
-        return None
-    return Disclosure(subject, inferred.category, inferred.content.strip())
-
-
-def _listed(known: Iterable[Fact]) -> str:
+def _listed(known: Iterable[Fact[StrEnum]]) -> str:
     lines = [f"- {fact.subject}: {fact.disclosure.content}" for fact in known]
     return "\n".join(lines) if lines else NOTHING_KNOWN

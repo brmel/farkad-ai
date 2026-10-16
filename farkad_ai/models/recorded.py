@@ -123,6 +123,8 @@ class RecordingModel(Model):
 
     def commit(self) -> int:
         self._directory.mkdir(parents=True, exist_ok=True)
+        for stale in self._directory.glob("*.json"):
+            stale.unlink()
         for key, recording in self._pending.items():
             (self._directory / f"{key}.json").write_text(recording)
         return len(self._pending)

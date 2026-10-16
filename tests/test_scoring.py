@@ -1,8 +1,8 @@
 import pytest
 
-from farkad_ai.eval.pricing import UnpricedModelError, cost_cents
 from farkad_ai.eval.scoring import RunScore, score_capture
-from farkad_ai.models.port import InputModality, Usage
+from farkad_ai.models.port import PipelineStep
+from tests.support import a_usage
 
 
 @pytest.mark.parametrize(
@@ -21,8 +21,6 @@ def test_each_wrong_field_counts_against_field_accuracy(
         expected={"nutrition": [{"name": "Apple", "calories": 95}]},
         routed=["nutrition"],
         extracted={"nutrition": [eaten]},
-        cost_cents=0.01,
-        spoken_cost_cents=0.01,
     )
 
     assert score.routing_is_exact
@@ -32,17 +30,20 @@ def test_each_wrong_field_counts_against_field_accuracy(
     assert run_score.field_accuracy == field_accuracy
 
 
-def test_a_capture_costs_its_tokens_at_the_model_price() -> None:
-    usage = Usage(
-        step="routing",
-        model="gemini-3.5-flash-lite",
-        prompt_version="v1",
-        input_modality=InputModality.text,
-        input_tokens=1_000_000,
-        output_tokens=1_000_000,
-        latency_ms=1,
+def test_a_run_reports_the_mean_and_p95_of_the_tokens_its_captures_spent() -> None:
+    captures = tuple(
+        score_capture(
+            utterance=f"capture {calls}",
+            expected_routes=[],
+            expected={},
+            routed=[],
+            extracted={},
+            usages=[a_usage(PipelineStep.routing)] * calls,
+        )
+        for calls in range(1, 21)
     )
+    run = RunScore(captures)
 
-    assert cost_cents(usage) == pytest.approx(280)
-    with pytest.raises(UnpricedModelError):
-        cost_cents(usage.model_copy(update={"model": "unpriced"}))
+    assert (captures[1].input_tokens, captures[1].output_tokens) == (20, 10)
+    assert run.mean(lambda capture: capture.input_tokens) == 105
+    assert run.p95(lambda capture: capture.output_tokens) == 95

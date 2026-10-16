@@ -1,3 +1,4 @@
+from pathlib import Path
 from string import Formatter
 
 import pytest
@@ -15,6 +16,15 @@ def test_a_prompt_is_versioned_by_its_text() -> None:
     assert edited.version != original.version
     assert original.version != prompt("pass_one").version
     assert len(original.version) == 12
+
+
+def test_a_consumer_loads_its_own_prompt_assets_the_same_way(tmp_path: Path) -> None:
+    (tmp_path / "greeting.txt").write_text("  Hello {name}\n", encoding="utf-8")
+
+    own = prompt("greeting", tmp_path)
+
+    assert own == PromptAsset(name="greeting", text="Hello {name}")
+    assert list_prompts(tmp_path) == (own,)
 
 
 def test_every_brace_in_a_prompt_is_a_placeholder() -> None:

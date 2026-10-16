@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import math
 from collections import Counter
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 
-from farkad_ai.extraction.extractor import holds_nothing
+from farkad_ai.models.port import Usage
 
 NUMERIC_TOLERANCE = 0.01
 
@@ -33,9 +33,7 @@ class CaptureScore:
     expected_routes: frozenset[str]
     routed: frozenset[str]
     fields: tuple[FieldScore, ...]
-    contentless: tuple[str, ...]
-    cost_cents: float
-    spoken_cost_cents: float
+    usages: tuple[Usage, ...]
     flagged: frozenset[str]
     expected_flags: frozenset[str]
     unparsed_response_from: str | None
@@ -43,6 +41,14 @@ class CaptureScore:
     @property
     def routing_is_exact(self) -> bool:
         return self.expected_routes == self.routed
+
+    @property
+    def input_tokens(self) -> int:
+        return sum(usage.input_tokens for usage in self.usages)
+
+    @property
+    def output_tokens(self) -> int:
+        return sum(usage.output_tokens for usage in self.usages)
 
     @property
     def wrong_fields(self) -> tuple[FieldScore, ...]:
@@ -85,14 +91,12 @@ def score_capture(
     expected: Mapping[str, Sequence[Mapping[str, object]]],
     routed: Sequence[str],
     extracted: Mapping[str, Sequence[Mapping[str, object]]],
-    cost_cents: float = 0.0,
-    spoken_cost_cents: float = 0.0,
+    usages: Sequence[Usage] = (),
     flagged: Sequence[str] = (),
     expected_flags: Sequence[str] = (),
     unparsed_response_from: str | None = None,
 ) -> CaptureScore:
     fields: list[FieldScore] = []
-    contentless: list[str] = []
     for pillar, wanted_entries in expected.items():
         found_entries = extracted.get(pillar, ())
         for index, wanted in enumerate(wanted_entries):
@@ -101,16 +105,12 @@ def score_capture(
                 FieldScore(pillar=pillar, field=name, expected=value, found=found.get(name))
                 for name, value in wanted.items()
             ]
-    for pillar, found_entries in extracted.items():
-        contentless += [pillar for entry in found_entries if holds_nothing(entry)]
     return CaptureScore(
         utterance=utterance,
         expected_routes=frozenset(expected_routes),
         routed=frozenset(routed),
         fields=tuple(fields),
-        contentless=tuple(sorted(contentless)),
-        cost_cents=cost_cents,
-        spoken_cost_cents=spoken_cost_cents,
+        usages=tuple(usages),
         flagged=frozenset(flagged),
         expected_flags=frozenset(expected_flags),
         unparsed_response_from=unparsed_response_from,
@@ -157,29 +157,11 @@ class RunScore:
             if capture.unparsed_response_from is not None
         )
 
-    @property
-    def cost_cents_per_capture(self) -> float:
-        return _share(sum(capture.cost_cents for capture in self.captures), len(self.captures))
+    def mean(self, measure: Callable[[CaptureScore], float]) -> float:
+        return _share(sum(measure(capture) for capture in self.captures), len(self.captures))
 
-    @property
-    def spoken_cost_cents_per_capture(self) -> float:
-        return _share(
-            sum(capture.spoken_cost_cents for capture in self.captures), len(self.captures)
-        )
-
-    @property
-    def contentless_entries(self) -> int:
-        return sum(len(capture.contentless) for capture in self.captures)
-
-    @property
-    def p95_cost_cents(self) -> float:
-        return _nearest_rank_percentile([capture.cost_cents for capture in self.captures], 0.95)
-
-    @property
-    def spoken_p95_cost_cents(self) -> float:
-        return _nearest_rank_percentile(
-            [capture.spoken_cost_cents for capture in self.captures], 0.95
-        )
+    def p95(self, measure: Callable[[CaptureScore], float]) -> float:
+        return _nearest_rank_percentile([measure(capture) for capture in self.captures], 0.95)
 
 
 def _share(total: float, count: int) -> float:

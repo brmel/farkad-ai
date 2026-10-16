@@ -1,9 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import timedelta
-
-WINDOW = timedelta(days=28)
 
 
 @dataclass(frozen=True, slots=True)
