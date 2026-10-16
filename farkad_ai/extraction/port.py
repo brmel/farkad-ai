@@ -35,7 +35,8 @@ class TrackedPillar(Protocol):
 
     @property
     def label_fields(self) -> frozenset[str]:
-        """Fields that only file an entry; an entry holding nothing else is dropped."""
+        """Discriminators that say nothing about what was logged; an entry holding nothing
+        else is dropped. A category the user named is what was logged, not a label."""
         ...
 
     def review(self, entry: Mapping[str, object]) -> Iterable[Finding]: ...

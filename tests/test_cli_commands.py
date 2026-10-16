@@ -19,6 +19,7 @@ def test_prompts_lists_every_prompt_asset() -> None:
     assert "pass_one" in output
     assert "extraction" in output
     assert "memory_inference" in output
+    assert "photo" in output
 
 
 def test_the_example_eval_replays_each_language_the_same_way_every_time() -> None:
