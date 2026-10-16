@@ -42,15 +42,15 @@ words as they were said.
 ## Measured
 
 Fifteen example sentences, three per language, replayed from answers recorded on
-`gemini-3.5-flash-lite` on 2026-10-15:
+`gemini-3.5-flash-lite` on 2026-10-16:
 
 | Language | Routing | Fields | Tokens per sentence (in / out) |
 | --- | --: | --: | --: |
-| English | 100% | 100% | 2,574 / 199 |
-| French | 100% | 100% | 2,413 / 180 |
-| Arabic | 100% | 100% | 1,863 / 102 |
-| Spanish | 100% | 100% | 2,231 / 134 |
-| Mixed languages | 100% | 100% | 2,647 / 237 |
+| English | 100% | 100% | 2,626 / 181 |
+| French | 100% | 100% | 2,465 / 180 |
+| Arabic | 100% | 100% | 1,925 / 101 |
+| Spanish | 100% | 100% | 2,284 / 153 |
+| Mixed languages | 100% | 100% | 2,687 / 206 |
 
 ## Try it
 
