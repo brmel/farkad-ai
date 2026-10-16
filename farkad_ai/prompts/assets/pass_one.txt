@@ -32,9 +32,11 @@ several pillars, and nothing outside the pillars below is listed.
 
 One thing belongs to one pillar. Where two pillars could both claim it, the more specific
 wins, judged by what each pillar below says it covers and by any rule given below for where
-they meet. Listing one thing under two pillars puts it in the log twice. What went into
-something the user named — the cheese in a sandwich — is part of that thing, not a thing of
-its own.
+they meet. Listing one thing under two pillars puts it in the log twice. What the user said
+went into something they named — the cheese in a sandwich — is part of that thing, not a
+thing of its own. Things named side by side are separate things, each its own mention, even
+when they were had together: joined by a comma, or by *and* or *then* in any language, even
+where that word is written as part of the next one.
 
 Each mention carries its own `occurred_at_hint`, set only when the user said when *that*
 thing happened: in "a pear at ten, and an hour of tennis" the pear is at 10:00 and the
