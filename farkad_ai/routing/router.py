@@ -62,6 +62,7 @@ class Router:
             return NothingToLog(
                 transcript=heard.transcript,
                 language=heard.language,
+                states_a_lasting_fact=heard.states_a_lasting_fact,
                 reason=NothingToLogReason.not_a_health_log,
                 usages=(usage,),
             )
@@ -73,6 +74,7 @@ class Router:
             return NothingToLog(
                 transcript=heard.transcript,
                 language=heard.language,
+                states_a_lasting_fact=heard.states_a_lasting_fact,
                 reason=NothingToLogReason.no_enabled_pillar,
                 usages=(usage,),
             )
@@ -80,6 +82,7 @@ class Router:
         return Routed(
             transcript=heard.transcript,
             language=heard.language,
+            states_a_lasting_fact=heard.states_a_lasting_fact,
             routes=routes,
             untracked=named - routes,
             mentions={
