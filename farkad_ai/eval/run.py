@@ -34,8 +34,10 @@ async def evaluate[Case: GoldCase](
     catalogue: Iterable[PillarSpec],
     tracked: tuple[TrackedPillar, ...],
     cases: Iterable[Case],
+    *,
+    routing_rules: tuple[str, ...] = (),
 ) -> tuple[Scored[Case], ...]:
-    engine = TwoPassCaptureEngine(model, catalogue)
+    engine = TwoPassCaptureEngine(model, catalogue, routing_rules=routing_rules)
     return tuple([Scored(case, await _scored(engine, tracked, case)) for case in cases])
 
 

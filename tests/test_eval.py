@@ -44,6 +44,21 @@ async def test_a_case_is_scored_with_its_findings_and_returned_as_the_consumers_
     assert len(scored.score.usages) == 2
 
 
+async def test_the_consumers_routing_rules_reach_the_routing_call() -> None:
+    model = AnswersByStep(routing=A_GLASS, extraction={"entries": []})
+
+    await evaluate(
+        model,
+        CATALOGUE,
+        (Tracked("water"),),
+        [GoldCase(utterance="a glass", routes=("water",))],
+        routing_rules=("a glass is water",),
+    )
+
+    (routing, _tier), _extraction = model.asked
+    assert routing.instructions.endswith("\n- a glass is water")
+
+
 async def test_an_answer_that_does_not_parse_scores_zero_and_stays_in_the_run() -> None:
     case = GoldCase(utterance="a glass", routes=("water",))
     model = AnswersByStep(routing=Unavailability.output_did_not_parse)
