@@ -96,6 +96,10 @@ class ExamplePillar:
     examples: str
     entry_schema: type[BaseModel]
 
+    @property
+    def label_fields(self) -> frozenset[str]:
+        return frozenset({"category"})
+
     def review(self, entry: Mapping[str, object]) -> Iterable[Finding]:
         return ()
 

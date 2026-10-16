@@ -6,7 +6,7 @@ import json
 import sys
 from pathlib import Path
 
-from farkad_ai.eval.run import RECORDINGS, evaluate, replace_recordings, report
+from farkad_ai.eval.example import RECORDINGS, evaluate_examples, report
 from farkad_ai.examples import EXAMPLE_PILLARS, ExampleCatalogue
 from farkad_ai.models.factory import ProviderName, create_model
 from farkad_ai.models.recorded import RecordingModel
@@ -38,7 +38,7 @@ def build_parser() -> argparse.ArgumentParser:
     route.add_argument("--fixtures", type=Path, help="Replay answers recorded in this directory")
 
     scored = commands.add_parser(
-        "eval", help="Score the example gold set: routing, fields and cost per language"
+        "eval", help="Score the example gold set: routing, fields and tokens per language"
     )
     add_provider(scored)
     scored.add_argument(
@@ -92,11 +92,11 @@ def print_eval(args: argparse.Namespace) -> int:
         sys.stderr.write(f"Error initializing model: {error}\n")
         return 1
     if not args.record:
-        sys.stdout.write(report(asyncio.run(evaluate(model))))
+        sys.stdout.write(report(asyncio.run(evaluate_examples(model))))
         return 0
     recorder = RecordingModel(model, RECORDINGS)
-    run = asyncio.run(evaluate(recorder))
-    sys.stdout.write(f"{report(run)}Recorded {replace_recordings(recorder)} answers\n")
+    run = asyncio.run(evaluate_examples(recorder))
+    sys.stdout.write(f"{report(run)}Recorded {recorder.commit()} answers\n")
     return 0
 
 

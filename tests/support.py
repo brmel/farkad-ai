@@ -72,6 +72,7 @@ class Tracked:
     guidance: str = "Record each item."
     examples: str = ""
     entry_schema: type[BaseModel] = Item
+    label_fields: frozenset[str] = frozenset({"pillar"})
     flagged: tuple[Finding, ...] = ()
 
     def review(self, entry: Mapping[str, object]) -> Iterable[Finding]:
