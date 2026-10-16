@@ -25,7 +25,7 @@ from farkad_ai.models.port import (
     Usage,
     fixed,
 )
-from farkad_ai.models.provider import ProviderModel
+from farkad_ai.models.provider import PLACEHOLDER_INPUT, ProviderModel
 
 DEFAULT_CHOICES: Mapping[ModelTier, ModelChoice] = {
     ModelTier.fast: ModelChoice("gpt-4o-mini"),
@@ -108,7 +108,7 @@ def _messages(prompt: Prompt, *, tier: ModelTier, model: str) -> list[ChatComple
     user_parts.extend(_image_part(blob, tier=tier, model=model) for blob in prompt.media)
     return [
         {"role": "system", "content": prompt.instructions},
-        {"role": "user", "content": user_parts or [{"type": "text", "text": "Input."}]},
+        {"role": "user", "content": user_parts or [{"type": "text", "text": PLACEHOLDER_INPUT}]},
     ]
 
 
