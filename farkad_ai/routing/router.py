@@ -30,12 +30,13 @@ class Router:
         catalogue: Iterable[PillarSpec],
         *,
         instructions: PromptAsset = INSTRUCTIONS,
+        rules: tuple[str, ...] = (),
     ) -> None:
         specs = tuple(catalogue)
         self._model = model
         self._known = frozenset(spec.pillar for spec in specs)
         self._asset = instructions
-        self._instructions = routing_instructions(specs, instructions)
+        self._instructions = routing_instructions(specs, instructions, rules=rules)
 
     async def route(
         self,
