@@ -20,6 +20,8 @@ from farkad_ai.models.port import (
     Usage,
 )
 
+PLACEHOLDER_INPUT = "Input."
+
 
 class ProviderModel(Model):
     honoured_reasoning: Collection[Reasoning]

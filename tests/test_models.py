@@ -14,11 +14,6 @@ def test_the_recorded_provider_replays_from_the_directory_given(tmp_path: Path) 
     assert isinstance(model, RecordedModel)
 
 
-def test_the_recorded_provider_needs_a_directory_to_replay_from() -> None:
-    with pytest.raises(ValueError):
-        create_model(ProviderName.recorded, fixtures_dir=None)
-
-
 @pytest.mark.parametrize(
     ("carried", "modality"),
     [

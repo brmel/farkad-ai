@@ -1,6 +1,6 @@
 import pytest
 
-from farkad_ai.eval.scoring import RunScore, score_capture
+from farkad_ai.eval.scoring import RunScore, matches, score_capture
 from farkad_ai.models.port import PipelineStep
 from tests.support import a_usage
 
@@ -28,6 +28,20 @@ def test_each_wrong_field_counts_against_field_accuracy(
     run_score = RunScore(captures=(score,))
     assert run_score.routing_accuracy == 1.0
     assert run_score.field_accuracy == field_accuracy
+
+
+@pytest.mark.parametrize(
+    ("expected", "found", "is_match"),
+    [
+        ({"value": 500, "unit": "mg"}, {"value": 500, "unit": "mg"}, True),
+        ({"value": 500, "unit": "mg"}, {"value": 500, "unit": "g"}, False),
+        (500, {"value": 500, "unit": "mg"}, True),
+    ],
+)
+def test_a_stated_unit_must_be_the_unit_found_and_a_bare_number_is_in_the_fields_own(
+    expected: object, found: object, is_match: bool
+) -> None:
+    assert matches(expected, found) is is_match
 
 
 def test_a_run_reports_the_mean_and_p95_of_the_tokens_its_captures_spent() -> None:

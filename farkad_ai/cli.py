@@ -4,12 +4,12 @@ import argparse
 import asyncio
 import json
 import sys
-from pathlib import Path
 
 from farkad_ai.eval.example import RECORDINGS, evaluate_examples, report
 from farkad_ai.examples import EXAMPLE_PILLARS
-from farkad_ai.models.factory import ProviderName, create_model
-from farkad_ai.models.recorded import RecordingModel
+from farkad_ai.models.factory import MissingCredentialsError, ProviderName, create_model
+from farkad_ai.models.port import Model
+from farkad_ai.models.recorded import NoRecordedResponseError, RecordingModel
 from farkad_ai.prompts import list_prompts
 from farkad_ai.routing.port import NothingToLog, Routed
 from farkad_ai.routing.router import Router
@@ -19,13 +19,16 @@ CLI_PILLARS = frozenset(pillar.pillar for pillar in EXAMPLE_PILLARS)
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    match args.command:
-        case "route":
-            return print_routing(args)
-        case "eval":
-            return print_eval(args)
-        case _:
-            return print_prompts()
+    if args.command == "prompts":
+        return print_prompts()
+    try:
+        model = create_model(args.provider, fixtures_dir=RECORDINGS)
+    except (MissingCredentialsError, ImportError) as error:
+        sys.stderr.write(f"Error initializing model: {error}\n")
+        return 1
+    if args.command == "route":
+        return print_routing(model, args.text)
+    return print_eval(model, record=args.record)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -35,7 +38,6 @@ def build_parser() -> argparse.ArgumentParser:
     route = commands.add_parser("route", help="Name the topics one sentence mentions")
     route.add_argument("--text", type=str, default="", help="The sentence to route")
     add_provider(route)
-    route.add_argument("--fixtures", type=Path, help="Replay answers recorded in this directory")
 
     scored = commands.add_parser(
         "eval", help="Score the example gold set: routing, fields and tokens per language"
@@ -58,13 +60,15 @@ def add_provider(command: argparse.ArgumentParser) -> None:
     )
 
 
-def print_routing(args: argparse.Namespace) -> int:
+def print_routing(model: Model, text: str) -> int:
     try:
-        model = create_model(args.provider, fixtures_dir=args.fixtures)
-    except (ValueError, ImportError) as error:
-        sys.stderr.write(f"Error initializing model: {error}\n")
+        outcome = asyncio.run(Router(model, EXAMPLE_PILLARS).route(CLI_PILLARS, text=text))
+    except NoRecordedResponseError:
+        sys.stderr.write(
+            "Only the gold set's sentences are recorded: route another with "
+            "--provider vertex, openai or anthropic\n"
+        )
         return 1
-    outcome = asyncio.run(Router(model, EXAMPLE_PILLARS).route(CLI_PILLARS, text=args.text))
     match outcome:
         case Routed():
             answer = {
@@ -85,13 +89,8 @@ def print_routing(args: argparse.Namespace) -> int:
     return 0
 
 
-def print_eval(args: argparse.Namespace) -> int:
-    try:
-        model = create_model(args.provider, fixtures_dir=RECORDINGS)
-    except (ValueError, ImportError) as error:
-        sys.stderr.write(f"Error initializing model: {error}\n")
-        return 1
-    if not args.record:
+def print_eval(model: Model, *, record: bool) -> int:
+    if not record:
         sys.stdout.write(report(asyncio.run(evaluate_examples(model))))
         return 0
     recorder = RecordingModel(model, RECORDINGS)
