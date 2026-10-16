@@ -5,11 +5,11 @@ from farkad_ai.eval.run import GoldCase, evaluate
 from farkad_ai.extraction.port import Finding
 from farkad_ai.models.port import ModelUnavailableError, Unavailability
 from farkad_ai.routing.pass_one import Mention, PassOne
-from tests.support import AnswersByStep, Registry, Spec, Tracked
+from tests.support import AnswersByStep, Spec, Tracked
 
 pytestmark = pytest.mark.anyio
 
-CATALOGUE = Registry(Spec("water", "drinks"))
+CATALOGUE = (Spec("water", "drinks"),)
 A_GLASS = PassOne(
     transcript="a glass",
     language="en",

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 
@@ -160,11 +160,3 @@ EXAMPLE_PILLARS: tuple[ExamplePillar, ...] = (
         RecoveryEntry,
     ),
 )
-
-
-class ExampleCatalogue:
-    def __iter__(self) -> Iterator[ExamplePillar]:
-        return iter(EXAMPLE_PILLARS)
-
-    def knows(self, route: str) -> bool:
-        return any(pillar.pillar == route for pillar in EXAMPLE_PILLARS)

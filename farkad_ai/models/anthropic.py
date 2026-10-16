@@ -2,21 +2,10 @@ from __future__ import annotations
 
 import base64
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, Literal
+from typing import Any, Literal
 
-try:
-    from anthropic import APIError as AnthropicAPIError
-    from anthropic import AsyncAnthropic
-
-    _ANTHROPIC_AVAILABLE = True
-except ImportError:
-    AsyncAnthropic = Any  # type: ignore[assignment,misc]
-    AnthropicAPIError = Exception  # type: ignore[assignment,misc]
-    _ANTHROPIC_AVAILABLE = False
-
-if TYPE_CHECKING:
-    from anthropic.types import ImageBlockParam, MessageParam, TextBlockParam, ToolParam
-
+from anthropic import APIError, AsyncAnthropic
+from anthropic.types import ImageBlockParam, MessageParam, TextBlockParam, ToolParam
 from pydantic import BaseModel
 
 from farkad_ai.models.port import (
@@ -34,7 +23,7 @@ from farkad_ai.models.port import (
 )
 from farkad_ai.models.provider import ProviderModel
 
-DEFAULT_ANTHROPIC_MODELS: Mapping[ModelTier, ModelChoice] = {
+DEFAULT_CHOICES: Mapping[ModelTier, ModelChoice] = {
     ModelTier.fast: ModelChoice("claude-haiku-4-5-20251001"),
     ModelTier.standard: ModelChoice("claude-sonnet-5"),
 }
@@ -49,12 +38,7 @@ class AnthropicModel(ProviderModel):
         *,
         choices: TierChoices | None = None,
     ) -> None:
-        super().__init__(
-            sdk_installed=_ANTHROPIC_AVAILABLE,
-            sdk="anthropic",
-            extra="anthropic",
-            choices=choices or fixed(DEFAULT_ANTHROPIC_MODELS),
-        )
+        super().__init__(choices or fixed(DEFAULT_CHOICES))
         self._client = client
 
     async def _send(
@@ -74,7 +58,7 @@ class AnthropicModel(ProviderModel):
                 "input_schema": schema.model_json_schema(),
             }
         ]
-        messages = build_anthropic_messages(prompt, tier=tier, model=model)
+        messages = _messages(prompt, tier=tier, model=model)
         try:
             return await self._client.messages.create(
                 model=model,
@@ -84,7 +68,7 @@ class AnthropicModel(ProviderModel):
                 tools=tools,
                 tool_choice={"type": "tool", "name": tool_name},
             )
-        except AnthropicAPIError as error:
+        except APIError as error:
             raise ModelUnavailableError(
                 tier,
                 model,
@@ -116,27 +100,27 @@ class AnthropicModel(ProviderModel):
         )
 
 
-def build_anthropic_messages(prompt: Prompt, *, tier: ModelTier, model: str) -> list[MessageParam]:
+def _messages(prompt: Prompt, *, tier: ModelTier, model: str) -> list[MessageParam]:
     content: list[TextBlockParam | ImageBlockParam] = []
     if prompt.utterance:
         content.append({"type": "text", "text": prompt.utterance})
-    content.extend(image_block(blob, tier=tier, model=model) for blob in prompt.media)
+    content.extend(_image_block(blob, tier=tier, model=model) for blob in prompt.media)
     return [{"role": "user", "content": content or [{"type": "text", "text": "Process input."}]}]
 
 
-def image_block(blob: MediaBlob, *, tier: ModelTier, model: str) -> ImageBlockParam:
+def _image_block(blob: MediaBlob, *, tier: ModelTier, model: str) -> ImageBlockParam:
     match blob.content_type:
         case MediaType.image_jpeg:
-            return base64_image("image/jpeg", blob.data)
+            return _base64_image("image/jpeg", blob.data)
         case MediaType.image_png:
-            return base64_image("image/png", blob.data)
+            return _base64_image("image/png", blob.data)
         case MediaType.audio_aac:
             raise ModelUnavailableError(
                 tier, model, Unavailability.provider_refused, "audio input unsupported"
             )
 
 
-def base64_image(media_type: Literal["image/jpeg", "image/png"], data: bytes) -> ImageBlockParam:
+def _base64_image(media_type: Literal["image/jpeg", "image/png"], data: bytes) -> ImageBlockParam:
     return {
         "type": "image",
         "source": {

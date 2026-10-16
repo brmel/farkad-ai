@@ -2,25 +2,14 @@ from __future__ import annotations
 
 import base64
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-try:
-    from openai import APIError as OpenAIAPIError
-    from openai import AsyncOpenAI
-
-    _OPENAI_AVAILABLE = True
-except ImportError:
-    AsyncOpenAI = Any  # type: ignore[assignment,misc]
-    OpenAIAPIError = Exception  # type: ignore[assignment,misc]
-    _OPENAI_AVAILABLE = False
-
-if TYPE_CHECKING:
-    from openai.types.chat import (
-        ChatCompletionContentPartImageParam,
-        ChatCompletionContentPartParam,
-        ChatCompletionMessageParam,
-    )
-
+from openai import APIError, AsyncOpenAI
+from openai.types.chat import (
+    ChatCompletionContentPartImageParam,
+    ChatCompletionContentPartParam,
+    ChatCompletionMessageParam,
+)
 from pydantic import BaseModel
 
 from farkad_ai.models.port import (
@@ -38,7 +27,7 @@ from farkad_ai.models.port import (
 )
 from farkad_ai.models.provider import ProviderModel
 
-DEFAULT_OPENAI_MODELS: Mapping[ModelTier, ModelChoice] = {
+DEFAULT_CHOICES: Mapping[ModelTier, ModelChoice] = {
     ModelTier.fast: ModelChoice("gpt-4o-mini"),
     ModelTier.standard: ModelChoice("gpt-4o"),
 }
@@ -53,12 +42,7 @@ class OpenAIModel(ProviderModel):
         *,
         choices: TierChoices | None = None,
     ) -> None:
-        super().__init__(
-            sdk_installed=_OPENAI_AVAILABLE,
-            sdk="openai",
-            extra="openai",
-            choices=choices or fixed(DEFAULT_OPENAI_MODELS),
-        )
+        super().__init__(choices or fixed(DEFAULT_CHOICES))
         self._client = client
 
     async def _send(
@@ -70,14 +54,14 @@ class OpenAIModel(ProviderModel):
         choice: ModelChoice,
     ) -> Any:
         model = choice.model
-        messages = build_openai_messages(prompt, tier=tier, model=model)
+        messages = _messages(prompt, tier=tier, model=model)
         try:
             return await self._client.beta.chat.completions.parse(
                 model=model,
                 messages=messages,
                 response_format=schema,
             )
-        except OpenAIAPIError as error:
+        except APIError as error:
             raise ModelUnavailableError(
                 tier,
                 model,
@@ -117,20 +101,18 @@ class OpenAIModel(ProviderModel):
         )
 
 
-def build_openai_messages(
-    prompt: Prompt, *, tier: ModelTier, model: str
-) -> list[ChatCompletionMessageParam]:
+def _messages(prompt: Prompt, *, tier: ModelTier, model: str) -> list[ChatCompletionMessageParam]:
     user_parts: list[ChatCompletionContentPartParam] = []
     if prompt.utterance:
         user_parts.append({"type": "text", "text": prompt.utterance})
-    user_parts.extend(image_part(blob, tier=tier, model=model) for blob in prompt.media)
+    user_parts.extend(_image_part(blob, tier=tier, model=model) for blob in prompt.media)
     return [
         {"role": "system", "content": prompt.instructions},
         {"role": "user", "content": user_parts or [{"type": "text", "text": "Input."}]},
     ]
 
 
-def image_part(
+def _image_part(
     blob: MediaBlob, *, tier: ModelTier, model: str
 ) -> ChatCompletionContentPartImageParam:
     match blob.content_type:

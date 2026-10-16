@@ -2,9 +2,10 @@ from datetime import time
 
 import pytest
 
+from farkad_ai.prompts import PromptAsset
 from farkad_ai.routing.pass_one import Mention, PassOne, TimeHint
 from farkad_ai.routing.port import (
-    NotApplicable,
+    NothingToLog,
     NothingToLogReason,
     PartOfDay,
     Routed,
@@ -12,11 +13,11 @@ from farkad_ai.routing.port import (
     StatedTime,
 )
 from farkad_ai.routing.router import Router
-from tests.support import Registry, ScriptedModel, Spec
+from tests.support import ScriptedModel, Spec
 
 pytestmark = pytest.mark.anyio
 
-REGISTRY = Registry(Spec("water", "tracks water intake"), Spec("food", "logs meals and snacks"))
+CATALOGUE = (Spec("water", "tracks water intake"), Spec("food", "logs meals and snacks"))
 
 
 def heard(*pillars: str, is_health_related: bool = True) -> PassOne:
@@ -29,7 +30,7 @@ def heard(*pillars: str, is_health_related: bool = True) -> PassOne:
 
 
 async def routed(answer: PassOne, tracked: frozenset[str]) -> RoutingOutcome:
-    return await Router(ScriptedModel(answer), REGISTRY).route(tracked, text=answer.transcript)
+    return await Router(ScriptedModel(answer), CATALOGUE).route(tracked, text=answer.transcript)
 
 
 class TestTheRouterDecidesRatherThanTheModel:
@@ -37,7 +38,7 @@ class TestTheRouterDecidesRatherThanTheModel:
         outcome = await routed(heard("water", "food"), frozenset({"water"}))
 
         assert isinstance(outcome, Routed)
-        assert outcome.pillars == frozenset({"water"})
+        assert outcome.routes == frozenset({"water"})
         assert outcome.untracked == frozenset({"food"})
 
     async def test_each_tracked_pillar_is_handed_only_what_was_listed_under_it(self) -> None:
@@ -70,19 +71,19 @@ class TestTheRouterDecidesRatherThanTheModel:
         outcome = await routed(heard("water", "astrology"), frozenset({"water"}))
 
         assert isinstance(outcome, Routed)
-        assert outcome.pillars == frozenset({"water"})
+        assert outcome.routes == frozenset({"water"})
         assert outcome.untracked == frozenset()
 
     async def test_a_log_of_only_untracked_pillars_has_nothing_to_log(self) -> None:
         outcome = await routed(heard("food"), frozenset({"water"}))
 
-        assert isinstance(outcome, NotApplicable)
+        assert isinstance(outcome, NothingToLog)
         assert outcome.reason is NothingToLogReason.no_enabled_pillar
 
     async def test_a_sentence_that_is_not_a_log_has_nothing_to_log(self) -> None:
         outcome = await routed(heard("water", is_health_related=False), frozenset({"water"}))
 
-        assert isinstance(outcome, NotApplicable)
+        assert isinstance(outcome, NothingToLog)
         assert outcome.reason is NothingToLogReason.not_a_health_log
 
     async def test_a_stated_time_dates_only_the_mention_it_was_said_about(self) -> None:
@@ -109,13 +110,23 @@ class TestTheRouterDecidesRatherThanTheModel:
         }
 
 
-async def test_the_model_is_told_every_pillar_the_registry_holds() -> None:
+async def test_the_model_is_told_every_pillar_the_catalogue_holds() -> None:
     model = ScriptedModel(heard("water"))
 
-    await Router(model, REGISTRY).route(frozenset({"water"}), text="I drank water")
+    await Router(model, CATALOGUE).route(frozenset({"water"}), text="I drank water")
 
     told = model.asked[0].instructions
-    assert [spec for spec in REGISTRY if f"- {spec.pillar}: {spec.intent}" not in told] == []
+    assert [spec for spec in CATALOGUE if f"- {spec.pillar}: {spec.intent}" not in told] == []
+
+
+async def test_the_router_routes_with_the_prompt_it_is_given() -> None:
+    own = PromptAsset(name="pass_one", text="Route this: {pillars}")
+    model = ScriptedModel(heard("water"))
+
+    await Router(model, CATALOGUE[:1], instructions=own).route(frozenset({"water"}), text="water")
+
+    assert model.asked[0].instructions.startswith("Route this: - water: tracks water intake")
+    assert model.asked[0].instructions_version == own.version
 
 
 def test_a_stated_time_names_a_day_only_when_it_is_not_today() -> None:

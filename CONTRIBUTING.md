@@ -19,5 +19,6 @@ ruff check . && ruff format --check . && mypy farkad_ai tests && pytest
 ```
 
 Tests run offline on scripted answers; no API key is needed. CI runs the same checks twice: in a
-venv holding only `.[dev]`, where the core must import no provider SDK, and with
-`.[dev,google,anthropic,openai]`, where the adapters are type-checked against the real SDKs.
+venv holding only `.[dev]`, where the core must import no provider SDK and the adapter tests are
+skipped, and with `.[dev,google,anthropic,openai]`, where the adapters are type-checked and tested
+against the real SDKs.

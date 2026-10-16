@@ -6,7 +6,7 @@ from typing import Protocol
 
 from pydantic import BaseModel
 
-from farkad_ai.models.port import MediaBlob, ModelTier, Usage
+from farkad_ai.models.port import MediaBlob, Usage
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,11 +67,3 @@ class ExtractionResult:
     pillar: str
     entries: tuple[ExtractedEntry, ...]
     usage: Usage
-
-
-class Extractor(Protocol):
-    async def extract(self, context: ExtractionContext) -> ExtractionResult: ...
-
-
-class TieredExtractor(Protocol):
-    async def extract(self, context: ExtractionContext, *, tier: ModelTier) -> ExtractionResult: ...

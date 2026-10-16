@@ -67,12 +67,14 @@ Install the `google`, `anthropic` or `openai` extra for the provider you use.
 
 ## Layout
 
-In the order a capture flows through `farkad_ai/`. Where a package has a `port.py`, it holds the
-types that cross its boundary. An interface there is named for the role it plays, with no `Port`
-or `Protocol` suffix since `port.py` already says it is one, and an implementation for how it plays
-it: `Model` and `RecordedModel`, `CaptureEngine` and `TwoPassCaptureEngine`.
+In the order a capture flows through `farkad_ai/`; each name is imported from the module that
+defines it. Where a package has a `port.py`, it holds the types that cross its boundary. An
+interface there is named for the role it plays, with no `Port` or `Protocol` suffix since `port.py`
+already says it is one, and an implementation for how it plays it: `Model` and `RecordedModel`,
+`CaptureEngine` and `TwoPassCaptureEngine`.
 
-- `pipeline/`: `TwoPassCaptureEngine`, which routes a capture once and extracts each topic it names
+- `pipeline/`: `TwoPassCaptureEngine`, which routes a capture once and extracts each topic it names,
+  and `photo_briefing`, which reads a photo as a log
 - `routing/`: the one call that transcribes the capture and names its topics
 - `extraction/`: one call per topic, in the app's schema, escalated when the answer does not parse
 - `memory/`: facts the user states, and the short sheet given back to every capture
@@ -80,6 +82,7 @@ it: `Model` and `RecordedModel`, `CaptureEngine` and `TwoPassCaptureEngine`.
   adapters for Gemini on Vertex AI, Claude and GPT; and the replay of recorded answers
 - `eval/`: the gold set, its recorded answers, and the runner that scores any catalogue's own
 - `prompts/`: the prompt texts, each versioned by a hash of its text
+- `examples.py`: the seven example topics the gold set and `farkad-ai route` use
 - `cli.py`: `farkad-ai route`, `eval` and `prompts`
 
 [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Apache 2.0](LICENSE)

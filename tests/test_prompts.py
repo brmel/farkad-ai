@@ -11,7 +11,7 @@ from farkad_ai.extraction.port import ExtractionContext
 from farkad_ai.pipeline.photo import photo_briefing
 from farkad_ai.prompts import PromptAsset, list_prompts, prompt
 from farkad_ai.routing.pass_one import routing_instructions
-from tests.support import Registry, ScriptedModel, Tracked
+from tests.support import ScriptedModel, Tracked
 
 
 def test_a_prompt_is_versioned_by_its_text() -> None:
@@ -72,7 +72,7 @@ def test_no_prompt_or_worked_example_quotes_the_gold_set() -> None:
 
 
 def test_the_routing_prompt_gives_no_pillar_a_meaning_the_catalogue_did_not() -> None:
-    told = set(re.findall(r"\w+", routing_instructions(Registry()).casefold()))
+    told = set(re.findall(r"\w+", routing_instructions(()).casefold()))
     pillar_words = {
         word for pillar in EXAMPLE_PILLARS for word in (pillar.pillar, *pillar.title.split())
     }

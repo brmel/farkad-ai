@@ -5,7 +5,7 @@ from typing import Protocol
 
 from farkad_ai.extraction.port import ExtractedEntry, TrackedPillar
 from farkad_ai.models.port import MediaBlob, Unavailability, Usage
-from farkad_ai.routing.port import NothingToLogReason, StatedTime
+from farkad_ai.routing.port import NothingToLog, StatedTime
 
 
 @dataclass(frozen=True, slots=True)
@@ -37,14 +37,6 @@ class Logged:
     untracked: frozenset[str]
     extracted: tuple[PillarEntries, ...]
     refused: tuple[PillarRefused, ...]
-    usages: tuple[Usage, ...]
-
-
-@dataclass(frozen=True, slots=True)
-class NothingToLog:
-    transcript: str
-    language: str
-    reason: NothingToLogReason
     usages: tuple[Usage, ...]
 
 

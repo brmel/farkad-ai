@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from collections.abc import Mapping
 from functools import lru_cache
 from typing import Any
@@ -12,10 +13,20 @@ from farkad_ai.extraction.port import (
     ExtractionResult,
     TrackedPillar,
 )
-from farkad_ai.models.port import Completion, Model, ModelTier, PipelineStep, Prompt
+from farkad_ai.models.port import (
+    Completion,
+    Model,
+    ModelTier,
+    ModelUnavailableError,
+    PipelineStep,
+    Prompt,
+    Unavailability,
+)
 from farkad_ai.prompts import PromptAsset, briefed, prompt
 
 INSTRUCTIONS = prompt("extraction")
+
+_log = logging.getLogger(__name__)
 
 
 class PillarExtractor:
@@ -48,6 +59,18 @@ class PillarExtractor:
             ),
             usage=completion.usage,
         )
+
+    async def extract_escalating(self, context: ExtractionContext) -> ExtractionResult:
+        try:
+            return await self.extract(context, tier=ModelTier.fast)
+        except ModelUnavailableError as unavailable:
+            if unavailable.because is not Unavailability.output_did_not_parse:
+                raise
+            _log.info(
+                "extraction_tier_escalated",
+                extra={"pillar": context.pillar.pillar, "model": unavailable.model},
+            )
+            return await self.extract(context, tier=ModelTier.standard)
 
 
 def fill(asset: PromptAsset, pillar: TrackedPillar, *, briefing: str = "", **values: object) -> str:

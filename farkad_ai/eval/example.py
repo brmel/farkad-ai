@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict
 
 from farkad_ai.eval.run import GoldCase, Scored, evaluate
 from farkad_ai.eval.scoring import RunScore
-from farkad_ai.examples import EXAMPLE_PILLARS, ExampleCatalogue
+from farkad_ai.examples import EXAMPLE_PILLARS
 from farkad_ai.models.port import Model
 
 RECORDINGS = Path(__file__).parent / "recordings"
@@ -38,7 +38,7 @@ type ExampleRun = tuple[Scored[ExampleCase], ...]
 
 async def evaluate_examples(model: Model) -> ExampleRun:
     gold = ExampleGold.model_validate_json(GOLD.read_text(encoding="utf-8"))
-    return await evaluate(model, ExampleCatalogue(), EXAMPLE_PILLARS, gold.cases)
+    return await evaluate(model, EXAMPLE_PILLARS, EXAMPLE_PILLARS, gold.cases)
 
 
 def report(run: ExampleRun) -> str:

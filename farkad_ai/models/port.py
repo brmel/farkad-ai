@@ -115,7 +115,6 @@ class ModelUnavailableError(Exception):
 
     def __init__(self, tier: ModelTier, model: str, because: Unavailability, detail: str) -> None:
         super().__init__(f"{tier} model {model} unavailable: {because} ({detail})")
-        self.tier = tier
         self.model = model
         self.because = because
 
