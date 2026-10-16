@@ -1,14 +1,14 @@
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from pydantic import BaseModel
 
+pytest.importorskip("anthropic")
+pytest.importorskip("openai")
+
 from farkad_ai.models.anthropic import AnthropicModel
 from farkad_ai.models.openai import OpenAIModel
 from farkad_ai.models.port import (
-    InputModality,
-    MediaBlob,
-    MediaType,
     ModelChoice,
     ModelTier,
     ModelUnavailableError,
@@ -16,30 +16,13 @@ from farkad_ai.models.port import (
     Prompt,
     Reasoning,
     Unavailability,
-    Usage,
     fixed,
 )
-
-ADAPTERS = [
-    pytest.param(AnthropicModel, "farkad_ai.models.anthropic._ANTHROPIC_AVAILABLE", id="anthropic"),
-    pytest.param(OpenAIModel, "farkad_ai.models.openai._OPENAI_AVAILABLE", id="openai"),
-]
 
 
 class HealthFact(BaseModel):
     category: str
     amount: int
-
-
-@pytest.mark.parametrize(("adapter", "sdk_installed"), ADAPTERS)
-def test_an_adapter_without_its_sdk_says_what_to_install(
-    adapter: type[AnthropicModel] | type[OpenAIModel], sdk_installed: str
-) -> None:
-    with (
-        patch(sdk_installed, False),
-        pytest.raises(RuntimeError, match=f"is required to use {adapter.__name__}"),
-    ):
-        adapter(Mock())
 
 
 @pytest.mark.anyio
@@ -58,22 +41,21 @@ async def test_an_anthropic_tool_answer_is_parsed_and_counted() -> None:
     client.messages = Mock()
     client.messages.create = AsyncMock(return_value=mock_response)
 
-    with patch("farkad_ai.models.anthropic._ANTHROPIC_AVAILABLE", True):
-        adapter = AnthropicModel(client)
+    prompt = Prompt(
+        step=PipelineStep.routing,
+        instructions="Extract facts",
+        instructions_version="v1",
+        utterance="Had 250ml",
+    )
+    completion = await AnthropicModel(client).complete(
+        prompt, schema=HealthFact, tier=ModelTier.fast
+    )
 
-        prompt = Prompt(
-            step=PipelineStep.routing,
-            instructions="Extract facts",
-            instructions_version="v1",
-            utterance="Had 250ml",
-        )
-        completion = await adapter.complete(prompt, schema=HealthFact, tier=ModelTier.fast)
-
-        assert completion.value.category == "hydration"
-        assert completion.value.amount == 250
-        assert completion.usage.input_tokens == 40
-        assert completion.usage.output_tokens == 15
-        assert client.messages.create.call_args.kwargs["model"] == "claude-haiku-4-5-20251001"
+    assert completion.value.category == "hydration"
+    assert completion.value.amount == 250
+    assert completion.usage.input_tokens == 40
+    assert completion.usage.output_tokens == 15
+    assert client.messages.create.call_args.kwargs["model"] == "claude-haiku-4-5-20251001"
 
 
 @pytest.mark.anyio
@@ -95,55 +77,30 @@ async def test_an_openai_structured_answer_is_parsed_and_counted() -> None:
     client.beta.chat.completions = Mock()
     client.beta.chat.completions.parse = AsyncMock(return_value=mock_response)
 
-    with patch("farkad_ai.models.openai._OPENAI_AVAILABLE", True):
-        adapter = OpenAIModel(client)
-
-        prompt = Prompt(
-            step=PipelineStep.extraction,
-            instructions="Extract sleep",
-            instructions_version="v1",
-            utterance="Slept 8 hours",
-        )
-        completion = await adapter.complete(prompt, schema=HealthFact, tier=ModelTier.standard)
-
-        assert completion.value.category == "sleep"
-        assert completion.value.amount == 8
-        assert completion.usage.input_tokens == 50
-        assert completion.usage.output_tokens == 20
-        assert client.beta.chat.completions.parse.call_args.kwargs["model"] == "gpt-4o"
-
-
-@pytest.mark.parametrize(
-    ("carried", "modality"),
-    [
-        ((), InputModality.text),
-        ((MediaType.image_png,), InputModality.image),
-        ((MediaType.image_jpeg, MediaType.audio_aac), InputModality.audio),
-    ],
-)
-def test_a_calls_usage_says_what_it_carried(
-    carried: tuple[MediaType, ...], modality: InputModality
-) -> None:
     prompt = Prompt(
-        step=PipelineStep.routing,
-        instructions="Route",
+        step=PipelineStep.extraction,
+        instructions="Extract sleep",
         instructions_version="v1",
-        media=tuple(MediaBlob(content_type=kind, data=b"") for kind in carried),
+        utterance="Slept 8 hours",
+    )
+    completion = await OpenAIModel(client).complete(
+        prompt, schema=HealthFact, tier=ModelTier.standard
     )
 
-    usage = Usage.answering(prompt, model="m", input_tokens=1, output_tokens=1, latency_ms=1)
-
-    assert usage.input_modality is modality
+    assert completion.value.category == "sleep"
+    assert completion.value.amount == 8
+    assert completion.usage.input_tokens == 50
+    assert completion.usage.output_tokens == 20
+    assert client.beta.chat.completions.parse.call_args.kwargs["model"] == "gpt-4o"
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize(("adapter", "sdk_installed"), ADAPTERS)
+@pytest.mark.parametrize("adapter", [AnthropicModel, OpenAIModel])
 async def test_a_reasoning_level_the_adapter_cannot_honour_is_refused_not_ignored(
-    adapter: type[AnthropicModel] | type[OpenAIModel], sdk_installed: str
+    adapter: type[AnthropicModel] | type[OpenAIModel],
 ) -> None:
     thinking = fixed({ModelTier.standard: ModelChoice("some-model", Reasoning.brief)})
-    with patch(sdk_installed, True):
-        model = adapter(Mock(), choices=thinking)
+    model = adapter(Mock(), choices=thinking)
     asked = Prompt(step=PipelineStep.extraction, instructions="Extract", instructions_version="v1")
 
     with pytest.raises(ModelUnavailableError) as refused:

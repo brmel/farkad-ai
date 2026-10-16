@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import time
 from enum import StrEnum
@@ -15,11 +15,6 @@ class PillarSpec(Protocol):
 
     @property
     def intent(self) -> str: ...
-
-
-class PillarRegistry(Protocol):
-    def __iter__(self) -> Iterator[PillarSpec]: ...
-    def knows(self, route: str) -> bool: ...
 
 
 class PartOfDay(StrEnum):
@@ -50,7 +45,7 @@ class NothingToLogReason(StrEnum):
 class Routed:
     transcript: str
     language: str
-    pillars: frozenset[str]
+    routes: frozenset[str]
     untracked: frozenset[str]
     mentions: Mapping[str, tuple[str, ...]]
     occurred_at_hints: Mapping[str, StatedTime | None]
@@ -58,11 +53,11 @@ class Routed:
 
 
 @dataclass(frozen=True, slots=True)
-class NotApplicable:
+class NothingToLog:
     transcript: str
     language: str
     reason: NothingToLogReason
-    usage: Usage
+    usages: tuple[Usage, ...]
 
 
-RoutingOutcome = Routed | NotApplicable
+RoutingOutcome = Routed | NothingToLog

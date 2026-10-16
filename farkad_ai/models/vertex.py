@@ -2,18 +2,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-try:
-    from google import genai
-    from google.genai import types
-    from google.genai.errors import APIError
-
-    _GENAI_AVAILABLE = True
-except ImportError:
-    genai = None  # type: ignore[assignment]
-    types = None  # type: ignore[assignment]
-    APIError = Exception  # type: ignore[assignment,misc]
-    _GENAI_AVAILABLE = False
-
+from google import genai
+from google.genai import types
+from google.genai.errors import APIError
 from pydantic import BaseModel
 
 from farkad_ai.models.port import (
@@ -80,12 +71,7 @@ class VertexModel(ProviderModel):
         *,
         choices: TierChoices | None = None,
     ) -> None:
-        super().__init__(
-            sdk_installed=_GENAI_AVAILABLE,
-            sdk="google-genai",
-            extra="google",
-            choices=choices or fixed(DEFAULT_CHOICES),
-        )
+        super().__init__(choices or fixed(DEFAULT_CHOICES))
         self._client = client
 
     async def _send(
@@ -100,7 +86,7 @@ class VertexModel(ProviderModel):
         try:
             return await self._client.aio.models.generate_content(
                 model=model,
-                contents=parts(prompt),
+                contents=_parts(prompt),
                 config=types.GenerateContentConfig(
                     system_instruction=prompt.instructions,
                     automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
@@ -127,7 +113,7 @@ class VertexModel(ProviderModel):
     _usage = staticmethod(usage_of)
 
 
-def parts(prompt: Prompt) -> types.ContentListUnion:
+def _parts(prompt: Prompt) -> types.ContentListUnion:
     spoken = [types.Part.from_text(text=prompt.utterance)] if prompt.utterance else []
     sent: list[types.PartUnion] = [
         *spoken,

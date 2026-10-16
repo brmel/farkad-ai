@@ -24,12 +24,7 @@ from farkad_ai.models.port import (
 class ProviderModel(Model):
     honoured_reasoning: Collection[Reasoning]
 
-    def __init__(self, *, sdk_installed: bool, sdk: str, extra: str, choices: TierChoices) -> None:
-        if not sdk_installed:
-            raise RuntimeError(
-                f"{sdk} is required to use {type(self).__name__}. "
-                f"Install with: pip install 'farkad-ai[{extra}]'"
-            )
+    def __init__(self, choices: TierChoices) -> None:
         self._choices = choices
 
     async def complete[T: BaseModel](
