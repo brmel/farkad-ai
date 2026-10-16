@@ -6,6 +6,10 @@ Each fact has:
 - subject: a short snake_case topic in English, such as diet, lactose, coffee_order or morning_run. When the statement is about a topic already known below, reuse that exact subject, so the newer fact replaces the older one.
 - category: {categories}.
 - content: the fact as one short sentence, in the language they spoke.
+- until: only when they said when the fact stops applying: their words for that end, and the days from today to the last day it applies. You are not told the date, so never work one out. Null when they gave no end.
+- asked_to_remember: true only when they explicitly asked for it to be remembered.
+
+The person switched these topics off. Learn nothing more about them, under the same subject or any other, however it is worded: {switched_off}
 
 Already known:
 {known}

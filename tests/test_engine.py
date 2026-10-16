@@ -23,11 +23,12 @@ CATALOGUE = (Spec("water", "tracks water intake"), Spec("food", "logs meals"))
 WATER = Tracked("water", title="Water", guidance="Count the glasses.", examples='"a glass" → 1')
 
 
-def heard(*said: tuple[str, str]) -> PassOne:
+def heard(*said: tuple[str, str], states_a_lasting_fact: bool = False) -> PassOne:
     return PassOne(
         transcript=" and ".join(words for _, words in said),
         language="en",
         is_health_related=bool(said),
+        states_a_lasting_fact=states_a_lasting_fact,
         mentions=[Mention(pillar=pillar, said=words) for pillar, words in said],
     )
 
@@ -76,6 +77,17 @@ async def test_each_tracked_pillar_named_comes_back_with_its_entries() -> None:
     ]
     assert outcome.refused == ()
     assert [usage.step for usage in outcome.usages] == ["routing", "extraction"]
+
+
+async def test_a_lasting_fact_stated_beside_a_log_is_reported_with_it() -> None:
+    model = AnswersByStep(
+        routing=heard(("water", "a glass"), states_a_lasting_fact=True),
+        extraction=entries("glass"),
+    )
+
+    outcome = await captured(model, WATER)
+
+    assert isinstance(outcome, Logged) and outcome.states_a_lasting_fact
 
 
 async def test_the_specialist_is_asked_only_what_its_pillar_records() -> None:

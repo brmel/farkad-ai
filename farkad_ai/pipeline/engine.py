@@ -90,6 +90,7 @@ class TwoPassCaptureEngine(CaptureEngine):
         return Logged(
             transcript=routed.transcript,
             language=routed.language,
+            states_a_lasting_fact=routed.states_a_lasting_fact,
             routes=routed.routes,
             untracked=routed.untracked,
             extracted=tuple(extracted),

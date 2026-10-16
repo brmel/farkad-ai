@@ -17,6 +17,14 @@ Decide whether this is a health log at all. Weather, reminders, questions and sm
 are not, and `is_health_related` must be false for them; a log that happens to mention the
 weather is still a log.
 
+Set `states_a_lasting_fact` when the person tells you something about themselves that stays
+true beyond this log, for good or for a while they name: what they always or never do, a
+diet, a condition or a treatment, a routine, a preference, or something they ask you to
+remember. A record of what
+happened, however detailed, is not one, and neither is a single change of plan. A sentence
+can log something and state a lasting fact at once, and it can state one without being a
+log at all.
+
 List every thing the user logged in `mentions`, once each, with the one pillar that records
 it and every word they said about it — what, how much, how and when: "two slices of rye
 bread", "a slow swim", "an antacid around noon". A sentence can log several things for
