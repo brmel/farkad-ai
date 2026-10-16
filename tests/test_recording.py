@@ -89,6 +89,15 @@ async def test_committing_twice_is_not_two_sets(tmp_path: Path) -> None:
     assert len(list(tmp_path.glob("*.json"))) == 2
 
 
+async def test_a_commit_replaces_the_recordings_already_there(tmp_path: Path) -> None:
+    (tmp_path / "stale.json").write_text('{"stale": true}\n')
+    recorder = await record(QuotaLimitedModel(before_failing=1), tmp_path, ["one"])
+
+    assert recorder.commit() == 1
+    assert not (tmp_path / "stale.json").exists()
+    assert len(list(tmp_path.glob("*.json"))) == 1
+
+
 class Reworded(BaseModel):
     said: str
     loudly: bool = False

@@ -1,8 +1,8 @@
 from farkad_ai.extraction.extractor import (
     PillarExtractor,
     answer_schema,
+    entries_answered,
     fill,
-    holds_nothing,
 )
 from farkad_ai.extraction.port import (
     ExtractedEntry,
@@ -11,7 +11,7 @@ from farkad_ai.extraction.port import (
     Finding,
     TrackedPillar,
 )
-from farkad_ai.memory.facts import Disclosure, Fact, FactSource, MemoryCategory
+from farkad_ai.memory.facts import Disclosure, Fact, FactSource
 from farkad_ai.memory.habits import HabitBaseline, UsualAmount
 from farkad_ai.memory.inference import Inference, MemoryInferrer
 from farkad_ai.models.port import (
@@ -75,7 +75,6 @@ __all__ = [
     "Logged",
     "MediaBlob",
     "MediaType",
-    "MemoryCategory",
     "MemoryInferrer",
     "Model",
     "ModelChoice",
@@ -105,8 +104,8 @@ __all__ = [
     "UsualAmount",
     "answer_schema",
     "briefed",
+    "entries_answered",
     "fill",
     "fixed",
-    "holds_nothing",
     "prompt",
 ]
