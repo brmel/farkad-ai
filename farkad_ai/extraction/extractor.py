@@ -16,7 +16,6 @@ from farkad_ai.models.port import Completion, Model, ModelTier, PipelineStep, Pr
 from farkad_ai.prompts import PromptAsset, briefed, prompt
 
 INSTRUCTIONS = prompt("extraction")
-UNSTATED_FIELDS = frozenset({"pillar", "category"})
 
 
 class PillarExtractor:
@@ -45,7 +44,7 @@ class PillarExtractor:
             pillar=pillar.pillar,
             entries=tuple(
                 ExtractedEntry(values=entry, findings=tuple(pillar.review(entry)))
-                for entry in entries_answered(completion)
+                for entry in entries_answered(completion, pillar)
             ),
             usage=completion.usage,
         )
@@ -68,12 +67,12 @@ def answer_schema(entry: type[BaseModel]) -> type[BaseModel]:
     )
 
 
-def entries_answered(completion: Completion[BaseModel]) -> list[dict[str, object]]:
+def entries_answered(
+    completion: Completion[BaseModel], pillar: TrackedPillar
+) -> list[dict[str, object]]:
     answered: list[dict[str, object]] = completion.value.model_dump(mode="json")["entries"]
-    return [entry for entry in answered if not holds_nothing(entry)]
+    return [entry for entry in answered if _states_something(entry, pillar.label_fields)]
 
 
-def holds_nothing(entry: Mapping[str, object]) -> bool:
-    return not any(
-        value is not None for name, value in entry.items() if name not in UNSTATED_FIELDS
-    )
+def _states_something(entry: Mapping[str, object], label_fields: frozenset[str]) -> bool:
+    return any(value is not None for name, value in entry.items() if name not in label_fields)

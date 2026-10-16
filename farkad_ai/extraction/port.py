@@ -33,6 +33,11 @@ class TrackedPillar(Protocol):
     @property
     def entry_schema(self) -> type[BaseModel]: ...
 
+    @property
+    def label_fields(self) -> frozenset[str]:
+        """Fields that only file an entry; an entry holding nothing else is dropped."""
+        ...
+
     def review(self, entry: Mapping[str, object]) -> Iterable[Finding]: ...
 
 

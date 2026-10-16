@@ -29,10 +29,10 @@ words as they were said.
 | ✅ | [Structured output](https://ai.google.dev/gemini-api/docs/structured-output) | Every answer is validated against a Pydantic schema |
 | ✅ | [Multimodal input](https://ai.google.dev/gemini-api/docs/audio) | Voice and photos, transcribed and routed in one call |
 | ✅ | [Model cascade](https://arxiv.org/abs/2305.05176) | A fast model first; the stronger one only when the answer fails validation |
-| ✅ | [Reasoning budget](https://ai.google.dev/gemini-api/docs/thinking) | Chosen per model tier, measured against cost |
+| ✅ | [Reasoning budget](https://ai.google.dev/gemini-api/docs/thinking) | Chosen per model tier, measured in tokens |
 | ✅ | [Few-shot examples](https://arxiv.org/abs/2005.14165) | Worked examples per topic, in the user's own units |
 | ✅ | Long-term memory | Facts the user states, such as "I'm vegan", are given back to every capture |
-| ✅ | Evaluation with a gold set | Accuracy and cost per language, below |
+| ✅ | Evaluation with a gold set | Accuracy and tokens per language, below |
 | ✅ | Several model providers | Gemini, Claude and GPT behind one interface |
 | | [RAG](https://arxiv.org/abs/2005.11401) | A user's memory fits in the prompt |
 | | Fine-tuning | Prompts and the gold set iterate faster |
@@ -44,13 +44,13 @@ words as they were said.
 Fifteen example sentences, three per language, replayed from answers recorded on
 `gemini-3.5-flash-lite` on 2026-10-15:
 
-| Language | Routing | Fields | Cost per sentence |
+| Language | Routing | Fields | Tokens per sentence (in / out) |
 | --- | --: | --: | --: |
-| English | 100% | 100% | 0.127¢ |
-| French | 100% | 100% | 0.117¢ |
-| Arabic | 100% | 100% | 0.081¢ |
-| Spanish | 100% | 100% | 0.100¢ |
-| Mixed languages | 100% | 100% | 0.139¢ |
+| English | 100% | 100% | 2,574 / 199 |
+| French | 100% | 100% | 2,413 / 180 |
+| Arabic | 100% | 100% | 1,863 / 102 |
+| Spanish | 100% | 100% | 2,231 / 134 |
+| Mixed languages | 100% | 100% | 2,647 / 237 |
 
 ## Try it
 
@@ -78,7 +78,7 @@ it: `Model` and `RecordedModel`, `CaptureEngine` and `TwoPassCaptureEngine`.
 - `memory/`: facts the user states, and the short sheet given back to every capture
 - `models/`: the `Model` every stage calls, with the prompt, completion and usage it speaks in;
   adapters for Gemini on Vertex AI, Claude and GPT; and the replay of recorded answers
-- `eval/`: the gold set, its recorded answers, scoring and pricing
+- `eval/`: the gold set, its recorded answers, and the runner that scores any catalogue's own
 - `prompts/`: the prompt texts, each versioned by a hash of its text
 - `cli.py`: `farkad-ai route`, `eval` and `prompts`
 

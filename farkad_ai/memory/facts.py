@@ -5,17 +5,6 @@ from dataclasses import dataclass, replace
 from datetime import datetime
 from enum import StrEnum
 
-MAX_CONTENT_CHARACTERS = 250
-MAX_FACTS = 40
-
-
-class MemoryCategory(StrEnum):
-    dietary = "dietary"
-    routine = "routine"
-    preference = "preference"
-    medical = "medical"
-    general = "general"
-
 
 class FactSource(StrEnum):
     spoken = "spoken"
@@ -27,22 +16,15 @@ class EmptyFactError(ValueError):
         super().__init__(f"the fact about {subject!r} says nothing")
 
 
-class OverlongFactError(ValueError):
-    def __init__(self, subject: str) -> None:
-        super().__init__(f"the fact about {subject!r} exceeds {MAX_CONTENT_CHARACTERS} characters")
-
-
 @dataclass(frozen=True, slots=True)
-class Disclosure:
+class Disclosure[Category: StrEnum]:
     subject: str
-    category: MemoryCategory
+    category: Category
     content: str
 
     def __post_init__(self) -> None:
         if not self.content.strip():
             raise EmptyFactError(self.subject)
-        if len(self.content) > MAX_CONTENT_CHARACTERS:
-            raise OverlongFactError(self.subject)
 
     @property
     def said(self) -> str:
@@ -50,8 +32,8 @@ class Disclosure:
 
 
 @dataclass(frozen=True, slots=True)
-class Fact:
-    disclosure: Disclosure
+class Fact[Category: StrEnum]:
+    disclosure: Disclosure[Category]
     source: FactSource
     enabled: bool
     since: datetime
@@ -68,37 +50,43 @@ class Refusal(StrEnum):
 
 
 @dataclass(frozen=True, slots=True)
-class Remembered:
-    fact: Fact
+class Remembered[Category: StrEnum]:
+    fact: Fact[Category]
 
 
 @dataclass(frozen=True, slots=True)
-class Superseded:
-    fact: Fact
-    replaced: Fact
+class Superseded[Category: StrEnum]:
+    fact: Fact[Category]
+    replaced: Fact[Category]
 
 
 @dataclass(frozen=True, slots=True)
-class Confirmed:
-    fact: Fact
+class Confirmed[Category: StrEnum]:
+    fact: Fact[Category]
 
 
 @dataclass(frozen=True, slots=True)
-class Declined:
-    disclosure: Disclosure
+class Declined[Category: StrEnum]:
+    disclosure: Disclosure[Category]
     because: Refusal
 
 
-type Learning = Remembered | Superseded | Confirmed | Declined
+type Learning[Category: StrEnum] = (
+    Remembered[Category] | Superseded[Category] | Confirmed[Category] | Declined[Category]
+)
 
 
-def learn_all(
-    known: Mapping[str, Fact], heard: Iterable[Disclosure], *, at: datetime
-) -> tuple[Learning, ...]:
+def learn_all[Category: StrEnum](
+    known: Mapping[str, Fact[Category]],
+    heard: Iterable[Disclosure[Category]],
+    *,
+    at: datetime,
+    max_facts: int,
+) -> tuple[Learning[Category], ...]:
     kept = dict(known)
-    learned: list[Learning] = []
+    learned: list[Learning[Category]] = []
     for disclosure in heard:
-        if disclosure.subject not in kept and len(kept) >= MAX_FACTS:
+        if disclosure.subject not in kept and len(kept) >= max_facts:
             learned.append(Declined(disclosure, Refusal.memory_full))
             continue
         learning = learn(kept.get(disclosure.subject), disclosure, at=at)
@@ -111,7 +99,9 @@ def learn_all(
     return tuple(learned)
 
 
-def learn(known: Fact | None, heard: Disclosure, *, at: datetime) -> Learning:
+def learn[Category: StrEnum](
+    known: Fact[Category] | None, heard: Disclosure[Category], *, at: datetime
+) -> Learning[Category]:
     if known is None:
         return Remembered(Fact(heard, FactSource.spoken, enabled=True, since=at))
     if not known.enabled:

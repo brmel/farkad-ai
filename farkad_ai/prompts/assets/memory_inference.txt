@@ -4,7 +4,7 @@ Read what they just said. Return only facts that will still be true next week an
 
 Each fact has:
 - subject: a short snake_case topic in English, such as diet, lactose, coffee_order or morning_run. When the statement is about a topic already known below, reuse that exact subject, so the newer fact replaces the older one.
-- category: dietary, routine, preference, medical or general.
+- category: {categories}.
 - content: the fact as one short sentence, in the language they spoke.
 
 Already known:
