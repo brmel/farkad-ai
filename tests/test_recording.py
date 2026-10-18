@@ -8,12 +8,23 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel
 
-from farkad_ai.models.port import Completion, MediaBlob, MediaType, ModelTier, PipelineStep, Prompt
+from farkad_ai.models.port import (
+    Completion,
+    MediaBlob,
+    MediaType,
+    ModelChoice,
+    ModelTier,
+    PipelineStep,
+    Prompt,
+    fixed,
+)
 from farkad_ai.models.recorded import (
+    PROMPT_CHANGED,
     SCHEMA_CHANGED,
     NoRecordedResponseError,
     RecordedModel,
     RecordingModel,
+    UnrecordedModelError,
     fingerprint,
 )
 from tests.support import a_usage
@@ -119,6 +130,47 @@ async def test_a_schema_changed_under_the_same_name_is_not_replayed(tmp_path: Pa
     assert missing.value.because == SCHEMA_CHANGED
     replayed = await RecordedModel(tmp_path).complete(asked, schema=Answer, tier=ModelTier.fast)
     assert replayed.value == Answer(said="one")
+
+
+async def test_a_recording_made_against_other_instructions_says_the_prompt_changed(
+    tmp_path: Path,
+) -> None:
+    (await record(QuotaLimitedModel(before_failing=1), tmp_path, ["one"])).commit()
+    reworded = replace(said_back("one"), instructions="say it twice")
+
+    with pytest.raises(NoRecordedResponseError) as missing:
+        await RecordedModel(tmp_path).complete(reworded, schema=Answer, tier=ModelTier.fast)
+
+    assert missing.value.because == PROMPT_CHANGED
+    assert "the prompt changed" in str(missing.value)
+
+
+async def test_an_utterance_never_recorded_has_no_diagnosis(tmp_path: Path) -> None:
+    (await record(QuotaLimitedModel(before_failing=1), tmp_path, ["one"])).commit()
+
+    with pytest.raises(NoRecordedResponseError) as missing:
+        await RecordedModel(tmp_path).complete(said_back("two"), schema=Answer, tier=ModelTier.fast)
+
+    assert missing.value.because is None
+
+
+async def test_only_a_recording_answered_by_the_pinned_model_replays(tmp_path: Path) -> None:
+    (await record(QuotaLimitedModel(before_failing=1), tmp_path, ["one"])).commit()
+    answered_by = a_usage(PipelineStep.routing).model
+
+    def pinned_to(model: str) -> RecordedModel:
+        return RecordedModel(tmp_path, pinned=fixed({ModelTier.fast: ModelChoice(model)}))
+
+    with pytest.raises(UnrecordedModelError) as unrecorded:
+        await pinned_to("gemini-3.5-flash").complete(
+            said_back("one"), schema=Answer, tier=ModelTier.fast
+        )
+
+    assert (unrecorded.value.recorded, unrecorded.value.pinned) == (answered_by, "gemini-3.5-flash")
+    replayed = await pinned_to(answered_by).complete(
+        said_back("one"), schema=Answer, tier=ModelTier.fast
+    )
+    assert replayed.usage.model == answered_by
 
 
 async def test_a_question_asked_twice_in_a_run_is_answered_once(tmp_path: Path) -> None:

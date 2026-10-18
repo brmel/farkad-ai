@@ -53,7 +53,6 @@ FIRST_TOLD = (
     MemoryCategory.preference,
     MemoryCategory.general,
 )
-FORTNIGHT = timedelta(days=14)
 
 MONDAY = datetime(2026, 9, 21, 8, tzinfo=UTC)
 FRIDAY = MONDAY + timedelta(days=4)
@@ -78,7 +77,7 @@ def inferrer(model: Model, *, max_content_characters: int = 250) -> MemoryInferr
 
 
 def sheet(facts: list[Fact[MemoryCategory]], habits: list[HabitBaseline]) -> str:
-    return core_sheet(facts, habits, first_told=FIRST_TOLD, habit_window=FORTNIGHT)
+    return core_sheet(facts, habits, first_told=FIRST_TOLD)
 
 
 class TestANewerWordOnATopicReplacesTheOlder:
@@ -188,7 +187,7 @@ class TestTheSheetEveryCaptureIsTold:
         assert sheet(facts, [COFFEE]).splitlines()[1:] == [
             "<about_this_person>",
             "- Allergic to peanuts",
-            "- logs coffee 250 ml around 08:00 (12x in 14 days)",
+            "- logs coffee 250 ml around 08:00 (12x in 28 days)",
             "</about_this_person>",
         ]
 
