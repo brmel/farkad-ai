@@ -16,6 +16,10 @@ class EmptyFactError(ValueError):
         super().__init__(f"the fact about {subject!r} says nothing")
 
 
+def folded(said: str) -> str:
+    return " ".join(said.casefold().split())
+
+
 @dataclass(frozen=True, slots=True)
 class Disclosure[Category: StrEnum]:
     subject: str
@@ -28,7 +32,7 @@ class Disclosure[Category: StrEnum]:
 
     @property
     def said(self) -> str:
-        return " ".join(self.content.casefold().split())
+        return folded(self.content)
 
 
 @dataclass(frozen=True, slots=True)
