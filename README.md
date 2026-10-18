@@ -83,9 +83,9 @@ already says it is one, and an implementation for how it plays it: `Model` and `
   given back to every capture
 - `models/`: the `Model` every stage calls, with the prompt, completion and usage it speaks in;
   adapters for Gemini on Vertex AI, Claude and GPT; and the replay of recorded answers
-- `eval/`: the gold set, its recorded answers, and the runner that scores any catalogue's own
+- `eval/`: the gold set, the seven example topics it and `farkad-ai route` use, its recorded
+  answers, and the runner that scores any catalogue's own
 - `prompts/`: the prompt texts, each versioned by a hash of its text
-- `examples.py`: the seven example topics the gold set and `farkad-ai route` use
 - `cli.py`: `farkad-ai route`, `eval` and `prompts`
 
 [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Apache 2.0](LICENSE)

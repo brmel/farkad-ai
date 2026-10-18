@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import base64
 from collections.abc import Mapping
-from typing import Any, Literal
+from typing import Literal
 
 from anthropic import APIError, AsyncAnthropic
-from anthropic.types import ImageBlockParam, MessageParam, TextBlockParam, ToolParam
+from anthropic.types import ImageBlockParam, Message, MessageParam, TextBlockParam, ToolParam
 from pydantic import BaseModel
 
 from farkad_ai.models.port import (
@@ -21,7 +21,7 @@ from farkad_ai.models.port import (
     Usage,
     fixed,
 )
-from farkad_ai.models.provider import PLACEHOLDER_INPUT, ProviderModel
+from farkad_ai.models.provider import PLACEHOLDER_INPUT, MissingCredentialsError, ProviderModel
 
 DEFAULT_CHOICES: Mapping[ModelTier, ModelChoice] = {
     ModelTier.fast: ModelChoice("claude-haiku-4-5-20251001"),
@@ -29,7 +29,7 @@ DEFAULT_CHOICES: Mapping[ModelTier, ModelChoice] = {
 }
 
 
-class AnthropicModel(ProviderModel):
+class AnthropicModel(ProviderModel[Message]):
     honoured_reasoning = (Reasoning.none,)
 
     def __init__(
@@ -41,6 +41,13 @@ class AnthropicModel(ProviderModel):
         super().__init__(choices or fixed(DEFAULT_CHOICES))
         self._client = client
 
+    @classmethod
+    def connected(cls, *, choices: TierChoices | None = None) -> AnthropicModel:
+        client = AsyncAnthropic()
+        if client.api_key is None and client.auth_token is None and client.credentials is None:
+            raise MissingCredentialsError("anthropic", "ANTHROPIC_API_KEY set")
+        return cls(client, choices=choices)
+
     async def _send(
         self,
         prompt: Prompt,
@@ -48,7 +55,7 @@ class AnthropicModel(ProviderModel):
         schema: type[BaseModel],
         tier: ModelTier,
         choice: ModelChoice,
-    ) -> Any:
+    ) -> Message:
         model = choice.model
         tool_name = schema.__name__
         tools: list[ToolParam] = [
@@ -76,7 +83,7 @@ class AnthropicModel(ProviderModel):
                 str(error),
             ) from error
 
-    def _answer(self, response: Any, *, tier: ModelTier, model: str) -> object:
+    def _answer(self, response: Message, *, tier: ModelTier, model: str) -> object:
         tool_blocks = [block for block in response.content if block.type == "tool_use"]
         if not tool_blocks:
             raise ModelUnavailableError(
@@ -85,7 +92,7 @@ class AnthropicModel(ProviderModel):
         return tool_blocks[0].input
 
     def _usage(
-        self, response: Any, *, prompt: Prompt, tier: ModelTier, model: str, latency_ms: int
+        self, response: Message, *, prompt: Prompt, tier: ModelTier, model: str, latency_ms: int
     ) -> Usage:
         if response.usage is None:
             raise ModelUnavailableError(
