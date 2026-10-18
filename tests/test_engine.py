@@ -1,3 +1,6 @@
+import asyncio
+from collections.abc import Mapping
+
 import pytest
 from pydantic import BaseModel
 
@@ -59,6 +62,24 @@ class BreaksOnExtraction(AnswersByStep):
         return await super().complete(prompt, schema=schema, tier=tier)
 
 
+class Overlapping(AnswersByStep):
+    def __init__(self, **answers: BaseModel | Mapping[str, object] | Unavailability) -> None:
+        super().__init__(**answers)
+        self._in_flight = 0
+        self.most_at_once = 0
+
+    async def complete[T: BaseModel](
+        self, prompt: Prompt, *, schema: type[T], tier: ModelTier
+    ) -> Completion[T]:
+        self._in_flight += 1
+        self.most_at_once = max(self.most_at_once, self._in_flight)
+        try:
+            await asyncio.sleep(0)
+            return await super().complete(prompt, schema=schema, tier=tier)
+        finally:
+            self._in_flight -= 1
+
+
 async def captured(model: AnswersByStep, *tracked: Tracked) -> Logged | NothingToLog:
     return await TwoPassCaptureEngine(model, CATALOGUE).capture(
         CaptureRequest(tracked=tracked, text="said")
@@ -77,6 +98,16 @@ async def test_each_tracked_pillar_named_comes_back_with_its_entries() -> None:
     ]
     assert outcome.refused == ()
     assert [usage.step for usage in outcome.usages] == ["routing", "extraction"]
+
+
+async def test_the_pillars_a_capture_names_are_extracted_at_the_same_time() -> None:
+    model = Overlapping(
+        routing=heard(("water", "a glass"), ("food", "an egg")), extraction=entries("glass")
+    )
+
+    await captured(model, WATER, Tracked("food"))
+
+    assert model.most_at_once == 2
 
 
 async def test_a_lasting_fact_stated_beside_a_log_is_reported_with_it() -> None:

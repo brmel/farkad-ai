@@ -77,8 +77,10 @@ already says it is one, and an implementation for how it plays it: `Model` and `
 - `pipeline/`: `TwoPassCaptureEngine`, which routes a capture once and extracts each topic it names,
   and `photo_briefing`, which reads a photo as a log
 - `routing/`: the one call that transcribes the capture and names its topics
-- `extraction/`: one call per topic, in the app's schema, escalated when the answer does not parse
-- `memory/`: facts the user states, and the sheet of them given back to every capture
+- `extraction/`: one call per topic, in the app's schema, escalated when the answer does not parse;
+  and `EntryRecomputer`, which fills the fields that follow from values the user corrected
+- `memory/`: facts the user states, the habits counted from what they log, and the sheet of both
+  given back to every capture
 - `models/`: the `Model` every stage calls, with the prompt, completion and usage it speaks in;
   adapters for Gemini on Vertex AI, Claude and GPT; and the replay of recorded answers
 - `eval/`: the gold set, its recorded answers, and the runner that scores any catalogue's own
