@@ -13,6 +13,7 @@ class PipelineStep(StrEnum):
 
     routing = "routing"
     extraction = "extraction"
+    recompute = "recompute"
     memory = "memory"
 
 
