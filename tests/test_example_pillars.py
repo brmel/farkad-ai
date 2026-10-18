@@ -1,6 +1,6 @@
 import pytest
 
-from farkad_ai.examples import EXAMPLE_PILLARS, ExamplePillar
+from farkad_ai.eval.pillars import EXAMPLE_PILLARS, ExamplePillar
 from farkad_ai.extraction.extractor import PillarExtractor
 from farkad_ai.extraction.port import ExtractionContext, ExtractionResult
 from tests.support import ScriptedModel

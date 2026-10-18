@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import base64
 from collections.abc import Mapping
-from typing import Any
 
-from openai import APIError, AsyncOpenAI
+from openai import APIError, AsyncOpenAI, OpenAIError
 from openai.types.chat import (
     ChatCompletionContentPartImageParam,
     ChatCompletionContentPartParam,
     ChatCompletionMessageParam,
+    ParsedChatCompletion,
 )
 from pydantic import BaseModel
 
@@ -25,7 +25,7 @@ from farkad_ai.models.port import (
     Usage,
     fixed,
 )
-from farkad_ai.models.provider import PLACEHOLDER_INPUT, ProviderModel
+from farkad_ai.models.provider import PLACEHOLDER_INPUT, MissingCredentialsError, ProviderModel
 
 DEFAULT_CHOICES: Mapping[ModelTier, ModelChoice] = {
     ModelTier.fast: ModelChoice("gpt-4o-mini"),
@@ -33,7 +33,7 @@ DEFAULT_CHOICES: Mapping[ModelTier, ModelChoice] = {
 }
 
 
-class OpenAIModel(ProviderModel):
+class OpenAIModel(ProviderModel[ParsedChatCompletion[BaseModel]]):
     honoured_reasoning = (Reasoning.none,)
 
     def __init__(
@@ -45,6 +45,13 @@ class OpenAIModel(ProviderModel):
         super().__init__(choices or fixed(DEFAULT_CHOICES))
         self._client = client
 
+    @classmethod
+    def connected(cls, *, choices: TierChoices | None = None) -> OpenAIModel:
+        try:
+            return cls(AsyncOpenAI(), choices=choices)
+        except OpenAIError as error:
+            raise MissingCredentialsError("openai", "OPENAI_API_KEY set") from error
+
     async def _send(
         self,
         prompt: Prompt,
@@ -52,7 +59,7 @@ class OpenAIModel(ProviderModel):
         schema: type[BaseModel],
         tier: ModelTier,
         choice: ModelChoice,
-    ) -> Any:
+    ) -> ParsedChatCompletion[BaseModel]:
         model = choice.model
         messages = _messages(prompt, tier=tier, model=model)
         try:
@@ -69,7 +76,9 @@ class OpenAIModel(ProviderModel):
                 str(error),
             ) from error
 
-    def _answer(self, response: Any, *, tier: ModelTier, model: str) -> object:
+    def _answer(
+        self, response: ParsedChatCompletion[BaseModel], *, tier: ModelTier, model: str
+    ) -> object:
         if not response.choices:
             raise ModelUnavailableError(
                 tier, model, Unavailability.output_did_not_parse, "no choices in response"
@@ -86,7 +95,13 @@ class OpenAIModel(ProviderModel):
         return message.parsed
 
     def _usage(
-        self, response: Any, *, prompt: Prompt, tier: ModelTier, model: str, latency_ms: int
+        self,
+        response: ParsedChatCompletion[BaseModel],
+        *,
+        prompt: Prompt,
+        tier: ModelTier,
+        model: str,
+        latency_ms: int,
     ) -> Usage:
         if response.usage is None:
             raise ModelUnavailableError(
