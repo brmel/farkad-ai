@@ -6,9 +6,10 @@ import json
 import sys
 
 from farkad_ai.eval.example import RECORDINGS, evaluate_examples, report
-from farkad_ai.examples import EXAMPLE_PILLARS
-from farkad_ai.models.factory import MissingCredentialsError, ProviderName, create_model
+from farkad_ai.eval.pillars import EXAMPLE_PILLARS
+from farkad_ai.models.factory import ProviderName, create_model
 from farkad_ai.models.port import Model
+from farkad_ai.models.provider import MissingCredentialsError
 from farkad_ai.models.recorded import NoRecordedResponseError, RecordingModel
 from farkad_ai.prompts import list_prompts
 from farkad_ai.routing.port import NothingToLog, Routed

@@ -30,17 +30,17 @@ class HabitBaseline:
 
 
 @dataclass(frozen=True, slots=True)
-class Logged:
+class Occurrence:
     pillar: str
     what: str | None
     amount: UsualAmount | None
     hour: int
 
 
-def baselines_from(entries: Iterable[Logged]) -> tuple[HabitBaseline, ...]:
-    grouped: dict[tuple[str, str | None], list[Logged]] = {}
-    for entry in entries:
-        grouped.setdefault((entry.pillar, _named(entry.what)), []).append(entry)
+def baselines_from(occurrences: Iterable[Occurrence]) -> tuple[HabitBaseline, ...]:
+    grouped: dict[tuple[str, str | None], list[Occurrence]] = {}
+    for occurrence in occurrences:
+        grouped.setdefault((occurrence.pillar, _named(occurrence.what)), []).append(occurrence)
     habits = [
         _habit(pillar, what, group)
         for (pillar, what), group in grouped.items()
@@ -56,7 +56,7 @@ def _named(what: str | None) -> str | None:
     return folded(what)
 
 
-def _habit(pillar: str, what: str | None, group: list[Logged]) -> HabitBaseline:
+def _habit(pillar: str, what: str | None, group: list[Occurrence]) -> HabitBaseline:
     return HabitBaseline(
         pillar=pillar,
         what=what,
