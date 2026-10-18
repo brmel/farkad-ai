@@ -6,18 +6,18 @@ from farkad_ai.memory.habits import (
     MAX_HABITS,
     TIMES_TO_BE_A_HABIT,
     HabitBaseline,
-    Logged,
+    Occurrence,
     UsualAmount,
     baselines_from,
 )
 
 
-def ibuprofen(dose: float, unit: str = "mg") -> Logged:
-    return Logged(pillar="drugs", what="ibuprofen", amount=UsualAmount(dose, unit), hour=8)
+def ibuprofen(dose: float, unit: str = "mg") -> Occurrence:
+    return Occurrence(pillar="drugs", what="ibuprofen", amount=UsualAmount(dose, unit), hour=8)
 
 
-def tea(hour: int = 8, what: str | None = "tea") -> Logged:
-    return Logged(pillar="water", what=what, amount=None, hour=hour)
+def tea(hour: int = 8, what: str | None = "tea") -> Occurrence:
+    return Occurrence(pillar="water", what=what, amount=None, hour=hour)
 
 
 def test_a_usual_amount_is_the_median_of_those_logged() -> None:
@@ -46,7 +46,7 @@ def test_fewer_than_enough_times_is_not_a_habit() -> None:
 
 def test_only_the_most_logged_habits_are_kept() -> None:
     many = [
-        Logged(pillar="food", what=f"dish {n}", amount=None, hour=12)
+        Occurrence(pillar="food", what=f"dish {n}", amount=None, hour=12)
         for n in range(MAX_HABITS + 2)
         for _ in range(TIMES_TO_BE_A_HABIT + n)
     ]

@@ -71,33 +71,36 @@ class TwoPassCaptureEngine(CaptureEngine):
         attempts = await asyncio.gather(
             *(_attempt(self._extractor, context) for context in contexts)
         )
-        extracted: list[PillarEntries] = []
-        refused: list[PillarRefused] = []
-        usages = [routed.usage]
-        for attempt in attempts:
-            match attempt:
-                case PillarRefused():
-                    refused.append(attempt)
-                case ExtractionResult(pillar=pillar, entries=entries, usage=usage):
-                    usages.append(usage)
-                    extracted.append(
-                        PillarEntries(
-                            pillar=pillar,
-                            entries=entries,
-                            occurred_at_hint=routed.occurred_at_hints[pillar],
-                        )
-                    )
+        return _logged(routed, attempts)
 
-        return Logged(
-            transcript=routed.transcript,
-            language=routed.language,
-            states_a_lasting_fact=routed.states_a_lasting_fact,
-            routes=routed.routes,
-            untracked=routed.untracked,
-            extracted=tuple(extracted),
-            refused=tuple(refused),
-            usages=tuple(usages),
-        )
+
+def _logged(routed: Routed, attempts: Iterable[ExtractionResult | PillarRefused]) -> Logged:
+    extracted: list[PillarEntries] = []
+    refused: list[PillarRefused] = []
+    usages = [routed.usage]
+    for attempt in attempts:
+        match attempt:
+            case PillarRefused():
+                refused.append(attempt)
+            case ExtractionResult(pillar=pillar, entries=entries, usage=usage):
+                usages.append(usage)
+                extracted.append(
+                    PillarEntries(
+                        pillar=pillar,
+                        entries=entries,
+                        occurred_at_hint=routed.occurred_at_hints[pillar],
+                    )
+                )
+    return Logged(
+        transcript=routed.transcript,
+        language=routed.language,
+        states_a_lasting_fact=routed.states_a_lasting_fact,
+        routes=routed.routes,
+        untracked=routed.untracked,
+        extracted=tuple(extracted),
+        refused=tuple(refused),
+        usages=tuple(usages),
+    )
 
 
 async def _attempt(

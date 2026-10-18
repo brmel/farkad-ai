@@ -1,5 +1,5 @@
 {
-  "why": "Three sentences per language, scored against the example pillars in farkad_ai/examples.py. Only what the sentence states or the example pillar declares is scored, such as a glass's 250 ml: a name or a big glass's volume the model must guess is left out. The code-switched sentences mix Arabic or Moroccan Darija with French, as they are spoken.",
+  "why": "Three sentences per language, scored against the example pillars in farkad_ai/eval/pillars.py. Only what the sentence states or the example pillar declares is scored, such as a glass's 250 ml: a name or a big glass's volume the model must guess is left out. The code-switched sentences mix Arabic or Moroccan Darija with French, as they are spoken.",
   "cases": [
     {
       "language": "en",

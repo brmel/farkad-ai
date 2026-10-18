@@ -3,7 +3,6 @@ from __future__ import annotations
 import time
 from abc import abstractmethod
 from collections.abc import Collection
-from typing import Any
 
 from pydantic import BaseModel, ValidationError
 
@@ -23,7 +22,12 @@ from farkad_ai.models.port import (
 PLACEHOLDER_INPUT = "Input."
 
 
-class ProviderModel(Model):
+class MissingCredentialsError(Exception):
+    def __init__(self, provider: str, remedy: str) -> None:
+        super().__init__(f"the {provider} provider needs {remedy}")
+
+
+class ProviderModel[Response](Model):
     honoured_reasoning: Collection[Reasoning]
 
     def __init__(self, choices: TierChoices) -> None:
@@ -65,12 +69,12 @@ class ProviderModel(Model):
     @abstractmethod
     async def _send(
         self, prompt: Prompt, *, schema: type[BaseModel], tier: ModelTier, choice: ModelChoice
-    ) -> Any: ...
+    ) -> Response: ...
 
     @abstractmethod
-    def _answer(self, response: Any, *, tier: ModelTier, model: str) -> object: ...
+    def _answer(self, response: Response, *, tier: ModelTier, model: str) -> object: ...
 
     @abstractmethod
     def _usage(
-        self, response: Any, *, prompt: Prompt, tier: ModelTier, model: str, latency_ms: int
+        self, response: Response, *, prompt: Prompt, tier: ModelTier, model: str, latency_ms: int
     ) -> Usage: ...

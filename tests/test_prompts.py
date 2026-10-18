@@ -5,7 +5,7 @@ from string import Formatter
 import pytest
 
 from farkad_ai.eval.example import GOLD, ExampleGold
-from farkad_ai.examples import EXAMPLE_PILLARS
+from farkad_ai.eval.pillars import EXAMPLE_PILLARS
 from farkad_ai.extraction.extractor import PillarExtractor
 from farkad_ai.extraction.port import ExtractionContext
 from farkad_ai.pipeline.photo import photo_briefing

@@ -5,9 +5,9 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict
 
+from farkad_ai.eval.pillars import EXAMPLE_PILLARS
 from farkad_ai.eval.run import GoldCase, Scored, evaluate
 from farkad_ai.eval.scoring import RunScore
-from farkad_ai.examples import EXAMPLE_PILLARS
 from farkad_ai.models.port import Model
 
 RECORDINGS = Path(__file__).parent / "recordings"

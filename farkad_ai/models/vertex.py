@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
+from datetime import timedelta
 
 from google import genai
+from google.auth.exceptions import DefaultCredentialsError
 from google.genai import types
 from google.genai.errors import APIError
 from pydantic import BaseModel
@@ -18,7 +21,7 @@ from farkad_ai.models.port import (
     Usage,
     fixed,
 )
-from farkad_ai.models.provider import PLACEHOLDER_INPUT, ProviderModel
+from farkad_ai.models.provider import PLACEHOLDER_INPUT, MissingCredentialsError, ProviderModel
 
 # Gemini's thinking budget in tokens: https://ai.google.dev/gemini-api/docs/thinking
 THINKING_BUDGET: Mapping[Reasoning, int] = {
@@ -62,7 +65,14 @@ def usage_of(
     )
 
 
-class VertexModel(ProviderModel):
+@dataclass(frozen=True, slots=True)
+class Retries:
+    attempts: int
+    first_wait: timedelta
+    longest_wait: timedelta
+
+
+class VertexModel(ProviderModel[types.GenerateContentResponse]):
     honoured_reasoning = THINKING_BUDGET
 
     def __init__(
@@ -73,6 +83,25 @@ class VertexModel(ProviderModel):
     ) -> None:
         super().__init__(choices or fixed(DEFAULT_CHOICES))
         self._client = client
+
+    @classmethod
+    def connected(
+        cls,
+        *,
+        project: str | None = None,
+        location: str | None = None,
+        retries: Retries | None = None,
+        choices: TierChoices | None = None,
+    ) -> VertexModel:
+        try:
+            client = genai.Client(
+                vertexai=True, project=project, location=location, http_options=_retrying(retries)
+            )
+        except (DefaultCredentialsError, ValueError) as error:
+            raise MissingCredentialsError(
+                "vertex", "GOOGLE_CLOUD_PROJECT set and `gcloud auth application-default login`"
+            ) from error
+        return cls(client, choices=choices)
 
     async def _send(
         self,
@@ -111,6 +140,18 @@ class VertexModel(ProviderModel):
         return response.parsed
 
     _usage = staticmethod(usage_of)
+
+
+def _retrying(retries: Retries | None) -> types.HttpOptions | None:
+    if retries is None:
+        return None
+    return types.HttpOptions(
+        retry_options=types.HttpRetryOptions(
+            attempts=retries.attempts,
+            initial_delay=retries.first_wait.total_seconds(),
+            max_delay=retries.longest_wait.total_seconds(),
+        )
+    )
 
 
 def _parts(prompt: Prompt) -> types.ContentListUnion:
