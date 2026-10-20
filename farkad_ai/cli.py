@@ -37,7 +37,7 @@ def build_parser() -> argparse.ArgumentParser:
     commands = parser.add_subparsers(dest="command", required=True)
 
     route = commands.add_parser("route", help="Name the topics one sentence mentions")
-    route.add_argument("--text", type=str, default="", help="The sentence to route")
+    route.add_argument("--text", required=True, help="The sentence to route")
     add_provider(route)
 
     scored = commands.add_parser(
