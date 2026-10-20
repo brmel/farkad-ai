@@ -43,7 +43,7 @@ def vertex_answering(monkeypatch: pytest.MonkeyPatch) -> Callable[..., Vertex]:
     async def without_waiting(_: float) -> None:
         await REAL_SLEEP(0)
 
-    signed_in = Credentials("token")  # type: ignore[no-untyped-call]
+    signed_in = Credentials("token")  # type: ignore[no-untyped-call, unused-ignore]
     monkeypatch.setattr(google.auth, "default", lambda **_: (signed_in, "a-project"))
     monkeypatch.setattr(asyncio, "sleep", without_waiting)
 
