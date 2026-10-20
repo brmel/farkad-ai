@@ -29,7 +29,7 @@ words as they were said.
 | :-: | --- | --- |
 | ✅ | [Structured output](https://ai.google.dev/gemini-api/docs/structured-output) | Every answer is validated against a Pydantic schema |
 | ✅ | [Multimodal input](https://ai.google.dev/gemini-api/docs/audio) | Voice and photos, transcribed and routed in one call |
-| ✅ | [Model cascade](https://arxiv.org/abs/2305.05176) | A fast model first; the stronger one only when the answer fails validation |
+| ✅ | [Model cascade](https://arxiv.org/abs/2305.05176) | The fast tier first; a topic whose answer fails validation is asked again, of a stronger model or of the same one given time to reason |
 | ✅ | [Reasoning budget](https://ai.google.dev/gemini-api/docs/thinking) | Chosen per model tier, measured in tokens |
 | ✅ | [Few-shot examples](https://arxiv.org/abs/2005.14165) | Worked examples per topic, in the user's own units |
 | ✅ | Long-term memory | Facts the user states, such as "I'm vegan", are given back to every capture as data, never as instructions |
@@ -42,8 +42,8 @@ words as they were said.
 
 ## Measured
 
-Fifteen example sentences, three per language, replayed from answers recorded on
-`gemini-3.5-flash-lite` on 2026-10-16:
+Fifteen example sentences, three per language, on the seven example topics in `eval/` rather than
+the app's own, replayed from answers recorded on `gemini-3.5-flash-lite` on 2026-10-16:
 
 | Language | Routing | Fields | Tokens per sentence (in / out) |
 | --- | --: | --: | --: |

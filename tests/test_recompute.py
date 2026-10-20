@@ -3,7 +3,6 @@ from pydantic import BaseModel
 
 from farkad_ai.extraction.recompute import INSTRUCTIONS, EntryRecomputer
 from farkad_ai.models.port import ModelTier, PipelineStep
-from farkad_ai.prompts import PromptAsset
 from tests.support import AnswersByStep, Tracked, a_usage
 
 pytestmark = pytest.mark.anyio
@@ -52,14 +51,3 @@ async def test_an_answer_that_states_nothing_fills_nothing(entries: list[object]
     recomputation = await EntryRecomputer(model).recompute(FOOD, STATED)
 
     assert recomputation.values == {}
-
-
-async def test_an_entry_is_recomputed_with_the_prompt_it_is_given() -> None:
-    own = PromptAsset(name="recompute", text="{title} from {stated}")
-    model = AnswersByStep(recompute={"entries": []})
-
-    await EntryRecomputer(model, instructions=own).recompute(FOOD, {"dish": "rice"})
-
-    ((asked, _),) = model.asked
-    assert asked.instructions == 'Food from {"dish": "rice"}'
-    assert asked.instructions_version == own.version

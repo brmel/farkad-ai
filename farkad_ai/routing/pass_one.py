@@ -7,20 +7,15 @@ from datetime import time
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from farkad_ai.prompts import PromptAsset, prompt
+from farkad_ai.prompts import prompt
 from farkad_ai.routing.port import PartOfDay, PillarSpec, StatedTime
 
 INSTRUCTIONS = prompt("pass_one")
 RULES = prompt("pass_one_rules")
 
 
-def routing_instructions(
-    catalogue: Iterable[PillarSpec],
-    asset: PromptAsset = INSTRUCTIONS,
-    *,
-    rules: tuple[str, ...] = (),
-) -> str:
-    instructions = asset.format(
+def routing_instructions(catalogue: Iterable[PillarSpec], *, rules: tuple[str, ...] = ()) -> str:
+    instructions = INSTRUCTIONS.format(
         pillars=_listed(f"{spec.pillar}: {spec.intent}" for spec in catalogue)
     )
     if not rules:

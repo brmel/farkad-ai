@@ -86,5 +86,5 @@ strict = true
 packages = ["farkad_ai"]
 
 [[tool.mypy.overrides]]
-module = ["google.*", "anthropic.*", "openai.*"]
+module = ["google.*", "anthropic.*", "openai.*", "httpx.*"]
 ignore_missing_imports = true

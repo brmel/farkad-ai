@@ -11,7 +11,7 @@ from farkad_ai.models.port import (
     Prompt,
     Usage,
 )
-from farkad_ai.prompts import PromptAsset, briefed
+from farkad_ai.prompts import briefed
 from farkad_ai.routing.pass_one import INSTRUCTIONS, Mention, PassOne, routing_instructions
 from farkad_ai.routing.port import (
     NothingToLog,
@@ -25,18 +25,12 @@ from farkad_ai.routing.port import (
 
 class Router:
     def __init__(
-        self,
-        model: Model,
-        catalogue: Iterable[PillarSpec],
-        *,
-        instructions: PromptAsset = INSTRUCTIONS,
-        rules: tuple[str, ...] = (),
+        self, model: Model, catalogue: Iterable[PillarSpec], *, rules: tuple[str, ...] = ()
     ) -> None:
         specs = tuple(catalogue)
         self._model = model
         self._known = frozenset(spec.pillar for spec in specs)
-        self._asset = instructions
-        self._instructions = routing_instructions(specs, instructions, rules=rules)
+        self._instructions = routing_instructions(specs, rules=rules)
 
     async def route(
         self,
@@ -49,7 +43,7 @@ class Router:
         prompt = Prompt(
             step=PipelineStep.routing,
             instructions=briefed(self._instructions, briefing),
-            instructions_version=self._asset.version,
+            instructions_version=INSTRUCTIONS.version,
             utterance=text,
             media=media,
         )

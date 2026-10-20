@@ -2,7 +2,6 @@ from datetime import time
 
 import pytest
 
-from farkad_ai.prompts import PromptAsset
 from farkad_ai.routing.pass_one import INSTRUCTIONS, RULES, Mention, PassOne, TimeHint
 from farkad_ai.routing.port import (
     NothingToLog,
@@ -138,16 +137,6 @@ async def test_the_model_is_told_every_pillar_the_catalogue_holds() -> None:
 
     told = model.asked[0].instructions
     assert [spec for spec in CATALOGUE if f"- {spec.pillar}: {spec.intent}" not in told] == []
-
-
-async def test_the_router_routes_with_the_prompt_it_is_given() -> None:
-    own = PromptAsset(name="pass_one", text="Route this: {pillars}")
-    model = ScriptedModel(heard("water"))
-
-    await Router(model, CATALOGUE[:1], instructions=own).route(frozenset({"water"}), text="water")
-
-    assert model.asked[0].instructions.startswith("Route this: - water: tracks water intake")
-    assert model.asked[0].instructions_version == own.version
 
 
 CATALOGUE_LISTED = "- water: tracks water intake\n- food: logs meals and snacks"

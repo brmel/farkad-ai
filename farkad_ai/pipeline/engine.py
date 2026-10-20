@@ -4,7 +4,6 @@ import asyncio
 import logging
 from collections.abc import Iterable
 
-from farkad_ai.extraction.extractor import INSTRUCTIONS as EXTRACTION
 from farkad_ai.extraction.extractor import PillarExtractor
 from farkad_ai.extraction.port import ExtractionContext, ExtractionResult, TrackedPillar
 from farkad_ai.models.port import Model, ModelUnavailableError
@@ -16,8 +15,6 @@ from farkad_ai.pipeline.port import (
     PillarEntries,
     PillarRefused,
 )
-from farkad_ai.prompts import PromptAsset
-from farkad_ai.routing.pass_one import INSTRUCTIONS as ROUTING
 from farkad_ai.routing.port import NothingToLog, PillarSpec, Routed
 from farkad_ai.routing.router import Router
 
@@ -28,16 +25,10 @@ class TwoPassCaptureEngine(CaptureEngine):
     """Routes a capture once, then extracts each tracked pillar it names, side by side."""
 
     def __init__(
-        self,
-        model: Model,
-        catalogue: Iterable[PillarSpec],
-        *,
-        routing_prompt: PromptAsset = ROUTING,
-        routing_rules: tuple[str, ...] = (),
-        extraction_prompt: PromptAsset = EXTRACTION,
+        self, model: Model, catalogue: Iterable[PillarSpec], *, routing_rules: tuple[str, ...] = ()
     ) -> None:
-        self._router = Router(model, catalogue, instructions=routing_prompt, rules=routing_rules)
-        self._extractor = PillarExtractor(model, instructions=extraction_prompt)
+        self._router = Router(model, catalogue, rules=routing_rules)
+        self._extractor = PillarExtractor(model)
 
     async def capture(self, request: CaptureRequest) -> CaptureOutcome:
         tracked = {pillar.pillar: pillar for pillar in request.tracked}
