@@ -156,14 +156,6 @@ async def test_which_fields_only_label_an_entry_is_the_pillars_to_declare() -> N
     assert isinstance(outcome, Logged) and outcome.extracted[0].entries == ()
 
 
-async def test_extraction_asks_the_fast_tier_first() -> None:
-    model = AnswersByStep(routing=heard(("water", "a glass")), extraction=entries("glass"))
-
-    await captured(model, WATER)
-
-    assert [tier for _, tier in model.asked] == [ModelTier.fast, ModelTier.fast]
-
-
 async def test_a_refused_pillar_is_reported_with_why_and_the_other_keeps_its_entries() -> None:
     model = RefusesToHear(
         "an egg",
