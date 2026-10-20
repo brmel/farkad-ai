@@ -30,9 +30,8 @@ _log = logging.getLogger(__name__)
 
 
 class PillarExtractor:
-    def __init__(self, model: Model, *, instructions: PromptAsset = INSTRUCTIONS) -> None:
+    def __init__(self, model: Model) -> None:
         self._model = model
-        self._asset = instructions
 
     async def extract(
         self, context: ExtractionContext, *, tier: ModelTier = ModelTier.standard
@@ -42,9 +41,9 @@ class PillarExtractor:
             Prompt(
                 step=PipelineStep.extraction,
                 instructions=fill(
-                    self._asset, pillar, briefing=context.briefing, log=context.transcript
+                    INSTRUCTIONS, pillar, briefing=context.briefing, log=context.transcript
                 ),
-                instructions_version=self._asset.version,
+                instructions_version=INSTRUCTIONS.version,
                 utterance="\n".join(context.mentions),
                 media=context.media,
             ),

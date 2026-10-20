@@ -12,7 +12,7 @@ from pydantic import BaseModel, ConfigDict, Field, create_model
 
 from farkad_ai.memory.facts import Disclosure, Fact
 from farkad_ai.models.port import Model, ModelTier, PipelineStep, Prompt, Usage
-from farkad_ai.prompts import PromptAsset, prompt
+from farkad_ai.prompts import prompt
 
 INSTRUCTIONS = prompt("memory_inference")
 MAX_SUBJECT_CHARACTERS = 40
@@ -85,12 +85,10 @@ class MemoryInferrer[Category: StrEnum]:
         *,
         categories: type[Category],
         max_content_characters: int,
-        instructions: PromptAsset = INSTRUCTIONS,
     ) -> None:
         self._model = model
         self._categories = categories
         self._schema = _answer_schema(categories, max_content_characters)
-        self._asset = instructions
 
     async def infer(
         self, said: str, known: Iterable[Fact[Category]], *, switched_off: Iterable[str]
@@ -99,12 +97,12 @@ class MemoryInferrer[Category: StrEnum]:
         completion = await self._model.complete(
             Prompt(
                 step=PipelineStep.memory,
-                instructions=self._asset.format(
+                instructions=INSTRUCTIONS.format(
                     categories=_either(self._categories),
                     known=_listed(known),
                     switched_off=", ".join(switched_off) or NOTHING_SWITCHED_OFF,
                 ),
-                instructions_version=self._asset.version,
+                instructions_version=INSTRUCTIONS.version,
                 utterance=said,
             ),
             schema=self._schema,
