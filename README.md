@@ -42,8 +42,8 @@ words as they were said.
 
 ## Measured
 
-Fifteen example sentences, three per language, replayed from answers recorded on
-`gemini-3.5-flash-lite` on 2026-10-16:
+Fifteen example sentences, three per language, on the seven example topics in `eval/` rather than
+the app's own, replayed from answers recorded on `gemini-3.5-flash-lite` on 2026-10-16:
 
 | Language | Routing | Fields | Tokens per sentence (in / out) |
 | --- | --: | --: | --: |
