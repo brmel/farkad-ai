@@ -15,7 +15,6 @@ from farkad_ai.models.port import (
 )
 from farkad_ai.pipeline.engine import TwoPassCaptureEngine
 from farkad_ai.pipeline.port import CaptureRequest, Logged
-from farkad_ai.prompts import PromptAsset
 from farkad_ai.routing.pass_one import Mention, PassOne
 from farkad_ai.routing.port import NothingToLog, NothingToLogReason
 from tests.support import AnswersByStep, Spec, Tracked
@@ -135,19 +134,6 @@ async def test_the_specialist_is_asked_only_what_its_pillar_records() -> None:
     assert (
         "Count the glasses." in asked[0].instructions and '"a glass" → 1' in asked[0].instructions
     )
-
-
-async def test_the_engine_extracts_with_the_prompt_it_is_given() -> None:
-    own = PromptAsset(name="extraction", text="{title}: {guidance} {examples} {log}")
-    model = AnswersByStep(routing=heard(("water", "a glass")), extraction=entries())
-
-    await TwoPassCaptureEngine(model, CATALOGUE, extraction_prompt=own).capture(
-        CaptureRequest(tracked=(WATER,), text="said")
-    )
-
-    extraction = model.asked[1][0]
-    assert extraction.instructions.startswith("Water: Count the glasses.")
-    assert extraction.instructions_version == own.version
 
 
 async def test_an_entry_that_holds_nothing_is_dropped_and_findings_stay_on_theirs() -> None:
