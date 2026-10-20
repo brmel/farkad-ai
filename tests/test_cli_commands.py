@@ -50,6 +50,16 @@ def test_route_replays_the_gold_set_and_names_the_flag_for_any_other_sentence(
     assert said in "".join(capsys.readouterr())
 
 
+def test_route_without_a_sentence_asks_for_one_before_any_model_is_called(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    with patch("farkad_ai.cli.create_model") as create_model, pytest.raises(SystemExit):
+        main(["route"])
+
+    create_model.assert_not_called()
+    assert "--text" in capsys.readouterr().err
+
+
 CREDENTIAL_VARIABLES = (
     "OPENAI_API_KEY",
     "OPENAI_ADMIN_KEY",

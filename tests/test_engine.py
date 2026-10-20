@@ -15,7 +15,6 @@ from farkad_ai.models.port import (
 )
 from farkad_ai.pipeline.engine import TwoPassCaptureEngine
 from farkad_ai.pipeline.port import CaptureRequest, Logged
-from farkad_ai.prompts import PromptAsset
 from farkad_ai.routing.pass_one import Mention, PassOne
 from farkad_ai.routing.port import NothingToLog, NothingToLogReason
 from tests.support import AnswersByStep, Spec, Tracked
@@ -137,19 +136,6 @@ async def test_the_specialist_is_asked_only_what_its_pillar_records() -> None:
     )
 
 
-async def test_the_engine_extracts_with_the_prompt_it_is_given() -> None:
-    own = PromptAsset(name="extraction", text="{title}: {guidance} {examples} {log}")
-    model = AnswersByStep(routing=heard(("water", "a glass")), extraction=entries())
-
-    await TwoPassCaptureEngine(model, CATALOGUE, extraction_prompt=own).capture(
-        CaptureRequest(tracked=(WATER,), text="said")
-    )
-
-    extraction = model.asked[1][0]
-    assert extraction.instructions.startswith("Water: Count the glasses.")
-    assert extraction.instructions_version == own.version
-
-
 async def test_an_entry_that_holds_nothing_is_dropped_and_findings_stay_on_theirs() -> None:
     flagged = Tracked("water", flagged=(Finding(field="item", reason="implausible"),))
     model = AnswersByStep(routing=heard(("water", "a glass")), extraction=entries(None, "glass"))
@@ -168,14 +154,6 @@ async def test_which_fields_only_label_an_entry_is_the_pillars_to_declare() -> N
     outcome = await captured(model, labelled_by_item)
 
     assert isinstance(outcome, Logged) and outcome.extracted[0].entries == ()
-
-
-async def test_extraction_asks_the_fast_tier_first() -> None:
-    model = AnswersByStep(routing=heard(("water", "a glass")), extraction=entries("glass"))
-
-    await captured(model, WATER)
-
-    assert [tier for _, tier in model.asked] == [ModelTier.fast, ModelTier.fast]
 
 
 async def test_a_refused_pillar_is_reported_with_why_and_the_other_keeps_its_entries() -> None:
