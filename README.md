@@ -16,12 +16,21 @@ words as they were said.
 
 ## How it works
 
-1. **Route once.** One model call transcribes the audio, keeps each part in the language it was
-   spoken in, names the topics it mentions: food, water, sleep, exercise…, and says whether it
-   states a lasting fact about the person, the only sentences worth learning from.
-2. **Extract in parallel.** Each topic gets its own call, answering in a schema the app supplies.
-3. **Validate, then escalate.** Every answer is checked against its schema; a topic whose answer
-   fails is asked again, of a stronger model or of the same one given time to reason.
+`TwoPassCaptureEngine` (`pipeline/`) turns a sentence, a recording or a photo into entries:
+
+1. **Route once** (`routing/`). One call writes down what was said, each part in the language it
+   was spoken in, names the topics it mentions, and says whether it states a lasting fact about
+   the person.
+2. **Extract in parallel** (`extraction/`). Each tracked topic it named gets its own call,
+   answering in the schema the consumer supplies for it.
+3. **Validate, then escalate.** Every answer is validated against its schema; a topic whose
+   answer does not parse is asked again of a stronger model, or of the same one given time to
+   reason.
+
+Topics are *pillars* in the code, and the consumer passes them in. `memory/` learns the lasting
+facts a person states and counts habits from what they log, as a sheet given back to every
+capture. Every call goes through one `Model` (`models/`). Each name is imported from the module
+that defines it: `from farkad_ai.pipeline.engine import TwoPassCaptureEngine`.
 
 ## AI techniques
 
@@ -55,37 +64,40 @@ the app's own, replayed from answers recorded on `gemini-3.5-flash-lite` on 2026
 
 ## Try it
 
-No API key is needed to reproduce the table:
+No API key is needed to reproduce the table, or to route one of its sentences:
 
 ```bash
 pip install "farkad-ai @ git+https://github.com/brmel/farkad-ai"
 farkad-ai eval
+farkad-ai route --text "I drank 500 ml of water"
 ```
 
-`farkad-ai eval --provider vertex` runs it live on your Google Cloud project, and
-`farkad-ai route --provider vertex --text "two eggs and a glass of water"` routes your own sentence.
-Install the `google`, `anthropic` or `openai` extra for the provider you use.
+Your own sentences need a live model: install the `google`, `anthropic` or `openai` extra and
+pass `--provider vertex`, `anthropic` or `openai`. A missing credential is named in one line.
 
-## Layout
+```bash
+pip install "farkad-ai[google] @ git+https://github.com/brmel/farkad-ai"
+farkad-ai route --provider vertex --text "two eggs and a glass of water"
+```
 
-In the order a capture flows through `farkad_ai/`; each name is imported from the module that
-defines it. Where a package has a `port.py`, it holds the types that cross its boundary. An
-interface there is named for the role it plays, with no `Port` or `Protocol` suffix since `port.py`
-already says it is one, and an implementation for how it plays it: `Model` and `RecordedModel`,
-`CaptureEngine` and `TwoPassCaptureEngine`.
+## Extend it
 
-- `pipeline/`: `TwoPassCaptureEngine`, which routes a capture once and extracts each topic it names,
-  and `photo_briefing`, which reads a photo as a log
-- `routing/`: the one call that transcribes the capture and names its topics
-- `extraction/`: one call per topic, in the app's schema, escalated when the answer does not parse;
-  and `EntryRecomputer`, which fills the fields that follow from values the user corrected
-- `memory/`: facts the user states, the habits counted from what they log, and the sheet of both
-  given back to every capture
-- `models/`: the `Model` every stage calls, with the prompt, completion and usage it speaks in;
-  adapters for Gemini on Vertex AI, Claude and GPT; and the replay of recorded answers
-- `eval/`: the gold set, the seven example topics it and `farkad-ai route` use, its recorded
-  answers, and the runner that scores any catalogue's own
-- `prompts/`: the prompt texts, each versioned by a hash of its text
-- `cli.py`: `farkad-ai route`, `eval` and `prompts`
+- **A topic.** A consumer describes each one twice: a `PillarSpec` for routing, its id and what
+  it covers (`routing/port.py`), and a `TrackedPillar` for extraction, its guidance, worked
+  examples, Pydantic entry schema and a review of each entry (`extraction/port.py`).
+  `eval/pillars.py` holds seven; add one there, with sentences in `eval/example_gold.json`, and
+  the eval scores it.
+- **A model provider.** Subclass `ProviderModel` (`models/provider.py`) in a new module beside
+  `models/anthropic.py`: `_send` the prompt, return its structured `_answer`, count its `_usage`,
+  declare the reasoning levels it honours, and build its client in `connected()`. Name it in
+  `models/factory.py`, and give its SDK an extra and a mypy override in `pyproject.toml` and a
+  place in CI's matrix; no other module imports it.
+- **A prompt.** Each is a text file in `prompts/assets/`, loaded by the module that sends it and
+  versioned by a hash of its text; `farkad-ai prompts` lists them. The docstrings and field
+  descriptions in `routing/pass_one.py` and `memory/inference.py` reach the model too.
 
-[Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Apache 2.0](LICENSE)
+A new topic or prompt changes what the model is asked, so the eval needs new recordings:
+[Contributing](CONTRIBUTING.md#the-eval-and-its-recordings) says how.
+
+[Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) ·
+[Apache 2.0](LICENSE)
