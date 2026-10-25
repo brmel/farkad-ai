@@ -54,6 +54,14 @@ replaces every recording. The committed recordings, and the README's table, come
 update the table from the new output. If you cannot record on Vertex, say so in the pull request
 and the maintainer records them.
 
+## Adding a model provider
+
+Subclass `ProviderModel` (`farkad_ai/models/provider.py`) in a new module beside
+`farkad_ai/models/anthropic.py`: `_send` the prompt, return its structured `_answer`, count its
+`_usage`, declare the reasoning levels it honours, and build its client in `connected()`. Name it
+in `farkad_ai/models/factory.py`, and give its SDK an extra and a mypy override in
+`pyproject.toml` and a place in CI's matrix; no other module imports it.
+
 ## Tests and names
 
 - A test's name states the behaviour: `test_a_refusal_neither_tier_can_answer_is_never_paid_for_twice`.
