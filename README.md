@@ -32,15 +32,15 @@ model interface.
 ## How well it works
 
 Fifteen example sentences, three per language, on seven example topics, replayed from answers
-recorded on `gemini-3.5-flash-lite` on 2026-10-16:
+recorded on `gemini-3.5-flash-lite` on 2026-10-25:
 
 | Language | Routing | Fields | Tokens per sentence (in / out) |
 | --- | --: | --: | --: |
-| English | 100% | 100% | 2,873 / 206 |
-| French | 100% | 100% | 2,711 / 192 |
-| Arabic | 100% | 100% | 2,172 / 111 |
-| Spanish | 100% | 100% | 2,531 / 166 |
-| Mixed languages | 100% | 100% | 2,934 / 239 |
+| English | 100% | 100% | 2,871 / 200 |
+| French | 100% | 100% | 2,709 / 194 |
+| Arabic | 100% | 100% | 2,170 / 111 |
+| Spanish | 100% | 100% | 2,529 / 166 |
+| Mixed languages | 100% | 100% | 2,932 / 249 |
 
 ## What it uses, and what it leaves out
 

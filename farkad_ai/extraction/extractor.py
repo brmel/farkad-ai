@@ -22,7 +22,7 @@ from farkad_ai.models.port import (
     Prompt,
     Unavailability,
 )
-from farkad_ai.prompts import PromptAsset, briefed, prompt
+from farkad_ai.prompts import PromptAsset, briefed, prompt, version_of
 
 INSTRUCTIONS = prompt("extraction")
 
@@ -43,7 +43,7 @@ class PillarExtractor:
                 instructions=fill(
                     INSTRUCTIONS, pillar, briefing=context.briefing, log=context.transcript
                 ),
-                instructions_version=INSTRUCTIONS.version,
+                instructions_version=pillar_version(INSTRUCTIONS, pillar),
                 utterance="\n".join(context.mentions),
                 media=context.media,
             ),
@@ -70,6 +70,10 @@ class PillarExtractor:
                 extra={"pillar": context.pillar.pillar, "model": unavailable.model},
             )
             return await self.extract(context, tier=ModelTier.standard)
+
+
+def pillar_version(asset: PromptAsset, pillar: TrackedPillar) -> str:
+    return version_of(asset.text, pillar.title, pillar.guidance, pillar.examples)
 
 
 def fill(asset: PromptAsset, pillar: TrackedPillar, *, briefing: str = "", **values: object) -> str:

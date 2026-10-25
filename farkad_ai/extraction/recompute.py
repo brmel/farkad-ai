@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from pydantic import BaseModel
 
-from farkad_ai.extraction.extractor import answer_schema, entries_answered, fill
+from farkad_ai.extraction.extractor import answer_schema, entries_answered, fill, pillar_version
 from farkad_ai.extraction.port import TrackedPillar
 from farkad_ai.models.port import Completion, Model, ModelTier, PipelineStep, Prompt, Usage
 from farkad_ai.prompts import prompt
@@ -33,7 +33,7 @@ class EntryRecomputer:
                     pillar,
                     stated=json.dumps(dict(stated), ensure_ascii=False, sort_keys=True),
                 ),
-                instructions_version=INSTRUCTIONS.version,
+                instructions_version=pillar_version(INSTRUCTIONS, pillar),
             ),
             schema=answer_schema(pillar.entry_schema),
             tier=ModelTier.standard,

@@ -36,7 +36,10 @@ they meet. Listing one thing under two pillars puts it in the log twice. What th
 went into something they named — the cheese in a sandwich — is part of that thing, not a
 thing of its own. Things named side by side are separate things, each its own mention, even
 when they were had together: joined by a comma, or by *and* or *then* in any language, even
-where that word is written as part of the next one.
+where that word is written as part of the next one. But a thing named only to say when
+another happened belongs to that other thing's when, not to a log of its own: "a cold shower
+after the gym" and "une sieste après le déjeuner" log the shower and the nap alone, while "I
+swam, then had a sauna" logs both.
 
 Each mention carries its own `occurred_at_hint`, set only when the user said when *that*
 thing happened: in "a pear at ten, and an hour of tennis" the pear is at 10:00 and the

@@ -28,10 +28,8 @@ def _listed(lines: Iterable[str]) -> str:
 
 
 class TimeHint(BaseModel):
-    """A time the user stated, split into the parts a model is reliable at: which day
-    relative to today, and the hour or the part of the day they named. It is never asked for
-    a date or for a clock the user did not say: the calendar arithmetic stays with the
-    consumer, so a misheard word cannot become the year 2019."""
+    """A time the user stated: which day relative to today, and the hour or the part of the
+    day they named. Never a date, and never a clock the user did not say."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -76,8 +74,7 @@ class Mention(BaseModel):
 
 
 class PassOne(BaseModel):
-    """The model's answer. Deliberately not the domain type: `mentions` here is what the
-    model claimed, before it is intersected with what the user actually tracks."""
+    """Your answer about one log."""
 
     model_config = ConfigDict(extra="forbid")
 
