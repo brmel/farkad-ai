@@ -16,10 +16,14 @@ class PromptAsset:
 
     @property
     def version(self) -> str:
-        return sha256(self.text.encode()).hexdigest()[:VERSION_LENGTH]
+        return version_of(self.text)
 
     def format(self, **values: object) -> str:
         return self.text.format(**values)
+
+
+def version_of(*parts: str) -> str:
+    return sha256("\x00".join(parts).encode()).hexdigest()[:VERSION_LENGTH]
 
 
 def prompt(name: str) -> PromptAsset:

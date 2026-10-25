@@ -82,8 +82,6 @@ class Usage(BaseModel):
 
 @dataclass(frozen=True, slots=True)
 class Prompt:
-    """`instructions_version` names the asset the instructions came from, not the rendered text."""
-
     step: StrEnum
     instructions: str
     instructions_version: str

@@ -22,6 +22,21 @@ def test_a_prompt_is_versioned_by_its_text() -> None:
     assert len(original.version) == 12
 
 
+@pytest.mark.anyio
+async def test_a_pillar_s_extraction_version_moves_with_its_words_and_not_with_the_log() -> None:
+    async def version_asked(pillar: Tracked, transcript: str) -> str:
+        model = ScriptedModel({"entries": []})
+        context = ExtractionContext(pillar=pillar, transcript=transcript, mentions=(transcript,))
+        await PillarExtractor(model).extract(context)
+        return model.asked[0].instructions_version
+
+    water = Tracked("water")
+    reworded = Tracked("water", guidance="Record each glass.")
+
+    assert await version_asked(water, "a glass") == await version_asked(water, "two glasses")
+    assert await version_asked(water, "a glass") != await version_asked(reworded, "a glass")
+
+
 def test_every_brace_in_a_prompt_is_a_placeholder() -> None:
     for asset in list_prompts():
         for _, field, _, _ in Formatter().parse(asset.text):
