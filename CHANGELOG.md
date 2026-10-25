@@ -5,6 +5,8 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-10-25
+
 ### Removed
 
 - **Breaking:** `TwoPassCaptureEngine` no longer takes `routing_prompt` or `extraction_prompt`;
@@ -220,7 +222,8 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 - Gemini on Vertex AI, Claude and OpenAI behind one interface; long-term memory; an offline eval
   on recorded answers; the `farkad-ai` command.
 
-[Unreleased]: https://github.com/brmel/farkad-ai/compare/v0.21.0...HEAD
+[Unreleased]: https://github.com/brmel/farkad-ai/compare/v0.22.0...HEAD
+[0.22.0]: https://github.com/brmel/farkad-ai/compare/v0.21.0...v0.22.0
 [0.21.0]: https://github.com/brmel/farkad-ai/compare/v0.20.0...v0.21.0
 [0.20.0]: https://github.com/brmel/farkad-ai/compare/v0.19.0...v0.20.0
 [0.19.0]: https://github.com/brmel/farkad-ai/compare/v0.18.0...v0.19.0
