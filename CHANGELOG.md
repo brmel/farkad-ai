@@ -12,8 +12,18 @@ format. Before 1.0 a minor version may break the interface; each break is marked
   `instructions`; `routing_instructions`, `prompt()` and `list_prompts()` no longer take an asset
   or a folder. Each stage asks with the prompt it ships.
 
+### Changed
+
+- A prompt's `instructions_version` follows what the model is asked before the per-call words:
+  routing hashes its rendered catalogue and rules, extraction and recompute the template with
+  the pillar's title, guidance and examples. Re-record the eval after upgrading.
+- The answer schema carries only model-facing words: `PassOne`'s and `TimeHint`'s docstrings
+  lost their developer notes.
+
 ### Fixed
 
+- Pass one no longer logs a thing named only to say when another happened: "stretching after
+  training" and "estiramientos después de correr" log the stretching alone.
 - `farkad-ai route` requires `--text`, and stops with its usage before any model is created
   instead of routing an empty sentence.
 - CI passes again: the core-only leg type-checks the Vertex retry test.
