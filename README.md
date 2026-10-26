@@ -24,11 +24,6 @@ A sentence, a recording or a photo goes through two passes:
 2. **Extract in parallel.** Each topic it named gets its own call, answering in that topic's
    schema.
 
-Every answer is validated against its schema; one that does not parse is asked again, of a
-stronger model or of the same one given time to reason. Lasting facts a person states, such as
-"I'm vegan", are remembered and given back to every capture. Gemini, Claude and GPT sit behind one
-model interface.
-
 ## How well it works
 
 Fifteen example sentences, three per language, on seven example topics, replayed from answers
