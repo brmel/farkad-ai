@@ -7,6 +7,16 @@
 - The history is **public**: commit with the repository-local `user.email`, and never name a
   private issue, project id or address in a branch, commit or file.
 
+## Working within a budget
+
+- One task per session. This file and `CONTRIBUTING.md` are already in context.
+- Independent reads and searches go in one call; `rg -n` first, then read the line range it
+  points at, never the whole file.
+- An issue is fetched once, with only the fields needed:
+  `gh issue view <n> --json title,body --jq …`.
+- The checks run under the Bash tool's `timeout`, and their verdict is their exit code: never poll
+  a log.
+
 ## Releasing
 
 Releases are immutable: a wrong wheel is fixed by a new version.

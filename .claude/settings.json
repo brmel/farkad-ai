@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ruff check:*)",
+      "Bash(ruff format:*)",
+      "Bash(mypy:*)",
+      "Bash(pytest:*)",
+      "Bash(python -m pytest:*)",
+      "Bash(farkad-ai eval)",
+      "Bash(farkad-ai prompts)",
+      "Bash(rg:*)",
+      "Bash(gh issue view:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr diff:*)",
+      "Bash(gh pr checks:*)",
+      "Bash(gh run view:*)",
+      "Bash(gh run list:*)",
+      "Bash(git fetch:*)"
+    ],
+    "ask": [
+      "Bash(farkad-ai eval *--record*)",
+      "Bash(gh release create:*)"
+    ],
+    "deny": [
+      "Read(./**/.env)",
+      "Edit(./farkad_ai/eval/recordings/**)"
+    ]
+  }
+}
