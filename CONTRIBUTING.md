@@ -56,9 +56,10 @@ and the maintainer records them.
 
 ## Adding a model provider
 
-Subclass `ProviderModel` (`farkad_ai/models/provider.py`) in a new module beside
-`farkad_ai/models/anthropic.py`: `_send` the prompt, return its structured `_answer`, count its
-`_usage`, declare the reasoning levels it honours, and build its client in `connected()`. Name it
+Subclass `ProviderModel[Client, Response]` (`farkad_ai/models/provider.py`) in a new module
+beside `farkad_ai/models/anthropic.py`: `_send` the prompt, return its structured `_answer`, count
+its `_usage`, declare the reasoning levels it honours and the model each tier defaults to, and
+build its client in `connected()`. Name it
 in `farkad_ai/models/factory.py`, and give its SDK an extra and a mypy override in
 `pyproject.toml` and a place in CI's matrix; no other module imports it.
 

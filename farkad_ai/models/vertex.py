@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import ClassVar
 
 from google import genai
 from google.auth.exceptions import DefaultCredentialsError
@@ -19,7 +20,6 @@ from farkad_ai.models.port import (
     TierChoices,
     Unavailability,
     Usage,
-    fixed,
 )
 from farkad_ai.models.provider import PLACEHOLDER_INPUT, MissingCredentialsError, ProviderModel
 
@@ -28,11 +28,6 @@ THINKING_BUDGET: Mapping[Reasoning, int] = {
     Reasoning.none: 0,
     Reasoning.brief: 512,
     Reasoning.thorough: 2048,
-}
-
-DEFAULT_CHOICES: Mapping[ModelTier, ModelChoice] = {
-    ModelTier.fast: ModelChoice("gemini-3.5-flash-lite"),
-    ModelTier.standard: ModelChoice("gemini-3.5-flash-lite", Reasoning.brief),
 }
 
 
@@ -72,17 +67,12 @@ class Retries:
     longest_wait: timedelta
 
 
-class VertexModel(ProviderModel[types.GenerateContentResponse]):
+class VertexModel(ProviderModel[genai.Client, types.GenerateContentResponse]):
     honoured_reasoning = THINKING_BUDGET
-
-    def __init__(
-        self,
-        client: genai.Client,
-        *,
-        choices: TierChoices | None = None,
-    ) -> None:
-        super().__init__(choices or fixed(DEFAULT_CHOICES))
-        self._client = client
+    default_choices: ClassVar[Mapping[ModelTier, ModelChoice]] = {
+        ModelTier.fast: ModelChoice("gemini-3.5-flash-lite"),
+        ModelTier.standard: ModelChoice("gemini-3.5-flash-lite", Reasoning.brief),
+    }
 
     @classmethod
     def connected(
