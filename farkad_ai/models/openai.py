@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 from collections.abc import Mapping
+from typing import ClassVar
 
 from openai import APIError, AsyncOpenAI, OpenAIError
 from openai.types.chat import (
@@ -23,27 +24,16 @@ from farkad_ai.models.port import (
     TierChoices,
     Unavailability,
     Usage,
-    fixed,
 )
 from farkad_ai.models.provider import PLACEHOLDER_INPUT, MissingCredentialsError, ProviderModel
 
-DEFAULT_CHOICES: Mapping[ModelTier, ModelChoice] = {
-    ModelTier.fast: ModelChoice("gpt-4o-mini"),
-    ModelTier.standard: ModelChoice("gpt-4o"),
-}
 
-
-class OpenAIModel(ProviderModel[ParsedChatCompletion[BaseModel]]):
+class OpenAIModel(ProviderModel[AsyncOpenAI, ParsedChatCompletion[BaseModel]]):
     honoured_reasoning = (Reasoning.none,)
-
-    def __init__(
-        self,
-        client: AsyncOpenAI,
-        *,
-        choices: TierChoices | None = None,
-    ) -> None:
-        super().__init__(choices or fixed(DEFAULT_CHOICES))
-        self._client = client
+    default_choices: ClassVar[Mapping[ModelTier, ModelChoice]] = {
+        ModelTier.fast: ModelChoice("gpt-4o-mini"),
+        ModelTier.standard: ModelChoice("gpt-4o"),
+    }
 
     @classmethod
     def connected(cls, *, choices: TierChoices | None = None) -> OpenAIModel:

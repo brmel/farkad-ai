@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import base64
 from collections.abc import Mapping
-from typing import Literal
+from typing import ClassVar, Literal
 
 from anthropic import APIError, AsyncAnthropic
 from anthropic.types import ImageBlockParam, Message, MessageParam, TextBlockParam, ToolParam
@@ -19,27 +19,16 @@ from farkad_ai.models.port import (
     TierChoices,
     Unavailability,
     Usage,
-    fixed,
 )
 from farkad_ai.models.provider import PLACEHOLDER_INPUT, MissingCredentialsError, ProviderModel
 
-DEFAULT_CHOICES: Mapping[ModelTier, ModelChoice] = {
-    ModelTier.fast: ModelChoice("claude-haiku-4-5-20251001"),
-    ModelTier.standard: ModelChoice("claude-sonnet-5"),
-}
 
-
-class AnthropicModel(ProviderModel[Message]):
+class AnthropicModel(ProviderModel[AsyncAnthropic, Message]):
     honoured_reasoning = (Reasoning.none,)
-
-    def __init__(
-        self,
-        client: AsyncAnthropic,
-        *,
-        choices: TierChoices | None = None,
-    ) -> None:
-        super().__init__(choices or fixed(DEFAULT_CHOICES))
-        self._client = client
+    default_choices: ClassVar[Mapping[ModelTier, ModelChoice]] = {
+        ModelTier.fast: ModelChoice("claude-haiku-4-5-20251001"),
+        ModelTier.standard: ModelChoice("claude-sonnet-5"),
+    }
 
     @classmethod
     def connected(cls, *, choices: TierChoices | None = None) -> AnthropicModel:

@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import time
 from abc import abstractmethod
-from collections.abc import Collection
+from collections.abc import Collection, Mapping
+from typing import ClassVar
 
 from pydantic import BaseModel, ValidationError
 
@@ -17,6 +18,7 @@ from farkad_ai.models.port import (
     TierChoices,
     Unavailability,
     Usage,
+    fixed,
 )
 
 PLACEHOLDER_INPUT = "Input."
@@ -27,11 +29,13 @@ class MissingCredentialsError(Exception):
         super().__init__(f"the {provider} provider needs {remedy}")
 
 
-class ProviderModel[Response](Model):
+class ProviderModel[Client, Response](Model):
     honoured_reasoning: Collection[Reasoning]
+    default_choices: ClassVar[Mapping[ModelTier, ModelChoice]]
 
-    def __init__(self, choices: TierChoices) -> None:
-        self._choices = choices
+    def __init__(self, client: Client, *, choices: TierChoices | None = None) -> None:
+        self._client = client
+        self._choices = fixed(self.default_choices) if choices is None else choices
 
     async def complete[T: BaseModel](
         self, prompt: Prompt, *, schema: type[T], tier: ModelTier

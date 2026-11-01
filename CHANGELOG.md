@@ -5,6 +5,12 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking:** `ProviderModel` takes its client type as a parameter, `ProviderModel[Client,
+  Response]`, holds the client, and declares each tier's default model as `default_choices`. A
+  provider no longer writes a constructor; the module-level `DEFAULT_CHOICES` are gone.
+
 ## [0.22.0] - 2026-10-25
 
 ### Removed
