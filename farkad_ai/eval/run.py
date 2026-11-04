@@ -10,7 +10,7 @@ from farkad_ai.eval.scoring import CaptureScore, score_capture
 from farkad_ai.extraction.port import TrackedPillar
 from farkad_ai.models.port import Model, ModelUnavailableError, Unavailability
 from farkad_ai.pipeline.engine import TwoPassCaptureEngine
-from farkad_ai.pipeline.port import CaptureRequest, Logged
+from farkad_ai.pipeline.port import CaptureEngine, CaptureRequest, Logged
 from farkad_ai.routing.port import NothingToLog, PillarSpec
 
 
@@ -42,7 +42,7 @@ async def evaluate[Case: GoldCase](
 
 
 async def _scored(
-    engine: TwoPassCaptureEngine, tracked: tuple[TrackedPillar, ...], case: GoldCase
+    engine: CaptureEngine, tracked: tuple[TrackedPillar, ...], case: GoldCase
 ) -> CaptureScore:
     scored = partial(
         score_capture,

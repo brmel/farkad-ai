@@ -22,7 +22,7 @@ from farkad_ai.models.port import (
     Usage,
     fixed,
 )
-from farkad_ai.models.vertex import usage_of
+from farkad_ai.models.vertex import VertexModel
 
 
 class HealthFact(BaseModel):
@@ -114,40 +114,47 @@ async def test_a_reasoning_level_the_adapter_cannot_honour_is_refused_not_ignore
     assert refused.value.because is Unavailability.unsupported_request
 
 
-def counted(*, prompt: int | None, candidates: int | None) -> types.GenerateContentResponse:
-    return types.GenerateContentResponse(
-        usage_metadata=types.GenerateContentResponseUsageMetadata(
+def answered(metadata: types.GenerateContentResponseUsageMetadata | None) -> Mock:
+    return Mock(parsed={"category": "water", "amount": 250}, usage_metadata=metadata)
+
+
+def counted(*, prompt: int | None, candidates: int | None) -> Mock:
+    return answered(
+        types.GenerateContentResponseUsageMetadata(
             prompt_token_count=prompt, candidates_token_count=candidates
         )
     )
 
 
-def vertex_usage(response: types.GenerateContentResponse) -> Usage:
+async def vertex_usage(response: Mock) -> Usage:
+    client = Mock()
+    client.aio.models.generate_content = AsyncMock(return_value=response)
     asked = Prompt(step=PipelineStep.routing, instructions="Route", instructions_version="v1")
-    return usage_of(
-        response, prompt=asked, tier=ModelTier.fast, model="gemini-3.5-flash-lite", latency_ms=1
-    )
+    completion = await VertexModel(client).complete(asked, schema=HealthFact, tier=ModelTier.fast)
+    return completion.usage
 
 
+@pytest.mark.anyio
 @pytest.mark.parametrize(
     "response",
     [
-        types.GenerateContentResponse(),
+        answered(None),
         counted(prompt=None, candidates=800),
         counted(prompt=9_000, candidates=None),
     ],
     ids=["no usage", "no input count", "no output count"],
 )
-def test_a_vertex_answer_that_does_not_count_its_tokens_is_refused(
-    response: types.GenerateContentResponse,
+async def test_a_vertex_answer_that_does_not_count_its_tokens_is_refused(
+    response: Mock,
 ) -> None:
     with pytest.raises(ModelUnavailableError) as refused:
-        vertex_usage(response)
+        await vertex_usage(response)
 
     assert refused.value.because is Unavailability.usage_not_reported
 
 
-def test_a_counted_vertex_answer_reports_its_tokens() -> None:
-    usage = vertex_usage(counted(prompt=9_000, candidates=800))
+@pytest.mark.anyio
+async def test_a_counted_vertex_answer_reports_its_tokens() -> None:
+    usage = await vertex_usage(counted(prompt=9_000, candidates=800))
 
     assert (usage.input_tokens, usage.output_tokens) == (9_000, 800)

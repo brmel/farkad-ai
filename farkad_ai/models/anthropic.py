@@ -18,13 +18,13 @@ from farkad_ai.models.port import (
     Reasoning,
     TierChoices,
     Unavailability,
-    Usage,
 )
 from farkad_ai.models.provider import PLACEHOLDER_INPUT, MissingCredentialsError, ProviderModel
 
 
-class AnthropicModel(ProviderModel[AsyncAnthropic, Message]):
+class AnthropicModel(ProviderModel[AsyncAnthropic, Message, APIError]):
     honoured_reasoning = (Reasoning.none,)
+    refused_by = APIError
     default_choices: ClassVar[Mapping[ModelTier, ModelChoice]] = {
         ModelTier.fast: ModelChoice("claude-haiku-4-5-20251001"),
         ModelTier.standard: ModelChoice("claude-sonnet-5"),
@@ -55,22 +55,14 @@ class AnthropicModel(ProviderModel[AsyncAnthropic, Message]):
             }
         ]
         messages = _messages(prompt, tier=tier, model=model)
-        try:
-            return await self._client.messages.create(
-                model=model,
-                max_tokens=4096,
-                system=prompt.instructions,
-                messages=messages,
-                tools=tools,
-                tool_choice={"type": "tool", "name": tool_name},
-            )
-        except APIError as error:
-            raise ModelUnavailableError(
-                tier,
-                model,
-                Unavailability.provider_refused,
-                str(error),
-            ) from error
+        return await self._client.messages.create(
+            model=model,
+            max_tokens=4096,
+            system=prompt.instructions,
+            messages=messages,
+            tools=tools,
+            tool_choice={"type": "tool", "name": tool_name},
+        )
 
     def _answer(self, response: Message, *, tier: ModelTier, model: str) -> object:
         tool_blocks = [block for block in response.content if block.type == "tool_use"]
@@ -80,20 +72,10 @@ class AnthropicModel(ProviderModel[AsyncAnthropic, Message]):
             )
         return tool_blocks[0].input
 
-    def _usage(
-        self, response: Message, *, prompt: Prompt, tier: ModelTier, model: str, latency_ms: int
-    ) -> Usage:
+    def _tokens(self, response: Message) -> tuple[int, int] | None:
         if response.usage is None:
-            raise ModelUnavailableError(
-                tier, model, Unavailability.usage_not_reported, "no usage object in response"
-            )
-        return Usage.answering(
-            prompt,
-            model=model,
-            input_tokens=response.usage.input_tokens,
-            output_tokens=response.usage.output_tokens,
-            latency_ms=latency_ms,
-        )
+            return None
+        return response.usage.input_tokens, response.usage.output_tokens
 
 
 def _messages(prompt: Prompt, *, tier: ModelTier, model: str) -> list[MessageParam]:

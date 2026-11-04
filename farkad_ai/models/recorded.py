@@ -58,14 +58,7 @@ class RecordedModel(Model):
                 key, self._directory, self._diagnose(prompt, schema, tier)
             )
         recording = json.loads(path.read_text())
-        recorded = recording["usage"]
-        counted = Usage.answering(
-            prompt,
-            model=recorded["model"],
-            input_tokens=recorded["input_tokens"],
-            output_tokens=recorded["output_tokens"],
-            latency_ms=recorded["latency_ms"],
-        )
+        counted = Usage.answering(prompt, **recording["usage"])
         if self._pinned is not None:
             pinned = (await self._pinned(tier)).model
             if counted.model != pinned:

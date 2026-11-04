@@ -23,13 +23,13 @@ from farkad_ai.models.port import (
     Reasoning,
     TierChoices,
     Unavailability,
-    Usage,
 )
 from farkad_ai.models.provider import PLACEHOLDER_INPUT, MissingCredentialsError, ProviderModel
 
 
-class OpenAIModel(ProviderModel[AsyncOpenAI, ParsedChatCompletion[BaseModel]]):
+class OpenAIModel(ProviderModel[AsyncOpenAI, ParsedChatCompletion[BaseModel], APIError]):
     honoured_reasoning = (Reasoning.none,)
+    refused_by = APIError
     default_choices: ClassVar[Mapping[ModelTier, ModelChoice]] = {
         ModelTier.fast: ModelChoice("gpt-4o-mini"),
         ModelTier.standard: ModelChoice("gpt-4o"),
@@ -52,19 +52,11 @@ class OpenAIModel(ProviderModel[AsyncOpenAI, ParsedChatCompletion[BaseModel]]):
     ) -> ParsedChatCompletion[BaseModel]:
         model = choice.model
         messages = _messages(prompt, tier=tier, model=model)
-        try:
-            return await self._client.beta.chat.completions.parse(
-                model=model,
-                messages=messages,
-                response_format=schema,
-            )
-        except APIError as error:
-            raise ModelUnavailableError(
-                tier,
-                model,
-                Unavailability.provider_refused,
-                str(error),
-            ) from error
+        return await self._client.beta.chat.completions.parse(
+            model=model,
+            messages=messages,
+            response_format=schema,
+        )
 
     def _answer(
         self, response: ParsedChatCompletion[BaseModel], *, tier: ModelTier, model: str
@@ -84,26 +76,10 @@ class OpenAIModel(ProviderModel[AsyncOpenAI, ParsedChatCompletion[BaseModel]]):
             )
         return message.parsed
 
-    def _usage(
-        self,
-        response: ParsedChatCompletion[BaseModel],
-        *,
-        prompt: Prompt,
-        tier: ModelTier,
-        model: str,
-        latency_ms: int,
-    ) -> Usage:
+    def _tokens(self, response: ParsedChatCompletion[BaseModel]) -> tuple[int, int] | None:
         if response.usage is None:
-            raise ModelUnavailableError(
-                tier, model, Unavailability.usage_not_reported, "no usage in response"
-            )
-        return Usage.answering(
-            prompt,
-            model=model,
-            input_tokens=response.usage.prompt_tokens,
-            output_tokens=response.usage.completion_tokens,
-            latency_ms=latency_ms,
-        )
+            return None
+        return response.usage.prompt_tokens, response.usage.completion_tokens
 
 
 def _messages(prompt: Prompt, *, tier: ModelTier, model: str) -> list[ChatCompletionMessageParam]:

@@ -55,25 +55,13 @@ class Router:
 
     def _decide(self, heard: PassOne, tracked: frozenset[str], usage: Usage) -> RoutingOutcome:
         if not heard.is_health_related:
-            return NothingToLog(
-                transcript=heard.transcript,
-                language=heard.language,
-                states_a_lasting_fact=heard.states_a_lasting_fact,
-                reason=NothingToLogReason.not_a_health_log,
-                usages=(usage,),
-            )
+            return _nothing_to_log(heard, NothingToLogReason.not_a_health_log, usage)
 
         known = [mention for mention in heard.mentions if mention.pillar in self._known]
         named = frozenset(mention.pillar for mention in known)
         routes = named & tracked
         if not routes:
-            return NothingToLog(
-                transcript=heard.transcript,
-                language=heard.language,
-                states_a_lasting_fact=heard.states_a_lasting_fact,
-                reason=NothingToLogReason.no_enabled_pillar,
-                usages=(usage,),
-            )
+            return _nothing_to_log(heard, NothingToLogReason.no_enabled_pillar, usage)
 
         return Routed(
             transcript=heard.transcript,
@@ -88,6 +76,16 @@ class Router:
             occurred_at_hints={pillar: _first_stated(known, pillar) for pillar in sorted(routes)},
             usage=usage,
         )
+
+
+def _nothing_to_log(heard: PassOne, reason: NothingToLogReason, usage: Usage) -> NothingToLog:
+    return NothingToLog(
+        transcript=heard.transcript,
+        language=heard.language,
+        states_a_lasting_fact=heard.states_a_lasting_fact,
+        reason=reason,
+        usages=(usage,),
+    )
 
 
 def _first_stated(mentions: list[Mention], pillar: str) -> StatedTime | None:

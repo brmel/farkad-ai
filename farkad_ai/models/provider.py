@@ -29,9 +29,10 @@ class MissingCredentialsError(Exception):
         super().__init__(f"the {provider} provider needs {remedy}")
 
 
-class ProviderModel[Client, Response](Model):
+class ProviderModel[Client, Response, Refusal: Exception](Model):
     honoured_reasoning: Collection[Reasoning]
     default_choices: ClassVar[Mapping[ModelTier, ModelChoice]]
+    refused_by: type[Refusal]
 
     def __init__(self, client: Client, *, choices: TierChoices | None = None) -> None:
         self._client = client
@@ -43,7 +44,12 @@ class ProviderModel[Client, Response](Model):
         choice = await self._chosen(tier)
         model = choice.model
         started = time.monotonic()
-        response = await self._send(prompt, schema=schema, tier=tier, choice=choice)
+        try:
+            response = await self._send(prompt, schema=schema, tier=tier, choice=choice)
+        except self.refused_by as error:
+            raise ModelUnavailableError(
+                tier, model, Unavailability.provider_refused, self._refusal(error)
+            ) from error
         latency_ms = int((time.monotonic() - started) * 1000)
         answer = self._answer(response, tier=tier, model=model)
         try:
@@ -52,12 +58,20 @@ class ProviderModel[Client, Response](Model):
             raise ModelUnavailableError(
                 tier, model, Unavailability.output_did_not_parse, schema.__name__
             ) from error
-        return Completion(
-            value=value,
-            usage=self._usage(
-                response, prompt=prompt, tier=tier, model=model, latency_ms=latency_ms
-            ),
+        tokens = self._tokens(response)
+        if tokens is None:
+            raise ModelUnavailableError(
+                tier, model, Unavailability.usage_not_reported, "the response counted no tokens"
+            )
+        input_tokens, output_tokens = tokens
+        usage = Usage.answering(
+            prompt,
+            model=model,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            latency_ms=latency_ms,
         )
+        return Completion(value=value, usage=usage)
 
     async def _chosen(self, tier: ModelTier) -> ModelChoice:
         choice = await self._choices(tier)
@@ -79,6 +93,7 @@ class ProviderModel[Client, Response](Model):
     def _answer(self, response: Response, *, tier: ModelTier, model: str) -> object: ...
 
     @abstractmethod
-    def _usage(
-        self, response: Response, *, prompt: Prompt, tier: ModelTier, model: str, latency_ms: int
-    ) -> Usage: ...
+    def _tokens(self, response: Response) -> tuple[int, int] | None: ...
+
+    def _refusal(self, error: Refusal) -> str:
+        return str(error)

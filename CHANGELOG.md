@@ -10,6 +10,9 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 - **Breaking:** `ProviderModel` takes its client type as a parameter, `ProviderModel[Client,
   Response]`, holds the client, and declares each tier's default model as `default_choices`. A
   provider no longer writes a constructor; the module-level `DEFAULT_CHOICES` are gone.
+- **Breaking:** `ProviderModel[Client, Response, Refusal]` turns the provider's `refused_by`
+  error into `provider_refused` and missing token counts into `usage_not_reported` itself: a
+  provider implements `_tokens` instead of `_usage`, and `vertex.usage_of` is gone.
 
 ## [0.22.0] - 2026-10-25
 
