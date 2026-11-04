@@ -14,12 +14,9 @@ from pydantic import BaseModel
 from farkad_ai.models.port import (
     ModelChoice,
     ModelTier,
-    ModelUnavailableError,
     Prompt,
     Reasoning,
     TierChoices,
-    Unavailability,
-    Usage,
 )
 from farkad_ai.models.provider import PLACEHOLDER_INPUT, MissingCredentialsError, ProviderModel
 
@@ -31,35 +28,6 @@ THINKING_BUDGET: Mapping[Reasoning, int] = {
 }
 
 
-def usage_of(
-    response: types.GenerateContentResponse,
-    *,
-    prompt: Prompt,
-    tier: ModelTier,
-    model: str,
-    latency_ms: int,
-) -> Usage:
-    metadata = response.usage_metadata
-    if metadata is None:
-        raise ModelUnavailableError(
-            tier, model, Unavailability.usage_not_reported, "no usage metadata on the response"
-        )
-    if metadata.prompt_token_count is None or metadata.candidates_token_count is None:
-        raise ModelUnavailableError(
-            tier, model, Unavailability.usage_not_reported, "the response counted no tokens"
-        )
-    input_tokens = metadata.prompt_token_count
-    # `thoughts_token_count` is absent, not zero, without thinking: https://googleapis.github.io/python-genai/
-    output_tokens = metadata.candidates_token_count + (metadata.thoughts_token_count or 0)
-    return Usage.answering(
-        prompt,
-        model=model,
-        input_tokens=input_tokens,
-        output_tokens=output_tokens,
-        latency_ms=latency_ms,
-    )
-
-
 @dataclass(frozen=True, slots=True)
 class Retries:
     attempts: int
@@ -67,8 +35,9 @@ class Retries:
     longest_wait: timedelta
 
 
-class VertexModel(ProviderModel[genai.Client, types.GenerateContentResponse]):
+class VertexModel(ProviderModel[genai.Client, types.GenerateContentResponse, APIError]):
     honoured_reasoning = THINKING_BUDGET
+    refused_by = APIError
     default_choices: ClassVar[Mapping[ModelTier, ModelChoice]] = {
         ModelTier.fast: ModelChoice("gemini-3.5-flash-lite"),
         ModelTier.standard: ModelChoice("gemini-3.5-flash-lite", Reasoning.brief),
@@ -101,35 +70,39 @@ class VertexModel(ProviderModel[genai.Client, types.GenerateContentResponse]):
         tier: ModelTier,
         choice: ModelChoice,
     ) -> types.GenerateContentResponse:
-        model = choice.model
-        try:
-            return await self._client.aio.models.generate_content(
-                model=model,
-                contents=_parts(prompt),
-                config=types.GenerateContentConfig(
-                    system_instruction=prompt.instructions,
-                    automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
-                    response_mime_type="application/json",
-                    response_schema=schema,
-                    thinking_config=types.ThinkingConfig(
-                        thinking_budget=THINKING_BUDGET[choice.reasoning]
-                    ),
+        return await self._client.aio.models.generate_content(
+            model=choice.model,
+            contents=_parts(prompt),
+            config=types.GenerateContentConfig(
+                system_instruction=prompt.instructions,
+                automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
+                response_mime_type="application/json",
+                response_schema=schema,
+                thinking_config=types.ThinkingConfig(
+                    thinking_budget=THINKING_BUDGET[choice.reasoning]
                 ),
-            )
-        except APIError as error:
-            raise ModelUnavailableError(
-                tier,
-                model,
-                Unavailability.provider_refused,
-                f"{type(error).__name__} {error.code}",
-            ) from error
+            ),
+        )
 
     def _answer(
         self, response: types.GenerateContentResponse, *, tier: ModelTier, model: str
     ) -> object:
         return response.parsed
 
-    _usage = staticmethod(usage_of)
+    def _tokens(self, response: types.GenerateContentResponse) -> tuple[int, int] | None:
+        metadata = response.usage_metadata
+        if (
+            metadata is None
+            or metadata.prompt_token_count is None
+            or metadata.candidates_token_count is None
+        ):
+            return None
+        # `thoughts_token_count` is absent, not zero, without thinking: https://googleapis.github.io/python-genai/
+        thoughts = metadata.thoughts_token_count or 0
+        return metadata.prompt_token_count, metadata.candidates_token_count + thoughts
+
+    def _refusal(self, error: APIError) -> str:
+        return f"{type(error).__name__} {error.code}"
 
 
 def _retrying(retries: Retries | None) -> types.HttpOptions | None:

@@ -130,15 +130,6 @@ async def test_a_lasting_fact_is_reported_whether_or_not_anything_is_logged(
     assert outcome.states_a_lasting_fact
 
 
-async def test_the_model_is_told_every_pillar_the_catalogue_holds() -> None:
-    model = ScriptedModel(heard("water"))
-
-    await Router(model, CATALOGUE).route(frozenset({"water"}), text="I drank water")
-
-    told = model.asked[0].instructions
-    assert [spec for spec in CATALOGUE if f"- {spec.pillar}: {spec.intent}" not in told] == []
-
-
 CATALOGUE_LISTED = "- water: tracks water intake\n- food: logs meals and snacks"
 
 
@@ -159,7 +150,6 @@ async def test_routing_rules_are_told_once_in_order_under_their_heading_after_th
     told = model.asked[0].instructions
     heading = RULES.text.replace("{rules}", "- plain coffee is water\n- coffee with milk is food")
     assert told == f"{INSTRUCTIONS.text.replace('{pillars}', CATALOGUE_LISTED)}\n\n{heading}"
-    assert [told.count(rule) for rule in rules] == [1, 1]
 
 
 def test_a_stated_time_names_a_day_only_when_it_is_not_today() -> None:
