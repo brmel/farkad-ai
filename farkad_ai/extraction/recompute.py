@@ -8,7 +8,16 @@ from pydantic import BaseModel
 
 from farkad_ai.extraction.extractor import answer_schema, entries_answered, fill, pillar_version
 from farkad_ai.extraction.port import TrackedPillar
-from farkad_ai.models.port import Completion, Model, ModelTier, PipelineStep, Prompt, Usage
+from farkad_ai.models.port import (
+    Completion,
+    Model,
+    ModelTier,
+    ModelUnavailableError,
+    PipelineStep,
+    Prompt,
+    Unavailability,
+    Usage,
+)
 from farkad_ai.prompts import prompt
 
 INSTRUCTIONS = prompt("recompute")
@@ -38,7 +47,12 @@ class EntryRecomputer:
             schema=answer_schema(pillar.entry_schema),
             tier=ModelTier.standard,
         )
-        return Recomputation(
-            values=next(iter(entries_answered(completion, pillar)), {}),
-            usage=completion.usage,
-        )
+        entries = entries_answered(completion, pillar)
+        if not entries:
+            raise ModelUnavailableError(
+                ModelTier.standard,
+                completion.usage.model,
+                Unavailability.output_did_not_parse,
+                f"no {pillar.pillar} entry recomputed",
+            )
+        return Recomputation(values=entries[0], usage=completion.usage)

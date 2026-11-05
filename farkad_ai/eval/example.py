@@ -43,16 +43,23 @@ async def evaluate_examples(model: Model) -> ExampleRun:
 
 def report(run: ExampleRun) -> str:
     rows = [
-        "| Language | Captures | Routing | Fields | Tokens in / out | p95 in / out |",
-        "| --- | --: | --: | --: | --: | --: |",
+        "| Language | Captures | Routing | Fields | Validators | Tokens in / out | p95 in / out |",
+        "| --- | --: | --: | --: | --: | --: | --: |",
     ]
     for language in Language:
         rows.append(_row(language.value, [each for each in run if each.case.language is language]))
     rows.append(_row("all", list(run)))
     models = sorted({usage.model for each in run for usage in each.score.usages})
+    unparsed = RunScore(tuple(each.score for each in run)).unparsed_responses_by_model
     return (
         "\n".join(
-            [*rows, "", f"Model: {', '.join(models)}", *(f"Miss: {miss}" for miss in _misses(run))]
+            [
+                *rows,
+                "",
+                f"Model: {', '.join(models)}",
+                *(f"Unparsed: {model} x{count}" for model, count in sorted(unparsed.items())),
+                *(f"Miss: {miss}" for miss in _misses(run)),
+            ]
         )
         + "\n"
     )
@@ -66,7 +73,8 @@ def _row(label: str, scored: list[Scored[ExampleCase]]) -> str:
     p95_out = score.p95(lambda capture: capture.output_tokens)
     return (
         f"| {label} | {len(scored)} | {score.routing_accuracy:.0%} | "
-        f"{score.field_accuracy:.0%} | {mean_in:.0f} / {mean_out:.0f} | "
+        f"{score.field_accuracy:.0%} | {score.validator_agreement:.0%} | "
+        f"{mean_in:.0f} / {mean_out:.0f} | "
         f"{p95_in:.0f} / {p95_out:.0f} |"
     )
 
@@ -79,6 +87,11 @@ def _misses(run: ExampleRun) -> list[str]:
             found.append(
                 f"{score.utterance}: routed {sorted(score.routed)}, "
                 f"wanted {sorted(score.expected_routes)}"
+            )
+        if not score.validators_agree:
+            found.append(
+                f"{score.utterance}: flagged {sorted(score.flagged)}, "
+                f"wanted {sorted(score.expected_flags)}"
             )
         found += [
             f"{score.utterance}: {wrong.pillar}.{wrong.field} wanted {wrong.expected!r}, "

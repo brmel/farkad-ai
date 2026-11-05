@@ -19,11 +19,10 @@ from farkad_ai.models.port import (
     fixed,
 )
 from farkad_ai.models.recorded import (
-    PROMPT_CHANGED,
-    SCHEMA_CHANGED,
     NoRecordedResponseError,
     RecordedModel,
     RecordingModel,
+    Unreachable,
     UnrecordedModelError,
     fingerprint,
 )
@@ -127,7 +126,7 @@ async def test_a_schema_changed_under_the_same_name_is_not_replayed(tmp_path: Pa
     with pytest.raises(NoRecordedResponseError) as missing:
         await RecordedModel(tmp_path).complete(asked, schema=changed, tier=ModelTier.fast)
 
-    assert missing.value.because == SCHEMA_CHANGED
+    assert missing.value.because is Unreachable.schema_changed
     replayed = await RecordedModel(tmp_path).complete(asked, schema=Answer, tier=ModelTier.fast)
     assert replayed.value == Answer(said="one")
 
@@ -141,8 +140,7 @@ async def test_a_recording_made_against_other_instructions_says_the_prompt_chang
     with pytest.raises(NoRecordedResponseError) as missing:
         await RecordedModel(tmp_path).complete(reworded, schema=Answer, tier=ModelTier.fast)
 
-    assert missing.value.because == PROMPT_CHANGED
-    assert "the prompt changed" in str(missing.value)
+    assert missing.value.because is Unreachable.prompt_changed
 
 
 async def test_an_utterance_never_recorded_has_no_diagnosis(tmp_path: Path) -> None:
@@ -151,7 +149,7 @@ async def test_an_utterance_never_recorded_has_no_diagnosis(tmp_path: Path) -> N
     with pytest.raises(NoRecordedResponseError) as missing:
         await RecordedModel(tmp_path).complete(said_back("two"), schema=Answer, tier=ModelTier.fast)
 
-    assert missing.value.because is None
+    assert missing.value.because is Unreachable.never_recorded
 
 
 async def test_only_a_recording_answered_by_the_pinned_model_replays(tmp_path: Path) -> None:

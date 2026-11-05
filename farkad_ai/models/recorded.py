@@ -2,20 +2,31 @@ from __future__ import annotations
 
 import hashlib
 import json
+from enum import StrEnum
 from pathlib import Path
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 
 from farkad_ai.models.port import Completion, Model, ModelTier, Prompt, TierChoices, Usage
 
 
+class Unreachable(StrEnum):
+    never_recorded = "the utterance was never recorded"
+    prompt_changed = (
+        "the same utterance is recorded against different instructions, so the prompt "
+        "changed and every recording made against the old one is now unreachable"
+    )
+    schema_changed = (
+        "the same utterance is recorded against the same instructions but another answer "
+        "schema, so the schema changed and the recording would replay an answer to the old one"
+    )
+
+
 class NoRecordedResponseError(Exception):
-    def __init__(self, key: str, directory: Path, because: str | None = None) -> None:
+    def __init__(self, key: str, directory: Path, because: Unreachable) -> None:
         super().__init__(
-            f"no recorded response {key} in {directory}"
-            + (f" — {because}" if because is not None else "")
-            + "; record one with RecordingModel against the live provider "
-            "rather than writing it"
+            f"no recorded response {key} in {directory} — {because}; record one with "
+            "RecordingModel against the live provider rather than writing it"
         )
         self.because = because
 
@@ -31,16 +42,31 @@ class UnrecordedModelError(Exception):
         self.recorded = recorded
 
 
-PROMPT_CHANGED = (
-    "the same utterance is recorded against different instructions, so the prompt "
-    "changed and every recording made against the old one is now unreachable"
-)
+class RecordedUsage(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    model: str
+    input_tokens: int = Field(ge=0)
+    output_tokens: int = Field(ge=0)
+    latency_ms: int = Field(ge=0)
 
 
-SCHEMA_CHANGED = (
-    "the same utterance is recorded against the same instructions but another answer "
-    "schema, so the schema changed and the recording would replay an answer to the old one"
-)
+class Recording(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    tier: ModelTier
+    schema_name: str = Field(alias="schema")
+    instructions: str
+    utterance: str
+    value: dict[str, object]
+    usage: RecordedUsage
+
+    @classmethod
+    def read(cls, path: Path) -> Recording:
+        return cls.model_validate_json(path.read_text())
+
+    def written(self) -> str:
+        return json.dumps(self.model_dump(mode="json", by_alias=True), indent=2) + "\n"
 
 
 class RecordedModel(Model):
@@ -57,30 +83,27 @@ class RecordedModel(Model):
             raise NoRecordedResponseError(
                 key, self._directory, self._diagnose(prompt, schema, tier)
             )
-        recording = json.loads(path.read_text())
-        counted = Usage.answering(prompt, **recording["usage"])
+        recording = Recording.read(path)
+        counted = Usage.answering(prompt, **recording.usage.model_dump())
         if self._pinned is not None:
             pinned = (await self._pinned(tier)).model
             if counted.model != pinned:
                 raise UnrecordedModelError(key, tier, pinned=pinned, recorded=counted.model)
-        return Completion(
-            value=schema.model_validate(recording["value"]),
-            usage=counted,
-        )
+        return Completion(value=schema.model_validate(recording.value), usage=counted)
 
-    def _diagnose(self, prompt: Prompt, schema: type[BaseModel], tier: ModelTier) -> str | None:
+    def _diagnose(self, prompt: Prompt, schema: type[BaseModel], tier: ModelTier) -> Unreachable:
         for path in sorted(self._directory.glob("*.json")):
-            recorded = json.loads(path.read_text())
-            if not (
-                recorded.get("tier") == tier.value
-                and recorded.get("schema") == schema.__name__
-                and recorded.get("utterance") == prompt.utterance
+            recorded = Recording.read(path)
+            if (recorded.tier, recorded.schema_name, recorded.utterance) != (
+                tier,
+                schema.__name__,
+                prompt.utterance,
             ):
                 continue
-            if recorded.get("instructions") != prompt.instructions:
-                return PROMPT_CHANGED
-            return SCHEMA_CHANGED
-        return None
+            if recorded.instructions != prompt.instructions:
+                return Unreachable.prompt_changed
+            return Unreachable.schema_changed
+        return Unreachable.never_recorded
 
 
 class RecordingModel(Model):
@@ -101,17 +124,15 @@ class RecordingModel(Model):
             )
         completion = await self._live.complete(prompt, schema=schema, tier=tier)
         self._answered[key] = completion
-        recording = {
-            "tier": tier.value,
-            "schema": schema.__name__,
-            "instructions": prompt.instructions,
-            "utterance": prompt.utterance,
-            "value": completion.value.model_dump(mode="json"),
-            "usage": completion.usage.model_dump(
-                mode="json", exclude={"step", "prompt_version", "input_modality"}
-            ),
-        }
-        self._pending[key] = json.dumps(recording, indent=2) + "\n"
+        recording = Recording(
+            tier=tier,
+            schema=schema.__name__,
+            instructions=prompt.instructions,
+            utterance=prompt.utterance,
+            value=completion.value.model_dump(mode="json"),
+            usage=RecordedUsage.model_validate(completion.usage, from_attributes=True),
+        )
+        self._pending[key] = recording.written()
         return completion
 
     def commit(self) -> int:

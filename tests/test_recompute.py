@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 from farkad_ai.extraction.extractor import pillar_version
 from farkad_ai.extraction.recompute import INSTRUCTIONS, EntryRecomputer
-from farkad_ai.models.port import ModelTier, PipelineStep
+from farkad_ai.models.port import ModelTier, ModelUnavailableError, PipelineStep, Unavailability
 from tests.support import AnswersByStep, Tracked, a_usage
 
 pytestmark = pytest.mark.anyio
@@ -20,7 +20,7 @@ STATED = {"pillar": "food", "dish": "thé à la menthe"}
 
 
 async def test_the_model_is_told_only_what_the_user_stated() -> None:
-    model = AnswersByStep(recompute={"entries": []})
+    model = AnswersByStep(recompute={"entries": [STATED]})
 
     await EntryRecomputer(model).recompute(FOOD, STATED)
 
@@ -45,10 +45,11 @@ async def test_the_fields_that_follow_come_back_beside_the_stated_ones() -> None
     assert recomputation.usage == a_usage(PipelineStep.recompute)
 
 
-@pytest.mark.parametrize("entries", [[], [{"pillar": "food"}]])
-async def test_an_answer_that_states_nothing_fills_nothing(entries: list[object]) -> None:
+@pytest.mark.parametrize("entries", [[], [{"pillar": "food"}]], ids=["no entry", "only a label"])
+async def test_an_answer_that_states_nothing_is_refused(entries: list[object]) -> None:
     model = AnswersByStep(recompute={"entries": entries})
 
-    recomputation = await EntryRecomputer(model).recompute(FOOD, STATED)
+    with pytest.raises(ModelUnavailableError) as refused:
+        await EntryRecomputer(model).recompute(FOOD, STATED)
 
-    assert recomputation.values == {}
+    assert refused.value.because is Unavailability.output_did_not_parse
