@@ -22,8 +22,7 @@ uv pip install -e ".[dev]"
 ```
 
 With pip, the last two lines are `python3.13 -m venv .venv && source .venv/bin/activate` and
-`pip install -e ".[dev]"`. Add `google`, `anthropic` or `openai` to the extras to work on that
-adapter.
+`pip install -e ".[dev]"`. Add `google` to the extras to work on the Vertex adapter.
 
 ## The checks
 
@@ -33,8 +32,8 @@ ruff check . && ruff format --check . && mypy farkad_ai tests && pytest
 
 They run offline on scripted and recorded answers; no API key is needed. CI runs them twice:
 with `.[dev]` alone, where the core must import no provider SDK and the adapter tests are
-skipped, and with `.[dev,google,anthropic,openai]`, where the adapters are type-checked and
-tested against the real SDKs. CodeQL scans every pull request as well.
+skipped, and with `.[dev,google]`, where the adapter is type-checked and tested against the real
+SDK. CodeQL scans every pull request as well.
 
 ## The eval and its recordings
 
@@ -56,12 +55,13 @@ and the maintainer records them.
 
 ## Adding a model provider
 
-Subclass `ProviderModel[Client, Response]` (`farkad_ai/models/provider.py`) in a new module
-beside `farkad_ai/models/anthropic.py`: `_send` the prompt, return its structured `_answer`, count
-its `_usage`, declare the reasoning levels it honours and the model each tier defaults to, and
-build its client in `connected()`. Name it
-in `farkad_ai/models/factory.py`, and give its SDK an extra and a mypy override in
-`pyproject.toml` and a place in CI's matrix; no other module imports it.
+Implement the `Model` port (`farkad_ai/models/port.py`) in a new module beside
+`farkad_ai/models/vertex.py`, which is the pattern: send the prompt with its schema as a
+structured answer, accept audio and images or refuse them with `provider_refused`, honour every
+`Reasoning` level, turn the SDK's refusal into `provider_refused`, an answer that fails the schema
+into `output_did_not_parse` and missing token counts into `usage_not_reported`, and build its
+client in `connected()`. Name it in `farkad_ai/models/factory.py`, and give its SDK an extra and a
+mypy override in `pyproject.toml` and a place in CI's matrix; no other module imports it.
 
 ## Tests and names
 

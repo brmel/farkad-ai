@@ -61,12 +61,6 @@ def test_route_without_a_sentence_asks_for_one_before_any_model_is_called(
 
 
 CREDENTIAL_VARIABLES = (
-    "OPENAI_API_KEY",
-    "OPENAI_ADMIN_KEY",
-    "ANTHROPIC_API_KEY",
-    "ANTHROPIC_AUTH_TOKEN",
-    "ANTHROPIC_PROFILE",
-    "ANTHROPIC_FEDERATION_RULE_ID",
     "GOOGLE_APPLICATION_CREDENTIALS",
     "GOOGLE_CLOUD_PROJECT",
     "GOOGLE_API_KEY",
@@ -74,33 +68,22 @@ CREDENTIAL_VARIABLES = (
 )
 
 
-@pytest.mark.parametrize(
-    ("provider", "sdk", "setting"),
-    [
-        ("openai", "openai", "OPENAI_API_KEY"),
-        ("anthropic", "anthropic", "ANTHROPIC_API_KEY"),
-        ("vertex", "google.genai", "GOOGLE_CLOUD_PROJECT"),
-    ],
-)
-def test_a_provider_without_credentials_names_what_to_set_in_one_line(
-    provider: str,
-    sdk: str,
-    setting: str,
+def test_vertex_without_credentials_names_what_to_set_in_one_line(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    pytest.importorskip(sdk)
+    pytest.importorskip("google.genai")
     for variable in CREDENTIAL_VARIABLES:
         monkeypatch.delenv(variable, raising=False)
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setenv("CLOUDSDK_CONFIG", str(tmp_path))
     monkeypatch.setenv("NO_GCE_CHECK", "True")
 
-    assert main(["eval", "--provider", provider]) == 1
+    assert main(["eval", "--provider", "vertex"]) == 1
     # google-genai's client finaliser schedules aclose() on whichever event loop is running when
     # it is collected, and fails there when construction failed (google/genai/_api_client.py).
     gc.collect()
     error = capsys.readouterr().err
-    assert setting in error
+    assert "GOOGLE_CLOUD_PROJECT" in error
     assert error.count("\n") == 1

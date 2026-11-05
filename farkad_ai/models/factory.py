@@ -7,10 +7,13 @@ from farkad_ai.models.port import Model
 from farkad_ai.models.recorded import RecordedModel
 
 
+class MissingCredentialsError(Exception):
+    def __init__(self, provider: str, remedy: str) -> None:
+        super().__init__(f"the {provider} provider needs {remedy}")
+
+
 class ProviderName(StrEnum):
     vertex = "vertex"
-    openai = "openai"
-    anthropic = "anthropic"
     recorded = "recorded"
 
 
@@ -20,13 +23,5 @@ def create_model(provider: ProviderName, *, fixtures_dir: Path) -> Model:
             from farkad_ai.models.vertex import VertexModel
 
             return VertexModel.connected()
-        case ProviderName.openai:
-            from farkad_ai.models.openai import OpenAIModel
-
-            return OpenAIModel.connected()
-        case ProviderName.anthropic:
-            from farkad_ai.models.anthropic import AnthropicModel
-
-            return AnthropicModel.connected()
         case ProviderName.recorded:
             return RecordedModel(fixtures_dir)

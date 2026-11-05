@@ -104,7 +104,6 @@ class Completion[T: BaseModel]:
 
 class Unavailability(StrEnum):
     provider_refused = "provider_refused"
-    unsupported_request = "unsupported_request"
     output_did_not_parse = "output_did_not_parse"
     usage_not_reported = "usage_not_reported"
 

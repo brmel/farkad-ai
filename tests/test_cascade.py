@@ -60,7 +60,6 @@ async def test_an_answer_that_did_not_parse_escalates_to_standard() -> None:
 async def test_a_refusal_neither_tier_can_answer_is_never_paid_for_twice() -> None:
     for because in (
         Unavailability.provider_refused,
-        Unavailability.unsupported_request,
         Unavailability.usage_not_reported,
     ):
         script = TierScript(fast=because, standard="standard")

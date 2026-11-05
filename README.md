@@ -48,11 +48,11 @@ recorded on `gemini-3.5-flash-lite` on 2026-10-25:
 | ✅ | [Few-shot examples](https://arxiv.org/abs/2005.14165) | Worked examples per topic, in the user's own units |
 | ✅ | Long-term memory | Facts the user states, such as "I'm vegan", are given back to every capture as data, never as instructions |
 | ✅ | Evaluation with a gold set | Accuracy and tokens per language, above |
-| ✅ | Several model providers | Gemini, Claude and GPT behind one interface |
 | | [RAG](https://arxiv.org/abs/2005.11401) | A user's memory fits in the prompt |
 | | Fine-tuning | Prompts and the gold set iterate faster |
 | | [Agents and tool calling](https://www.anthropic.com/research/building-effective-agents) | A fixed two-step pipeline is cheaper and reproducible |
 | | [Context caching](https://ai.google.dev/gemini-api/docs/caching) | The saving does not pay for managing a cache |
+| | Several model providers | Gemini on Vertex AI hears voice and reasons on a budget; another provider is one module behind the `Model` port |
 
 ## Try it
 
@@ -64,8 +64,8 @@ farkad-ai eval
 farkad-ai route --text "I drank 500 ml of water"
 ```
 
-Your own sentences need a live model: install the `google`, `anthropic` or `openai` extra and
-pass `--provider vertex`, `anthropic` or `openai`. A missing credential is named in one line.
+Your own sentences need a live model: install the `google` extra and pass `--provider vertex`.
+A missing credential is named in one line.
 
 ```bash
 pip install "farkad-ai[google] @ git+https://github.com/brmel/farkad-ai"
@@ -80,7 +80,7 @@ In Python, import each name from the module that defines it:
 - **A topic** is a `PillarSpec` for routing and a `TrackedPillar` for extraction. Copy one of the
   seven in `farkad_ai/eval/pillars.py`, add sentences to `farkad_ai/eval/example_gold.json`, and
   the eval scores it.
-- **A model provider** is one module beside `farkad_ai/models/anthropic.py`;
+- **A model provider** is one module beside `farkad_ai/models/vertex.py`;
   [Contributing](CONTRIBUTING.md#adding-a-model-provider) lists what it implements.
 - **A prompt** is a text file in `farkad_ai/prompts/assets/`; `farkad-ai prompts` lists them.
 
