@@ -5,8 +5,20 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-11-05
+
+### Added
+
+- `CaptureScore.word_errors` and `RunScore.word_error_rate` score the transcript the engine heard
+  against the case's utterance, ignoring case, punctuation and combining marks such as Arabic
+  vowels, so a spoken gold set measures hearing beside routing and fields.
+- `GoldCase.request(tracked)` builds the case's `CaptureRequest`; a consumer's case overrides it
+  to ask with a clip instead of text.
+
 ### Changed
 
+- **Breaking:** `score_capture` takes `heard`, the transcript the engine returned, and
+  `CaptureScore` carries it.
 - **Breaking:** `ProviderModel` takes its client type as a parameter, `ProviderModel[Client,
   Response]`, holds the client, and declares each tier's default model as `default_choices`. A
   provider no longer writes a constructor; the module-level `DEFAULT_CHOICES` are gone.
@@ -231,7 +243,8 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 - Gemini on Vertex AI, Claude and OpenAI behind one interface; long-term memory; an offline eval
   on recorded answers; the `farkad-ai` command.
 
-[Unreleased]: https://github.com/brmel/farkad-ai/compare/v0.22.0...HEAD
+[Unreleased]: https://github.com/brmel/farkad-ai/compare/v0.23.0...HEAD
+[0.23.0]: https://github.com/brmel/farkad-ai/compare/v0.22.0...v0.23.0
 [0.22.0]: https://github.com/brmel/farkad-ai/compare/v0.21.0...v0.22.0
 [0.21.0]: https://github.com/brmel/farkad-ai/compare/v0.20.0...v0.21.0
 [0.20.0]: https://github.com/brmel/farkad-ai/compare/v0.19.0...v0.20.0
