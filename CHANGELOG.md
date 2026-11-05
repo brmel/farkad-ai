@@ -5,6 +5,18 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-11-05
+
+### Removed
+
+- **Breaking:** the OpenAI and Anthropic adapters, and the `openai` and `anthropic` extras. Neither
+  heard audio nor reasoned on a budget, so the README's voice and cascade rows held for Gemini
+  alone; Gemini on Vertex AI is the one provider.
+- **Breaking:** `ProviderModel` and `farkad_ai.models.provider`: `VertexModel` implements `Model`
+  itself. `MissingCredentialsError` lives in `farkad_ai.models.factory`, and `PLACEHOLDER_INPUT`
+  in `farkad_ai.models.vertex`.
+- **Breaking:** `Unavailability.unsupported_request`, which only those adapters raised.
+
 ## [0.23.0] - 2026-11-05
 
 ### Added
@@ -27,6 +39,10 @@ format. Before 1.0 a minor version may break the interface; each break is marked
   provider implements `_tokens` instead of `_usage`, and `vertex.usage_of` is gone.
 
 ## [0.22.0] - 2026-10-25
+
+### Added
+
+- `farkad-ai prompts` lists every prompt the engine ships, with its version.
 
 ### Removed
 
@@ -243,7 +259,8 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 - Gemini on Vertex AI, Claude and OpenAI behind one interface; long-term memory; an offline eval
   on recorded answers; the `farkad-ai` command.
 
-[Unreleased]: https://github.com/brmel/farkad-ai/compare/v0.23.0...HEAD
+[Unreleased]: https://github.com/brmel/farkad-ai/compare/v0.24.0...HEAD
+[0.24.0]: https://github.com/brmel/farkad-ai/compare/v0.23.0...v0.24.0
 [0.23.0]: https://github.com/brmel/farkad-ai/compare/v0.22.0...v0.23.0
 [0.22.0]: https://github.com/brmel/farkad-ai/compare/v0.21.0...v0.22.0
 [0.21.0]: https://github.com/brmel/farkad-ai/compare/v0.20.0...v0.21.0

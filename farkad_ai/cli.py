@@ -7,9 +7,8 @@ import sys
 
 from farkad_ai.eval.example import RECORDINGS, evaluate_examples, report
 from farkad_ai.eval.pillars import EXAMPLE_PILLARS
-from farkad_ai.models.factory import ProviderName, create_model
+from farkad_ai.models.factory import MissingCredentialsError, ProviderName, create_model
 from farkad_ai.models.port import Model
-from farkad_ai.models.provider import MissingCredentialsError
 from farkad_ai.models.recorded import NoRecordedResponseError, RecordingModel
 from farkad_ai.prompts import list_prompts
 from farkad_ai.routing.port import NothingToLog, Routed
@@ -66,8 +65,7 @@ def print_routing(model: Model, text: str) -> int:
         outcome = asyncio.run(Router(model, EXAMPLE_PILLARS).route(CLI_PILLARS, text=text))
     except NoRecordedResponseError:
         sys.stderr.write(
-            "Only the gold set's sentences are recorded: route another with "
-            "--provider vertex, openai or anthropic\n"
+            "Only the gold set's sentences are recorded: route another with --provider vertex\n"
         )
         return 1
     match outcome:

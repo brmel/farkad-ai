@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "farkad-ai"
-version = "0.23.0"
+version = "0.24.0"
 description = "Turns a sentence, a recording or a photo about your day into structured health entries"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -38,12 +38,6 @@ dependencies = [
 [project.optional-dependencies]
 google = [
     "google-genai>=2.14.0",
-]
-anthropic = [
-    "anthropic>=0.98.0",
-]
-openai = [
-    "openai>=1.50.0",
 ]
 dev = [
     "anyio==4.15.1",
@@ -86,5 +80,5 @@ strict = true
 packages = ["farkad_ai"]
 
 [[tool.mypy.overrides]]
-module = ["google.*", "anthropic.*", "openai.*", "httpx.*"]
+module = ["google.*", "httpx.*"]
 ignore_missing_imports = true
