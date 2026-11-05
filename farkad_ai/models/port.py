@@ -57,7 +57,7 @@ class MediaBlob:
 class Usage(BaseModel):
     model_config = ConfigDict(extra="ignore", frozen=True)
 
-    step: str
+    step: StrEnum
     model: str
     prompt_version: str
     input_modality: InputModality

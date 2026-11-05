@@ -111,5 +111,13 @@ async def test_the_example_eval_reports_tokens_for_a_model_of_any_provider() -> 
 
     table = report(await evaluate_examples(model))
 
-    assert "| all | 15 | 7% | 0% | 10 / 5 | 10 / 5 |" in table
+    assert "| all | 15 | 7% | 0% | 100% | 10 / 5 | 10 / 5 |" in table
     assert "Model: gemini-2.5-flash-lite" in table
+
+
+async def test_the_example_report_counts_the_answers_that_did_not_parse_per_model() -> None:
+    model = AnswersByStep(routing=Unavailability.output_did_not_parse)
+
+    table = report(await evaluate_examples(model))
+
+    assert "Unparsed: model-fast x15" in table

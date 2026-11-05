@@ -61,7 +61,6 @@ class VertexModel(Model):
         project: str | None = None,
         location: str | None = None,
         retries: Retries | None = None,
-        choices: TierChoices | None = None,
     ) -> VertexModel:
         try:
             client = genai.Client(
@@ -71,7 +70,10 @@ class VertexModel(Model):
             raise MissingCredentialsError(
                 "vertex", "GOOGLE_CLOUD_PROJECT set and `gcloud auth application-default login`"
             ) from error
-        return cls(client, choices=choices)
+        return cls(client)
+
+    def choosing(self, choices: TierChoices) -> VertexModel:
+        return VertexModel(self._client, choices=choices)
 
     async def complete[T: BaseModel](
         self, prompt: Prompt, *, schema: type[T], tier: ModelTier

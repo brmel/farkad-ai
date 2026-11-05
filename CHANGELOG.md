@@ -5,6 +5,29 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-11-05
+
+### Added
+
+- `VertexModel.choosing(choices)`: the same retrying client, asked with other tier choices, so a
+  consumer builds one client with `connected(retries=)` and never a second retrying client.
+- The example report shows how often the validators agreed with the gold set, each disagreement as
+  a miss, and how many answers each model sent that did not parse.
+
+### Changed
+
+- **Breaking:** a recording is read and written as a typed `Recording`; a file with a missing or
+  unknown field no longer replays.
+- **Breaking:** `NoRecordedResponseError.because` is an `Unreachable`, never `None` or a string;
+  its members replace `PROMPT_CHANGED` and `SCHEMA_CHANGED`.
+- **Breaking:** `Usage.step` is the `StrEnum` the prompt was labelled with, not a string.
+- **Breaking:** `EntryRecomputer` raises `ModelUnavailableError(output_did_not_parse)` when the
+  model recomputes no entry, instead of returning no values beside a paid `Usage`.
+
+### Removed
+
+- **Breaking:** `VertexModel.connected(choices=)`: call `choosing` on the connected model.
+
 ## [0.24.0] - 2026-11-05
 
 ### Removed
@@ -259,7 +282,8 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 - Gemini on Vertex AI, Claude and OpenAI behind one interface; long-term memory; an offline eval
   on recorded answers; the `farkad-ai` command.
 
-[Unreleased]: https://github.com/brmel/farkad-ai/compare/v0.24.0...HEAD
+[Unreleased]: https://github.com/brmel/farkad-ai/compare/v0.25.0...HEAD
+[0.25.0]: https://github.com/brmel/farkad-ai/compare/v0.24.0...v0.25.0
 [0.24.0]: https://github.com/brmel/farkad-ai/compare/v0.23.0...v0.24.0
 [0.23.0]: https://github.com/brmel/farkad-ai/compare/v0.22.0...v0.23.0
 [0.22.0]: https://github.com/brmel/farkad-ai/compare/v0.21.0...v0.22.0
