@@ -22,6 +22,9 @@ class GoldCase(BaseModel):
     expected: dict[str, tuple[dict[str, object], ...]] = Field(default_factory=dict)
     flags: tuple[str, ...] = ()
 
+    def request(self, tracked: tuple[TrackedPillar, ...]) -> CaptureRequest:
+        return CaptureRequest(tracked=tracked, text=self.utterance)
+
 
 @dataclass(frozen=True, slots=True)
 class Scored[Case: GoldCase]:
@@ -52,17 +55,18 @@ async def _scored(
         expected_flags=case.flags,
     )
     try:
-        outcome = await engine.capture(CaptureRequest(tracked=tracked, text=case.utterance))
+        outcome = await engine.capture(case.request(tracked))
     except ModelUnavailableError as unavailable:
         if unavailable.because is not Unavailability.output_did_not_parse:
             raise
-        return scored(routed=(), extracted={}, unparsed_response_from=unavailable.model)
+        return scored(heard="", routed=(), extracted={}, unparsed_response_from=unavailable.model)
     match outcome:
         case Logged(routes=routes, extracted=extracted):
             pass
         case NothingToLog():
             routes, extracted = frozenset(), ()
     return scored(
+        heard=outcome.transcript,
         routed=sorted(routes),
         extracted={each.pillar: [entry.values for entry in each.entries] for each in extracted},
         usages=outcome.usages,

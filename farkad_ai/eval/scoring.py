@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+import unicodedata
 from collections import Counter
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
@@ -30,6 +31,7 @@ class FieldScore:
 @dataclass(frozen=True, slots=True)
 class CaptureScore:
     utterance: str
+    heard: str
     expected_routes: frozenset[str]
     routed: frozenset[str]
     fields: tuple[FieldScore, ...]
@@ -58,6 +60,39 @@ class CaptureScore:
     def validators_agree(self) -> bool:
         return self.flagged == self.expected_flags
 
+    @property
+    def reference_words(self) -> int:
+        return len(_words(self.utterance))
+
+    @property
+    def word_errors(self) -> int:
+        return _edit_distance(_words(self.utterance), _words(self.heard))
+
+
+def _words(said: str) -> list[str]:
+    kept = (
+        " " if unicodedata.category(c)[0] in "PSZ" else c
+        for c in unicodedata.normalize("NFKC", said).casefold()
+        if unicodedata.category(c) != "Mn"
+    )
+    return "".join(kept).split()
+
+
+def _edit_distance(reference: list[str], heard: list[str]) -> int:
+    previous = list(range(len(heard) + 1))
+    for row, wanted in enumerate(reference, start=1):
+        current = [row]
+        for column, found in enumerate(heard, start=1):
+            current.append(
+                min(
+                    previous[column] + 1,
+                    current[column - 1] + 1,
+                    previous[column - 1] + (wanted != found),
+                )
+            )
+        previous = current
+    return previous[-1]
+
 
 def matches(expected: object, found: object) -> bool:
     match expected:
@@ -83,6 +118,7 @@ def _magnitude(found: object) -> float | None:
 def score_capture(
     *,
     utterance: str,
+    heard: str,
     expected_routes: Sequence[str],
     expected: Mapping[str, Sequence[Mapping[str, object]]],
     routed: Sequence[str],
@@ -103,6 +139,7 @@ def score_capture(
             ]
     return CaptureScore(
         utterance=utterance,
+        heard=heard,
         expected_routes=frozenset(expected_routes),
         routed=frozenset(routed),
         fields=tuple(fields),
@@ -127,6 +164,13 @@ class RunScore:
     def field_accuracy(self) -> float:
         scored = [score for capture in self.captures for score in capture.fields]
         return _share(sum(1 for score in scored if score.is_match), len(scored))
+
+    @property
+    def word_error_rate(self) -> float:
+        return _share(
+            sum(capture.word_errors for capture in self.captures),
+            sum(capture.reference_words for capture in self.captures),
+        )
 
     @property
     def validator_agreement(self) -> float:

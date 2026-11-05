@@ -2,8 +2,9 @@ import pytest
 
 from farkad_ai.eval.example import evaluate_examples, report
 from farkad_ai.eval.run import GoldCase, evaluate
-from farkad_ai.extraction.port import Finding
-from farkad_ai.models.port import ModelUnavailableError, Unavailability
+from farkad_ai.extraction.port import Finding, TrackedPillar
+from farkad_ai.models.port import MediaBlob, MediaType, ModelUnavailableError, Unavailability
+from farkad_ai.pipeline.port import CaptureRequest
 from farkad_ai.routing.pass_one import Mention, PassOne
 from tests.support import AnswersByStep, Spec, Tracked
 
@@ -42,6 +43,25 @@ async def test_a_case_is_scored_with_its_findings_and_returned_as_the_consumers_
     assert scored.score.routing_is_exact and not scored.score.wrong_fields
     assert scored.score.validators_agree
     assert len(scored.score.usages) == 2
+
+
+class SpokenCase(GoldCase):
+    def request(self, tracked: tuple[TrackedPillar, ...]) -> CaptureRequest:
+        return CaptureRequest(tracked=tracked, media=(MediaBlob(MediaType.audio_aac, b"clip"),))
+
+
+async def test_a_case_that_asks_with_a_clip_is_scored_on_the_words_heard_from_it() -> None:
+    model = AnswersByStep(
+        routing=A_GLASS.model_copy(update={"transcript": "a gas"}), extraction={"entries": []}
+    )
+
+    (scored,) = await evaluate(
+        model, CATALOGUE, (Tracked("water"),), [SpokenCase(utterance="a glass", routes=("water",))]
+    )
+
+    (routing, _tier), _extraction = model.asked
+    assert routing.media == (MediaBlob(MediaType.audio_aac, b"clip"),)
+    assert (scored.score.heard, scored.score.word_errors) == ("a gas", 1)
 
 
 async def test_the_consumers_routing_rules_reach_the_routing_call() -> None:

@@ -1,6 +1,6 @@
 import pytest
 
-from farkad_ai.eval.scoring import RunScore, matches, score_capture
+from farkad_ai.eval.scoring import CaptureScore, RunScore, matches, score_capture
 from farkad_ai.models.port import PipelineStep
 from tests.support import a_usage
 
@@ -17,6 +17,7 @@ def test_each_wrong_field_counts_against_field_accuracy(
 ) -> None:
     score = score_capture(
         utterance="Ate a fruit",
+        heard="Ate a fruit",
         expected_routes=["nutrition"],
         expected={"nutrition": [{"name": "Apple", "calories": 95}]},
         routed=["nutrition"],
@@ -48,6 +49,7 @@ def test_a_run_reports_the_mean_and_p95_of_the_tokens_its_captures_spent() -> No
     captures = tuple(
         score_capture(
             utterance=f"capture {calls}",
+            heard=f"capture {calls}",
             expected_routes=[],
             expected={},
             routed=[],
@@ -61,3 +63,23 @@ def test_a_run_reports_the_mean_and_p95_of_the_tokens_its_captures_spent() -> No
     assert (captures[1].input_tokens, captures[1].output_tokens) == (20, 10)
     assert run.mean(lambda capture: capture.input_tokens) == 105
     assert run.p95(lambda capture: capture.output_tokens) == 95
+
+
+def test_word_errors_are_counted_against_the_words_said_not_their_marks_or_case() -> None:
+    def heard(said: str, transcribed: str) -> CaptureScore:
+        return score_capture(
+            utterance=said,
+            heard=transcribed,
+            expected_routes=[],
+            expected={},
+            routed=[],
+            extracted={},
+        )
+
+    exact = heard("J'ai bu un litre d'eau.", "j'ai bu un litre d'eau")
+    vowelled = heard("شربت كأس ماء", "شَرِبْتُ كأسَ ماءٍ")
+    one_wrong_one_missing = heard("I slept seven hours", "I slapped hours")
+    run = RunScore((exact, vowelled, one_wrong_one_missing))
+
+    assert (exact.word_errors, vowelled.word_errors, one_wrong_one_missing.word_errors) == (0, 0, 2)
+    assert run.word_error_rate == 2 / 14
