@@ -5,6 +5,13 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 
 ## [Unreleased]
 
+## [0.26.0] - 2026-11-05
+
+### Fixed
+
+- **Breaking:** `Usage.step` is a string again. A `Usage` is stored, and the engine cannot know
+  the consumer's `StrEnum` it was labelled with, so 0.25.0's stored usages did not parse back.
+
 ## [0.25.0] - 2026-11-05
 
 ### Added
@@ -282,7 +289,8 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 - Gemini on Vertex AI, Claude and OpenAI behind one interface; long-term memory; an offline eval
   on recorded answers; the `farkad-ai` command.
 
-[Unreleased]: https://github.com/brmel/farkad-ai/compare/v0.25.0...HEAD
+[Unreleased]: https://github.com/brmel/farkad-ai/compare/v0.26.0...HEAD
+[0.26.0]: https://github.com/brmel/farkad-ai/compare/v0.25.0...v0.26.0
 [0.25.0]: https://github.com/brmel/farkad-ai/compare/v0.24.0...v0.25.0
 [0.24.0]: https://github.com/brmel/farkad-ai/compare/v0.23.0...v0.24.0
 [0.23.0]: https://github.com/brmel/farkad-ai/compare/v0.22.0...v0.23.0
