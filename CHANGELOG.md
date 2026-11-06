@@ -5,6 +5,11 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 
 ## [Unreleased]
 
+### Fixed
+
+- The `google` extra stays on `google-genai` 2: version 3 moves its transport to `httpx2`, and
+  `VertexModel` has not been checked against that client yet.
+
 ## [0.26.0] - 2026-11-05
 
 ### Fixed
