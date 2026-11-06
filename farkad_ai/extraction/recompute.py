@@ -4,17 +4,13 @@ import json
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from pydantic import BaseModel
-
-from farkad_ai.extraction.extractor import answer_schema, entries_answered, fill, pillar_version
+from farkad_ai.extraction.extractor import ask_for_entries
 from farkad_ai.extraction.port import TrackedPillar
 from farkad_ai.models.port import (
-    Completion,
     Model,
     ModelTier,
     ModelUnavailableError,
     PipelineStep,
-    Prompt,
     Unavailability,
     Usage,
 )
@@ -34,25 +30,19 @@ class EntryRecomputer:
         self._model = model
 
     async def recompute(self, pillar: TrackedPillar, stated: Mapping[str, object]) -> Recomputation:
-        completion: Completion[BaseModel] = await self._model.complete(
-            Prompt(
-                step=PipelineStep.recompute,
-                instructions=fill(
-                    INSTRUCTIONS,
-                    pillar,
-                    stated=json.dumps(dict(stated), ensure_ascii=False, sort_keys=True),
-                ),
-                instructions_version=pillar_version(INSTRUCTIONS, pillar),
-            ),
-            schema=answer_schema(pillar.entry_schema),
+        entries, usage = await ask_for_entries(
+            self._model,
+            INSTRUCTIONS,
+            pillar,
+            step=PipelineStep.recompute,
             tier=ModelTier.standard,
+            stated=json.dumps(dict(stated), ensure_ascii=False, sort_keys=True),
         )
-        entries = entries_answered(completion, pillar)
         if not entries:
             raise ModelUnavailableError(
                 ModelTier.standard,
-                completion.usage.model,
+                usage.model,
                 Unavailability.output_did_not_parse,
                 f"no {pillar.pillar} entry recomputed",
             )
-        return Recomputation(values=entries[0], usage=completion.usage)
+        return Recomputation(values=entries[0], usage=usage)

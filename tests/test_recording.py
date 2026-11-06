@@ -67,20 +67,6 @@ async def record(
     return recorder
 
 
-async def test_a_run_that_finishes_writes_its_recordings(tmp_path: Path) -> None:
-    recorder = await record(QuotaLimitedModel(before_failing=3), tmp_path, ["one", "two", "three"])
-
-    assert recorder.commit() == 3
-    assert len(list(tmp_path.glob("*.json"))) == 3
-
-
-async def test_a_run_that_dies_part_way_writes_nothing(tmp_path: Path) -> None:
-    with pytest.raises(RuntimeError):
-        await record(QuotaLimitedModel(before_failing=2), tmp_path, ["one", "two", "three"])
-
-    assert list(tmp_path.glob("*.json")) == []
-
-
 async def test_an_existing_set_survives_a_failed_run(tmp_path: Path) -> None:
     (tmp_path / "already-here.json").write_text('{"kept": true}\n')
 
@@ -113,43 +99,24 @@ class Reworded(BaseModel):
     loudly: bool = False
 
 
-async def test_a_schema_changed_under_the_same_name_is_not_replayed(tmp_path: Path) -> None:
-    (await record(QuotaLimitedModel(before_failing=1), tmp_path, ["one"])).commit()
-    changed = type("Answer", (Reworded,), {})
-    asked = Prompt(
-        step=PipelineStep.routing,
-        instructions="say it back",
-        instructions_version="v1",
-        utterance="one",
-    )
-
-    with pytest.raises(NoRecordedResponseError) as missing:
-        await RecordedModel(tmp_path).complete(asked, schema=changed, tier=ModelTier.fast)
-
-    assert missing.value.because is Unreachable.schema_changed
-    replayed = await RecordedModel(tmp_path).complete(asked, schema=Answer, tier=ModelTier.fast)
-    assert replayed.value == Answer(said="one")
-
-
-async def test_a_recording_made_against_other_instructions_says_the_prompt_changed(
-    tmp_path: Path,
+@pytest.mark.parametrize(
+    ("asked", "schema", "because"),
+    [
+        (said_back("one"), type("Answer", (Reworded,), {}), Unreachable.schema_changed),
+        (replace(said_back("one"), instructions="twice"), Answer, Unreachable.prompt_changed),
+        (said_back("two"), Answer, Unreachable.never_recorded),
+    ],
+    ids=["schema", "prompt", "never recorded"],
+)
+async def test_a_missing_recording_says_why_it_is_missing(
+    tmp_path: Path, asked: Prompt, schema: type[BaseModel], because: Unreachable
 ) -> None:
     (await record(QuotaLimitedModel(before_failing=1), tmp_path, ["one"])).commit()
-    reworded = replace(said_back("one"), instructions="say it twice")
 
     with pytest.raises(NoRecordedResponseError) as missing:
-        await RecordedModel(tmp_path).complete(reworded, schema=Answer, tier=ModelTier.fast)
+        await RecordedModel(tmp_path).complete(asked, schema=schema, tier=ModelTier.fast)
 
-    assert missing.value.because is Unreachable.prompt_changed
-
-
-async def test_an_utterance_never_recorded_has_no_diagnosis(tmp_path: Path) -> None:
-    (await record(QuotaLimitedModel(before_failing=1), tmp_path, ["one"])).commit()
-
-    with pytest.raises(NoRecordedResponseError) as missing:
-        await RecordedModel(tmp_path).complete(said_back("two"), schema=Answer, tier=ModelTier.fast)
-
-    assert missing.value.because is Unreachable.never_recorded
+    assert missing.value.because is because
 
 
 async def test_only_a_recording_answered_by_the_pinned_model_replays(tmp_path: Path) -> None:

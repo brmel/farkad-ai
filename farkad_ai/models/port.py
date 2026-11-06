@@ -108,6 +108,11 @@ class Unavailability(StrEnum):
     usage_not_reported = "usage_not_reported"
 
 
+class MissingCredentialsError(Exception):
+    def __init__(self, provider: str, remedy: str) -> None:
+        super().__init__(f"the {provider} provider needs {remedy}")
+
+
 class ModelUnavailableError(Exception):
     """Carries no prompt and no transcript, which a log would then hold."""
 

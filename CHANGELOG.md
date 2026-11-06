@@ -5,6 +5,21 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-11-06
+
+### Changed
+
+- **Breaking**: `PillarExtractor.extract` now starts on the fast tier and escalates;
+  `extract_escalating` and its `tier` argument are gone.
+
+### Removed
+
+- **Breaking**: `farkad_ai.models.factory`: `MissingCredentialsError` moved to
+  `farkad_ai.models.port`, and the rest to the CLI, its only caller.
+- **Breaking**: `farkad_ai.pipeline.photo`: use `prompt("photo").format(language=...)`.
+- **Breaking**: `pillar_version` and `entries_answered`, now inside `ask_for_entries`.
+- **Breaking**: the `farkad-ai prompts` command.
+
 ### Fixed
 
 - The `google` extra stays on `google-genai` 2: version 3 moves its transport to `httpx2`, and
@@ -294,7 +309,8 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 - Gemini on Vertex AI, Claude and OpenAI behind one interface; long-term memory; an offline eval
   on recorded answers; the `farkad-ai` command.
 
-[Unreleased]: https://github.com/brmel/farkad-ai/compare/v0.26.0...HEAD
+[Unreleased]: https://github.com/brmel/farkad-ai/compare/v0.27.0...HEAD
+[0.27.0]: https://github.com/brmel/farkad-ai/compare/v0.26.0...v0.27.0
 [0.26.0]: https://github.com/brmel/farkad-ai/compare/v0.25.0...v0.26.0
 [0.25.0]: https://github.com/brmel/farkad-ai/compare/v0.24.0...v0.25.0
 [0.24.0]: https://github.com/brmel/farkad-ai/compare/v0.23.0...v0.24.0

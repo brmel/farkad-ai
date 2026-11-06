@@ -12,9 +12,9 @@ from google.genai import types
 from google.genai.errors import APIError
 from pydantic import BaseModel, ValidationError
 
-from farkad_ai.models.factory import MissingCredentialsError
 from farkad_ai.models.port import (
     Completion,
+    MissingCredentialsError,
     Model,
     ModelChoice,
     ModelTier,

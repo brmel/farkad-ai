@@ -4,25 +4,37 @@ import argparse
 import asyncio
 import json
 import sys
+from enum import StrEnum
 
 from farkad_ai.eval.example import RECORDINGS, evaluate_examples, report
 from farkad_ai.eval.pillars import EXAMPLE_PILLARS
-from farkad_ai.models.factory import MissingCredentialsError, ProviderName, create_model
-from farkad_ai.models.port import Model
-from farkad_ai.models.recorded import NoRecordedResponseError, RecordingModel
-from farkad_ai.prompts import list_prompts
+from farkad_ai.models.port import MissingCredentialsError, Model
+from farkad_ai.models.recorded import NoRecordedResponseError, RecordedModel, RecordingModel
 from farkad_ai.routing.port import NothingToLog, Routed
 from farkad_ai.routing.router import Router
 
 CLI_PILLARS = frozenset(pillar.pillar for pillar in EXAMPLE_PILLARS)
 
 
+class ProviderName(StrEnum):
+    vertex = "vertex"
+    recorded = "recorded"
+
+
+def _model_of(provider: ProviderName) -> Model:
+    match provider:
+        case ProviderName.vertex:
+            from farkad_ai.models.vertex import VertexModel
+
+            return VertexModel.connected()
+        case ProviderName.recorded:
+            return RecordedModel(RECORDINGS)
+
+
 def main(argv: list[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
-    if args.command == "prompts":
-        return _print_prompts()
     try:
-        model = create_model(args.provider, fixtures_dir=RECORDINGS)
+        model = _model_of(args.provider)
     except (MissingCredentialsError, ImportError) as error:
         sys.stderr.write(f"Error initializing model: {error}\n")
         return 1
@@ -46,8 +58,6 @@ def _build_parser() -> argparse.ArgumentParser:
     scored.add_argument(
         "--record", action="store_true", help="Replace the committed answers with this run's"
     )
-
-    commands.add_parser("prompts", help="List active prompt assets and versions")
     return parser
 
 
@@ -95,10 +105,4 @@ def _print_eval(model: Model, *, record: bool) -> int:
     recorder = RecordingModel(model, RECORDINGS)
     run = asyncio.run(evaluate_examples(recorder))
     sys.stdout.write(f"{report(run)}Recorded {recorder.commit()} answers\n")
-    return 0
-
-
-def _print_prompts() -> int:
-    for asset in list_prompts():
-        sys.stdout.write(f"{asset.name:<15} (version: {asset.version}) [{len(asset.text)} chars]\n")
     return 0
