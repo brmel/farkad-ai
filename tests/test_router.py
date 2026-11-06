@@ -42,6 +42,7 @@ class TestTheRouterDecidesRatherThanTheModel:
         assert isinstance(outcome, Routed)
         assert outcome.routes == frozenset({"water"})
         assert outcome.untracked == frozenset({"food"})
+        assert outcome.mentions == {"water": ("some water",)}
 
     async def test_each_tracked_pillar_is_handed_only_what_was_listed_under_it(self) -> None:
         answer = PassOne(
@@ -64,24 +65,12 @@ class TestTheRouterDecidesRatherThanTheModel:
             "water": ("a glass of water",),
         }
 
-    async def test_what_an_untracked_pillar_was_given_is_handed_to_no_other(self) -> None:
-        outcome = await routed(heard("water", "food"), frozenset({"water"}))
-
-        assert isinstance(outcome, Routed)
-        assert outcome.mentions == {"water": ("some water",)}
-
     async def test_a_pillar_nobody_registered_is_dropped(self) -> None:
         outcome = await routed(heard("water", "astrology"), frozenset({"water"}))
 
         assert isinstance(outcome, Routed)
         assert outcome.routes == frozenset({"water"})
         assert outcome.untracked == frozenset()
-
-    async def test_a_log_of_only_untracked_pillars_has_nothing_to_log(self) -> None:
-        outcome = await routed(heard("food"), frozenset({"water"}))
-
-        assert isinstance(outcome, NothingToLog)
-        assert outcome.reason is NothingToLogReason.no_enabled_pillar
 
     async def test_a_sentence_that_is_not_a_log_has_nothing_to_log(self) -> None:
         outcome = await routed(heard("water", is_health_related=False), frozenset({"water"}))

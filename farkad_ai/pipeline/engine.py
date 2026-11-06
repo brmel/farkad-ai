@@ -98,7 +98,7 @@ async def _attempt(
     extractor: PillarExtractor, context: ExtractionContext
 ) -> ExtractionResult | PillarRefused:
     try:
-        return await extractor.extract_escalating(context)
+        return await extractor.extract(context)
     except ModelUnavailableError as unavailable:
         _log.warning(
             "pillar extraction failed",

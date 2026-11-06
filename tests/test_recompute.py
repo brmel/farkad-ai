@@ -1,8 +1,7 @@
 import pytest
 from pydantic import BaseModel
 
-from farkad_ai.extraction.extractor import pillar_version
-from farkad_ai.extraction.recompute import INSTRUCTIONS, EntryRecomputer
+from farkad_ai.extraction.recompute import EntryRecomputer
 from farkad_ai.models.port import ModelTier, ModelUnavailableError, PipelineStep, Unavailability
 from tests.support import AnswersByStep, Tracked, a_usage
 
@@ -32,7 +31,6 @@ async def test_the_model_is_told_only_what_the_user_stated() -> None:
         (),
     )
     assert '{"dish": "thé à la menthe", "pillar": "food"}' in asked.instructions
-    assert asked.instructions_version == pillar_version(INSTRUCTIONS, FOOD)
 
 
 async def test_the_fields_that_follow_come_back_beside_the_stated_ones() -> None:

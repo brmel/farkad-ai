@@ -1,6 +1,7 @@
 import asyncio
 from collections.abc import Callable
 from datetime import timedelta
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from pydantic import BaseModel
@@ -9,6 +10,7 @@ pytest.importorskip("google.genai")
 
 import google.auth
 import httpx
+from google.genai import types
 from google.oauth2.credentials import Credentials
 
 from farkad_ai.models.port import (
@@ -17,6 +19,8 @@ from farkad_ai.models.port import (
     ModelUnavailableError,
     PipelineStep,
     Prompt,
+    Unavailability,
+    Usage,
     fixed,
 )
 from farkad_ai.models.vertex import Retries, VertexModel
@@ -32,6 +36,50 @@ ANSWER = {
 
 class Said(BaseModel):
     said: str
+
+
+def answered(metadata: types.GenerateContentResponseUsageMetadata | None) -> Mock:
+    return Mock(parsed={"said": "a meal"}, usage_metadata=metadata)
+
+
+def counted(*, prompt: int | None, candidates: int | None) -> Mock:
+    return answered(
+        types.GenerateContentResponseUsageMetadata(
+            prompt_token_count=prompt, candidates_token_count=candidates
+        )
+    )
+
+
+async def vertex_usage(response: Mock) -> Usage:
+    client = Mock()
+    client.aio.models.generate_content = AsyncMock(return_value=response)
+    asked = Prompt(step=PipelineStep.routing, instructions="Route", instructions_version="v1")
+    completion = await VertexModel(client).complete(asked, schema=Said, tier=ModelTier.fast)
+    return completion.usage
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(
+    "response",
+    [
+        answered(None),
+        counted(prompt=None, candidates=800),
+        counted(prompt=9_000, candidates=None),
+    ],
+    ids=["no usage", "no input count", "no output count"],
+)
+async def test_an_answer_that_does_not_count_its_tokens_is_refused(response: Mock) -> None:
+    with pytest.raises(ModelUnavailableError) as refused:
+        await vertex_usage(response)
+
+    assert refused.value.because is Unavailability.usage_not_reported
+
+
+@pytest.mark.anyio
+async def test_a_counted_answer_reports_its_tokens() -> None:
+    usage = await vertex_usage(counted(prompt=9_000, candidates=800))
+
+    assert (usage.input_tokens, usage.output_tokens) == (9_000, 800)
 
 
 class Vertex:

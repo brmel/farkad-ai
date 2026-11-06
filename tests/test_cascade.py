@@ -36,7 +36,7 @@ class TierScript(Model):
 
 
 async def escalated(script: TierScript) -> str:
-    result = await PillarExtractor(script).extract_escalating(TWO_EGGS)
+    result = await PillarExtractor(script).extract(TWO_EGGS)
     return str(result.entries[0].values["item"])
 
 

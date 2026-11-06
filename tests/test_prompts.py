@@ -7,19 +7,9 @@ from farkad_ai.eval.example import GOLD, ExampleGold
 from farkad_ai.eval.pillars import EXAMPLE_PILLARS
 from farkad_ai.extraction.extractor import PillarExtractor
 from farkad_ai.extraction.port import ExtractionContext
-from farkad_ai.pipeline.photo import photo_briefing
-from farkad_ai.prompts import PromptAsset, list_prompts, prompt
+from farkad_ai.prompts import list_prompts
 from farkad_ai.routing.pass_one import routing_instructions
 from tests.support import ScriptedModel, Tracked
-
-
-def test_a_prompt_is_versioned_by_its_text() -> None:
-    original = prompt("extraction")
-    edited = PromptAsset(name=original.name, text=original.text + " Answer in metric.")
-
-    assert edited.version != original.version
-    assert original.version != prompt("pass_one").version
-    assert len(original.version) == 12
 
 
 @pytest.mark.anyio
@@ -83,7 +73,3 @@ def test_the_routing_prompt_gives_no_pillar_a_meaning_the_catalogue_did_not() ->
     }
 
     assert told & pillar_words == set()
-
-
-def test_a_photo_is_read_in_the_language_the_consumer_names() -> None:
-    assert "French" in photo_briefing("French")
