@@ -20,7 +20,7 @@ INSTRUCTIONS = prompt("recompute")
 
 
 @dataclass(frozen=True, slots=True)
-class Recomputation:
+class _Recomputation:
     values: dict[str, object]
     usage: Usage
 
@@ -29,7 +29,9 @@ class EntryRecomputer:
     def __init__(self, model: Model) -> None:
         self._model = model
 
-    async def recompute(self, pillar: TrackedPillar, stated: Mapping[str, object]) -> Recomputation:
+    async def recompute(
+        self, pillar: TrackedPillar, stated: Mapping[str, object]
+    ) -> _Recomputation:
         entries, usage = await ask_for_entries(
             self._model,
             INSTRUCTIONS,
@@ -45,4 +47,4 @@ class EntryRecomputer:
                 Unavailability.output_did_not_parse,
                 f"no {pillar.pillar} entry recomputed",
             )
-        return Recomputation(values=entries[0], usage=usage)
+        return _Recomputation(values=entries[0], usage=usage)

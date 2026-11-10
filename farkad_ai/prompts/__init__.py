@@ -4,9 +4,9 @@ from dataclasses import dataclass
 from hashlib import sha256
 from importlib.resources import files
 
-ASSETS = files("farkad_ai.prompts.assets")
-SUFFIX = ".txt"
-VERSION_LENGTH = 12
+_ASSETS = files("farkad_ai.prompts.assets")
+_SUFFIX = ".txt"
+_VERSION_LENGTH = 12
 
 
 @dataclass(frozen=True, slots=True)
@@ -23,17 +23,19 @@ class PromptAsset:
 
 
 def version_of(*parts: str) -> str:
-    return sha256("\x00".join(parts).encode()).hexdigest()[:VERSION_LENGTH]
+    return sha256("\x00".join(parts).encode()).hexdigest()[:_VERSION_LENGTH]
 
 
 def prompt(name: str) -> PromptAsset:
-    text = ASSETS.joinpath(f"{name}{SUFFIX}").read_text(encoding="utf-8").strip()
+    text = _ASSETS.joinpath(f"{name}{_SUFFIX}").read_text(encoding="utf-8").strip()
     return PromptAsset(name=name, text=text)
 
 
 def list_prompts() -> tuple[PromptAsset, ...]:
     names = sorted(
-        entry.name.removesuffix(SUFFIX) for entry in ASSETS.iterdir() if entry.name.endswith(SUFFIX)
+        entry.name.removesuffix(_SUFFIX)
+        for entry in _ASSETS.iterdir()
+        if entry.name.endswith(_SUFFIX)
     )
     return tuple(prompt(name) for name in names)
 

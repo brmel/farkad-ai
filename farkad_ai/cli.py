@@ -13,21 +13,21 @@ from farkad_ai.models.recorded import NoRecordedResponseError, RecordedModel, Re
 from farkad_ai.routing.port import NothingToLog, Routed
 from farkad_ai.routing.router import Router
 
-CLI_PILLARS = frozenset(pillar.pillar for pillar in EXAMPLE_PILLARS)
+_CLI_PILLARS = frozenset(pillar.pillar for pillar in EXAMPLE_PILLARS)
 
 
-class ProviderName(StrEnum):
+class _ProviderName(StrEnum):
     vertex = "vertex"
     recorded = "recorded"
 
 
-def _model_of(provider: ProviderName) -> Model:
+def _model_of(provider: _ProviderName) -> Model:
     match provider:
-        case ProviderName.vertex:
+        case _ProviderName.vertex:
             from farkad_ai.models.vertex import VertexModel
 
             return VertexModel.connected()
-        case ProviderName.recorded:
+        case _ProviderName.recorded:
             return RecordedModel(RECORDINGS)
 
 
@@ -64,15 +64,15 @@ def _build_parser() -> argparse.ArgumentParser:
 def _add_provider(command: argparse.ArgumentParser) -> None:
     command.add_argument(
         "--provider",
-        type=ProviderName,
-        choices=list(ProviderName),
-        default=ProviderName.recorded,
+        type=_ProviderName,
+        choices=list(_ProviderName),
+        default=_ProviderName.recorded,
     )
 
 
 def _print_routing(model: Model, text: str) -> int:
     try:
-        outcome = asyncio.run(Router(model, EXAMPLE_PILLARS).route(CLI_PILLARS, text=text))
+        outcome = asyncio.run(Router(model, EXAMPLE_PILLARS).route(_CLI_PILLARS, text=text))
     except NoRecordedResponseError:
         sys.stderr.write(
             "Only the gold set's sentences are recorded: route another with --provider vertex\n"
