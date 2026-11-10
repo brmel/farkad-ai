@@ -62,12 +62,20 @@ class Usage(BaseModel):
     prompt_version: str
     input_modality: InputModality
     input_tokens: int = Field(ge=0)
+    cached_input_tokens: int = Field(ge=0)
     output_tokens: int = Field(ge=0)
     latency_ms: int = Field(ge=0)
 
     @classmethod
     def answering(
-        cls, prompt: Prompt, *, model: str, input_tokens: int, output_tokens: int, latency_ms: int
+        cls,
+        prompt: Prompt,
+        *,
+        model: str,
+        input_tokens: int,
+        cached_input_tokens: int,
+        output_tokens: int,
+        latency_ms: int,
     ) -> Usage:
         return cls(
             step=prompt.step,
@@ -75,6 +83,7 @@ class Usage(BaseModel):
             prompt_version=prompt.instructions_version,
             input_modality=prompt.input_modality,
             input_tokens=input_tokens,
+            cached_input_tokens=cached_input_tokens,
             output_tokens=output_tokens,
             latency_ms=latency_ms,
         )

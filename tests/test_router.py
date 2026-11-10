@@ -2,7 +2,14 @@ from datetime import time
 
 import pytest
 
-from farkad_ai.routing.pass_one import INSTRUCTIONS, RULES, Mention, PassOne, TimeHint
+from farkad_ai.models.port import MediaBlob, MediaType
+from farkad_ai.routing.pass_one import (
+    Mention,
+    PassOne,
+    TimeHint,
+    TranscribedPassOne,
+    routing_instructions,
+)
 from farkad_ai.routing.port import (
     NothingToLog,
     NothingToLogReason,
@@ -21,8 +28,8 @@ CATALOGUE = (Spec("water", "tracks water intake"), Spec("food", "logs meals and 
 
 def heard(
     *pillars: str, is_health_related: bool = True, states_a_lasting_fact: bool = False
-) -> PassOne:
-    return PassOne(
+) -> TranscribedPassOne:
+    return TranscribedPassOne(
         transcript="I drank two glasses of water",
         language="en",
         is_health_related=is_health_related,
@@ -31,7 +38,7 @@ def heard(
     )
 
 
-async def routed(answer: PassOne, tracked: frozenset[str]) -> RoutingOutcome:
+async def routed(answer: TranscribedPassOne, tracked: frozenset[str]) -> RoutingOutcome:
     return await Router(ScriptedModel(answer), CATALOGUE).route(tracked, text=answer.transcript)
 
 
@@ -45,7 +52,7 @@ class TestTheRouterDecidesRatherThanTheModel:
         assert outcome.mentions == {"water": ("some water",)}
 
     async def test_each_tracked_pillar_is_handed_only_what_was_listed_under_it(self) -> None:
-        answer = PassOne(
+        answer = TranscribedPassOne(
             transcript="a smoothie, a scoop of whey and a dose of creatine",
             language="en",
             is_health_related=True,
@@ -79,7 +86,7 @@ class TestTheRouterDecidesRatherThanTheModel:
         assert outcome.reason is NothingToLogReason.not_a_health_log
 
     async def test_a_stated_time_dates_only_the_mention_it_was_said_about(self) -> None:
-        answer = PassOne(
+        answer = TranscribedPassOne(
             transcript="a coffee at eight, and two glasses of water",
             language="en",
             is_health_related=True,
@@ -88,7 +95,7 @@ class TestTheRouterDecidesRatherThanTheModel:
                 Mention(
                     pillar="food",
                     said="a coffee at eight",
-                    occurred_at_hint=TimeHint(phrase="at eight", day_offset=0, clock=time(8, 0)),
+                    occurred_at_hint=TimeHint(day_offset=0, clock=time(8, 0)),
                 ),
                 Mention(pillar="water", said="two glasses of water"),
             ],
@@ -98,7 +105,7 @@ class TestTheRouterDecidesRatherThanTheModel:
 
         assert isinstance(outcome, Routed)
         assert outcome.occurred_at_hints == {
-            "food": StatedTime(phrase="at eight", day_offset=0, time_of_day=time(8, 0)),
+            "food": StatedTime(day_offset=0, time_of_day=time(8, 0)),
             "water": None,
         }
 
@@ -112,7 +119,7 @@ class TestTheRouterDecidesRatherThanTheModel:
     ],
 )
 async def test_a_lasting_fact_is_reported_whether_or_not_anything_is_logged(
-    answer: PassOne,
+    answer: TranscribedPassOne,
 ) -> None:
     outcome = await routed(answer, frozenset({"water"}))
 
@@ -127,7 +134,8 @@ async def test_a_catalogue_without_rules_is_told_only_the_pillar_list() -> None:
 
     await Router(model, CATALOGUE).route(frozenset({"water"}), text="water")
 
-    assert model.asked[0].instructions == INSTRUCTIONS.text.replace("{pillars}", CATALOGUE_LISTED)
+    assert model.asked[0].instructions == routing_instructions(CATALOGUE)
+    assert CATALOGUE_LISTED in model.asked[0].instructions
 
 
 async def test_routing_rules_are_told_once_in_order_under_their_heading_after_the_pillars() -> None:
@@ -137,32 +145,52 @@ async def test_routing_rules_are_told_once_in_order_under_their_heading_after_th
     await Router(model, CATALOGUE, rules=rules).route(frozenset({"water"}), text="water")
 
     told = model.asked[0].instructions
-    heading = RULES.text.replace("{rules}", "- plain coffee is water\n- coffee with milk is food")
-    assert told == f"{INSTRUCTIONS.text.replace('{pillars}', CATALOGUE_LISTED)}\n\n{heading}"
+    assert told == routing_instructions(CATALOGUE, rules=rules)
+    assert told.endswith("- plain coffee is water\n- coffee with milk is food")
+    assert told.index(CATALOGUE_LISTED) < told.index("plain coffee")
+
+
+class TestOnlyWhatIsHeardIsTranscribed:
+    async def test_a_typed_log_is_answered_without_a_transcript_and_keeps_its_words(self) -> None:
+        model = ScriptedModel(heard("water").model_dump(exclude={"transcript"}))
+
+        outcome = await Router(model, CATALOGUE).route(frozenset({"water"}), text="two glasses")
+
+        assert outcome.transcript == "two glasses"
+        assert "transcript" not in PassOne.model_json_schema()["properties"]
+        assert model.asked[0].instructions == routing_instructions(CATALOGUE)
+
+    async def test_a_clip_is_answered_with_the_transcript_the_model_wrote(self) -> None:
+        model = ScriptedModel(heard("water"))
+        clip = (MediaBlob(MediaType.audio_aac, b"clip"),)
+
+        outcome = await Router(model, CATALOGUE).route(frozenset({"water"}), media=clip)
+
+        assert outcome.transcript == "I drank two glasses of water"
+        assert model.asked[0].instructions == routing_instructions(CATALOGUE, transcribing=True)
 
 
 def test_a_stated_time_names_a_day_only_when_it_is_not_today() -> None:
-    assert not StatedTime(phrase="at 3pm", day_offset=0, time_of_day=time(15, 0)).names_a_day
-    assert StatedTime(phrase="yesterday at 3pm", day_offset=-1, time_of_day=time(15, 0)).names_a_day
+    assert not StatedTime(day_offset=0, time_of_day=time(15, 0)).names_a_day
+    assert StatedTime(day_offset=-1, time_of_day=time(15, 0)).names_a_day
 
 
 @pytest.mark.parametrize(
     ("hint", "time_of_day"),
     [
         (
-            TimeHint(phrase="this afternoon", day_offset=0, part_of_day=PartOfDay.afternoon),
+            TimeHint(day_offset=0, part_of_day=PartOfDay.afternoon),
             PartOfDay.afternoon,
         ),
         (
             TimeHint(
-                phrase="at six this evening",
                 day_offset=0,
                 clock=time(18, 0),
                 part_of_day=PartOfDay.evening,
             ),
             time(18, 0),
         ),
-        (TimeHint(phrase="yesterday", day_offset=-1), None),
+        (TimeHint(day_offset=-1), None),
     ],
 )
 def test_the_consumer_is_given_the_hour_said_else_the_part_of_the_day_said(

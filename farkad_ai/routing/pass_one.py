@@ -12,11 +12,16 @@ from farkad_ai.routing.port import PartOfDay, PillarSpec, StatedTime
 
 INSTRUCTIONS = prompt("pass_one")
 RULES = prompt("pass_one_rules")
+TRANSCRIBING = prompt("pass_one_transcribed")
+TYPED = prompt("pass_one_typed")
 
 
-def routing_instructions(catalogue: Iterable[PillarSpec], *, rules: tuple[str, ...] = ()) -> str:
+def routing_instructions(
+    catalogue: Iterable[PillarSpec], *, rules: tuple[str, ...] = (), transcribing: bool = False
+) -> str:
     instructions = INSTRUCTIONS.format(
-        pillars=_listed(f"{spec.pillar}: {spec.intent}" for spec in catalogue)
+        opening=(TRANSCRIBING if transcribing else TYPED).text,
+        pillars=_listed(f"{spec.pillar}: {spec.intent}" for spec in catalogue),
     )
     if not rules:
         return instructions
@@ -33,7 +38,6 @@ class TimeHint(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    phrase: str = Field(description="The time expression exactly as the user said it")
     day_offset: int = Field(description="0 for today, -1 for yesterday, -7 for this day last week")
     clock: time | None = Field(
         default=None,
@@ -53,7 +57,6 @@ class TimeHint(BaseModel):
 
     def stated(self) -> StatedTime:
         return StatedTime(
-            phrase=self.phrase,
             day_offset=self.day_offset,
             time_of_day=self.clock if self.clock is not None else self.part_of_day,
         )
@@ -78,9 +81,8 @@ class PassOne(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    transcript: str = Field(description="Exactly what was said, in its own language")
     language: str = Field(
-        description="BCP-47 tag the sentence begins in; the transcript may mix languages"
+        description="BCP-47 tag the sentence begins in; the sentence may mix languages"
     )
     is_health_related: bool = Field(description="False for anything that is not a log")
     states_a_lasting_fact: bool = Field(
@@ -91,3 +93,17 @@ class PassOne(BaseModel):
         default_factory=list,
         description="Every thing the user logged, each once, under the one pillar that records it",
     )
+
+    def transcript_of(self, typed: str) -> str:
+        return typed
+
+
+class Transcript(BaseModel):
+    transcript: str = Field(description="Exactly what was said, in its own language")
+
+
+class TranscribedPassOne(PassOne, Transcript):
+    """Your answer about one log that you hear or see, and so write down first."""
+
+    def transcript_of(self, typed: str) -> str:
+        return self.transcript

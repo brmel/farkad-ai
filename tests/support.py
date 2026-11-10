@@ -26,6 +26,7 @@ def a_usage(step: StrEnum) -> Usage:
         prompt_version="v1",
         input_modality=InputModality.text,
         input_tokens=10,
+        cached_input_tokens=4,
         output_tokens=5,
         latency_ms=100,
     )

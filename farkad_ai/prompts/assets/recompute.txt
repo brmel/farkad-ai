@@ -10,8 +10,8 @@ Leave a field out rather than inventing a value for it. A field that does not fo
 what the user stated is one you cannot know: a bowl of rice implies an energy figure, a
 brand of tea does not imply a duration.
 
-Confirmed by the user:
-{stated}
-
 Worked examples:
 {examples}
+
+Confirmed by the user:
+{stated}

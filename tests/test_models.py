@@ -23,6 +23,8 @@ def test_a_calls_usage_says_what_it_carried(
         media=tuple(MediaBlob(content_type=kind, data=b"") for kind in carried),
     )
 
-    usage = Usage.answering(prompt, model="m", input_tokens=1, output_tokens=1, latency_ms=1)
+    usage = Usage.answering(
+        prompt, model="m", input_tokens=1, cached_input_tokens=0, output_tokens=1, latency_ms=1
+    )
 
     assert usage.input_modality is modality

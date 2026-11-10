@@ -1,0 +1,2 @@
+Return the BCP-47 language tag the log begins in. A speaker may change language part-way through
+a sentence; `language` is then the one it begins in.

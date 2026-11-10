@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from dataclasses import dataclass
 
 from farkad_ai.models.port import (
     Completion,
@@ -12,7 +13,12 @@ from farkad_ai.models.port import (
     Usage,
 )
 from farkad_ai.prompts import briefed, version_of
-from farkad_ai.routing.pass_one import Mention, PassOne, routing_instructions
+from farkad_ai.routing.pass_one import (
+    Mention,
+    PassOne,
+    TranscribedPassOne,
+    routing_instructions,
+)
 from farkad_ai.routing.port import (
     NothingToLog,
     NothingToLogReason,
@@ -23,6 +29,16 @@ from farkad_ai.routing.port import (
 )
 
 
+@dataclass(frozen=True, slots=True)
+class _Pass:
+    instructions: str
+    schema: type[PassOne]
+
+    @property
+    def version(self) -> str:
+        return version_of(self.instructions)
+
+
 class Router:
     def __init__(
         self, model: Model, catalogue: Iterable[PillarSpec], *, rules: tuple[str, ...] = ()
@@ -30,8 +46,10 @@ class Router:
         specs = tuple(catalogue)
         self._model = model
         self._known = frozenset(spec.pillar for spec in specs)
-        self._instructions = routing_instructions(specs, rules=rules)
-        self._version = version_of(self._instructions)
+        self._typed = _Pass(routing_instructions(specs, rules=rules), PassOne)
+        self._transcribing = _Pass(
+            routing_instructions(specs, rules=rules, transcribing=True), TranscribedPassOne
+        )
 
     async def route(
         self,
@@ -41,30 +59,34 @@ class Router:
         media: tuple[MediaBlob, ...] = (),
         briefing: str = "",
     ) -> RoutingOutcome:
+        asking = self._transcribing if media else self._typed
         prompt = Prompt(
             step=PipelineStep.routing,
-            instructions=briefed(self._instructions, briefing),
-            instructions_version=self._version,
+            instructions=briefed(asking.instructions, briefing),
+            instructions_version=asking.version,
             utterance=text,
             media=media,
         )
         completion: Completion[PassOne] = await self._model.complete(
-            prompt, schema=PassOne, tier=ModelTier.fast
+            prompt, schema=asking.schema, tier=ModelTier.fast
         )
-        return self._decide(completion.value, tracked, completion.usage)
+        heard = completion.value
+        return self._decide(heard, heard.transcript_of(text), tracked, completion.usage)
 
-    def _decide(self, heard: PassOne, tracked: frozenset[str], usage: Usage) -> RoutingOutcome:
+    def _decide(
+        self, heard: PassOne, transcript: str, tracked: frozenset[str], usage: Usage
+    ) -> RoutingOutcome:
         if not heard.is_health_related:
-            return _nothing_to_log(heard, NothingToLogReason.not_a_health_log, usage)
+            return _nothing_to_log(heard, transcript, NothingToLogReason.not_a_health_log, usage)
 
         known = [mention for mention in heard.mentions if mention.pillar in self._known]
         named = frozenset(mention.pillar for mention in known)
         routes = named & tracked
         if not routes:
-            return _nothing_to_log(heard, NothingToLogReason.no_enabled_pillar, usage)
+            return _nothing_to_log(heard, transcript, NothingToLogReason.no_enabled_pillar, usage)
 
         return Routed(
-            transcript=heard.transcript,
+            transcript=transcript,
             language=heard.language,
             states_a_lasting_fact=heard.states_a_lasting_fact,
             routes=routes,
@@ -78,9 +100,11 @@ class Router:
         )
 
 
-def _nothing_to_log(heard: PassOne, reason: NothingToLogReason, usage: Usage) -> NothingToLog:
+def _nothing_to_log(
+    heard: PassOne, transcript: str, reason: NothingToLogReason, usage: Usage
+) -> NothingToLog:
     return NothingToLog(
-        transcript=heard.transcript,
+        transcript=transcript,
         language=heard.language,
         states_a_lasting_fact=heard.states_a_lasting_fact,
         reason=reason,

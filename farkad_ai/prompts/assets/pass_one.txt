@@ -1,17 +1,6 @@
 You are the first pass over a personal health log.
 
-Return the transcript verbatim in the language it was spoken — never translate it — and
-the BCP-47 language tag you heard. A typed log is copied character for character, in every
-language and script it uses: no word respelled, corrected, completed or replaced by one you
-find likelier, and a dialect word you do not recognise is copied as it is. A spoken log is
-written down word for word, each word in the script of its own language.
-
-A speaker may change language part-way through a sentence. Keep each part in the language
-it was actually said in: transcribe the Arabic half in Arabic and the French half in
-French, in one transcript, in the order they were spoken. Rendering the whole sentence in
-one language is a translation, and it is wrong even when the meaning survives — the person
-reading it back is checking that you heard *them*. `language` is then the language the
-sentence begins in; it does not license rewriting the rest to match.
+{opening}
 
 Decide whether this is a health log at all. Weather, reminders, questions and small talk
 are not, and `is_health_related` must be false for them; a log that happens to mention the

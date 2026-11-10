@@ -5,6 +5,24 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 
 ## [Unreleased]
 
+## [0.28.0] - 2026-11-09
+
+### Changed
+
+- **Breaking**: a typed log is routed without a transcript: pass one's answer no longer carries
+  one, the `Router` hands back the words it was given, and only a log with a clip or a photo is
+  answered as `TranscribedPassOne`. `routing_instructions` takes `transcribing`.
+- **Breaking**: `Usage` and `Recording` carry `cached_input_tokens`, the prompt tokens Gemini
+  served from its implicit cache; `Usage.answering` takes it.
+- The extraction and recompute prompts put what changes per request last (the briefing, then the
+  log), so the fixed words in front of them can be cached. Re-record the fixtures.
+- `evaluate` takes a `briefing`.
+
+### Removed
+
+- **Breaking**: `TimeHint.phrase` and `StatedTime.phrase`, which nothing read.
+- **Breaking**: `Superseded.replaced` and `ExtractedEntry.stale_fields`.
+
 ## [0.27.0] - 2026-11-06
 
 ### Changed
@@ -309,7 +327,8 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 - Gemini on Vertex AI, Claude and OpenAI behind one interface; long-term memory; an offline eval
   on recorded answers; the `farkad-ai` command.
 
-[Unreleased]: https://github.com/brmel/farkad-ai/compare/v0.27.0...HEAD
+[Unreleased]: https://github.com/brmel/farkad-ai/compare/v0.28.0...HEAD
+[0.28.0]: https://github.com/brmel/farkad-ai/compare/v0.27.0...v0.28.0
 [0.27.0]: https://github.com/brmel/farkad-ai/compare/v0.26.0...v0.27.0
 [0.26.0]: https://github.com/brmel/farkad-ai/compare/v0.25.0...v0.26.0
 [0.25.0]: https://github.com/brmel/farkad-ai/compare/v0.24.0...v0.25.0

@@ -61,7 +61,6 @@ class Remembered[Category: StrEnum]:
 @dataclass(frozen=True, slots=True)
 class Superseded[Category: StrEnum]:
     fact: Fact[Category]
-    replaced: Fact[Category]
 
 
 @dataclass(frozen=True, slots=True)
@@ -114,4 +113,4 @@ def learn[Category: StrEnum](
         return Declined(heard, Refusal.written_by_user)
     if known.disclosure.said == heard.said:
         return Confirmed(replace(known, since=at))
-    return Superseded(replace(known, disclosure=heard, since=at), replaced=known)
+    return Superseded(replace(known, disclosure=heard, since=at))

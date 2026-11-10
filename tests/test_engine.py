@@ -15,7 +15,7 @@ from farkad_ai.models.port import (
 )
 from farkad_ai.pipeline.engine import TwoPassCaptureEngine
 from farkad_ai.pipeline.port import CaptureRequest, Logged
-from farkad_ai.routing.pass_one import Mention, PassOne
+from farkad_ai.routing.pass_one import Mention, TranscribedPassOne
 from farkad_ai.routing.port import NothingToLog, NothingToLogReason
 from tests.support import AnswersByStep, Spec, Tracked
 
@@ -25,8 +25,8 @@ CATALOGUE = (Spec("water", "tracks water intake"), Spec("food", "logs meals"))
 WATER = Tracked("water", title="Water", guidance="Count the glasses.", examples='"a glass" → 1')
 
 
-def heard(*said: tuple[str, str], states_a_lasting_fact: bool = False) -> PassOne:
-    return PassOne(
+def heard(*said: tuple[str, str], states_a_lasting_fact: bool = False) -> TranscribedPassOne:
+    return TranscribedPassOne(
         transcript=" and ".join(words for _, words in said),
         language="en",
         is_health_related=bool(said),
@@ -144,7 +144,7 @@ async def test_an_entry_that_holds_nothing_is_dropped_and_findings_stay_on_their
 
     assert isinstance(outcome, Logged)
     (entry,) = outcome.extracted[0].entries
-    assert entry.values["item"] == "glass" and entry.stale_fields == frozenset({"item"})
+    assert entry.values["item"] == "glass" and [f.field for f in entry.findings] == ["item"]
 
 
 async def test_which_fields_only_label_an_entry_is_the_pillars_to_declare() -> None:
