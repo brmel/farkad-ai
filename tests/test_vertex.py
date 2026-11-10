@@ -42,10 +42,12 @@ def answered(metadata: types.GenerateContentResponseUsageMetadata | None) -> Moc
     return Mock(parsed={"said": "a meal"}, usage_metadata=metadata)
 
 
-def counted(*, prompt: int | None, candidates: int | None) -> Mock:
+def counted(*, prompt: int | None, candidates: int | None, cached: int | None = None) -> Mock:
     return answered(
         types.GenerateContentResponseUsageMetadata(
-            prompt_token_count=prompt, candidates_token_count=candidates
+            prompt_token_count=prompt,
+            candidates_token_count=candidates,
+            cached_content_token_count=cached,
         )
     )
 
@@ -79,7 +81,14 @@ async def test_an_answer_that_does_not_count_its_tokens_is_refused(response: Moc
 async def test_a_counted_answer_reports_its_tokens() -> None:
     usage = await vertex_usage(counted(prompt=9_000, candidates=800))
 
-    assert (usage.input_tokens, usage.output_tokens) == (9_000, 800)
+    assert (usage.input_tokens, usage.cached_input_tokens, usage.output_tokens) == (9_000, 0, 800)
+
+
+@pytest.mark.anyio
+async def test_the_tokens_served_from_the_cache_are_reported() -> None:
+    usage = await vertex_usage(counted(prompt=9_000, candidates=800, cached=7_000))
+
+    assert usage.cached_input_tokens == 7_000
 
 
 class Vertex:

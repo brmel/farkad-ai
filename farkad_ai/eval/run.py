@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from functools import partial
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -39,13 +39,14 @@ async def evaluate[Case: GoldCase](
     cases: Iterable[Case],
     *,
     routing_rules: tuple[str, ...] = (),
+    briefing: str = "",
 ) -> tuple[Scored[Case], ...]:
     engine = TwoPassCaptureEngine(model, catalogue, routing_rules=routing_rules)
-    return tuple([Scored(case, await _scored(engine, tracked, case)) for case in cases])
+    return tuple([Scored(case, await _scored(engine, tracked, case, briefing)) for case in cases])
 
 
 async def _scored(
-    engine: CaptureEngine, tracked: tuple[TrackedPillar, ...], case: GoldCase
+    engine: CaptureEngine, tracked: tuple[TrackedPillar, ...], case: GoldCase, briefing: str
 ) -> CaptureScore:
     scored = partial(
         score_capture,
@@ -55,7 +56,7 @@ async def _scored(
         expected_flags=case.flags,
     )
     try:
-        outcome = await engine.capture(case.request(tracked))
+        outcome = await engine.capture(replace(case.request(tracked), briefing=briefing))
     except ModelUnavailableError as unavailable:
         if unavailable.because is not Unavailability.output_did_not_parse:
             raise

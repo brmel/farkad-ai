@@ -26,15 +26,15 @@ can be replaced without touching the other.
 ## How well it works
 
 Fifteen example sentences, three per language, on seven example topics, replayed from answers
-recorded on `gemini-3.5-flash-lite` on 2026-10-25:
+recorded on `gemini-3.5-flash-lite` on 2026-11-09:
 
 | Language | Routing | Fields | Validators | Tokens per sentence (in / out) |
 | --- | --: | --: | --: | --: |
-| English | 100% | 100% | 100% | 2,871 / 200 |
-| French | 100% | 100% | 100% | 2,709 / 194 |
-| Arabic | 100% | 100% | 100% | 2,170 / 111 |
-| Spanish | 100% | 100% | 100% | 2,529 / 166 |
-| Mixed languages | 100% | 100% | 100% | 2,932 / 249 |
+| English | 100% | 100% | 100% | 2,628 / 193 |
+| French | 100% | 100% | 100% | 2,466 / 173 |
+| Arabic | 100% | 100% | 100% | 1,927 / 94 |
+| Spanish | 100% | 100% | 100% | 2,288 / 150 |
+| Mixed languages | 100% | 100% | 100% | 2,689 / 170 |
 
 ## What it uses, and what it leaves out
 

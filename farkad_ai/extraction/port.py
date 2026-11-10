@@ -57,10 +57,6 @@ class ExtractedEntry:
     values: dict[str, object]
     findings: tuple[Finding, ...]
 
-    @property
-    def stale_fields(self) -> frozenset[str]:
-        return frozenset(finding.field for finding in self.findings)
-
 
 @dataclass(frozen=True, slots=True)
 class ExtractionResult:

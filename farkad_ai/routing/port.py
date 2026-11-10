@@ -27,7 +27,6 @@ class PartOfDay(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class StatedTime:
-    phrase: str
     day_offset: int
     time_of_day: time | PartOfDay | None
 

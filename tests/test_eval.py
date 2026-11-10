@@ -5,13 +5,13 @@ from farkad_ai.eval.run import GoldCase, evaluate
 from farkad_ai.extraction.port import Finding, TrackedPillar
 from farkad_ai.models.port import MediaBlob, MediaType, ModelUnavailableError, Unavailability
 from farkad_ai.pipeline.port import CaptureRequest
-from farkad_ai.routing.pass_one import Mention, PassOne
+from farkad_ai.routing.pass_one import Mention, TranscribedPassOne
 from tests.support import AnswersByStep, Spec, Tracked
 
 pytestmark = pytest.mark.anyio
 
 CATALOGUE = (Spec("water", "drinks"),)
-A_GLASS = PassOne(
+A_GLASS = TranscribedPassOne(
     transcript="a glass",
     language="en",
     is_health_related=True,
@@ -100,7 +100,7 @@ async def test_a_refusal_other_than_an_unparsed_answer_is_raised() -> None:
 
 async def test_the_example_eval_reports_tokens_for_a_model_of_any_provider() -> None:
     model = AnswersByStep(
-        routing=PassOne(
+        routing=TranscribedPassOne(
             transcript="",
             language="en",
             is_health_related=False,

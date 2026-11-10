@@ -96,12 +96,13 @@ class VertexModel(Model):
             raise ModelUnavailableError(
                 tier, choice.model, Unavailability.output_did_not_parse, schema.__name__
             ) from error
-        input_tokens, output_tokens = _tokens(response, tier, choice.model)
+        tokens = _tokens(response, tier, choice.model)
         usage = Usage.answering(
             prompt,
             model=choice.model,
-            input_tokens=input_tokens,
-            output_tokens=output_tokens,
+            input_tokens=tokens.input,
+            cached_input_tokens=tokens.cached,
+            output_tokens=tokens.output,
             latency_ms=latency_ms,
         )
         return Completion(value=value, usage=usage)
@@ -119,9 +120,14 @@ def _asking(
     )
 
 
-def _tokens(
-    response: types.GenerateContentResponse, tier: ModelTier, model: str
-) -> tuple[int, int]:
+@dataclass(frozen=True, slots=True)
+class _Tokens:
+    input: int
+    cached: int
+    output: int
+
+
+def _tokens(response: types.GenerateContentResponse, tier: ModelTier, model: str) -> _Tokens:
     metadata = response.usage_metadata
     if (
         metadata is None
@@ -131,9 +137,13 @@ def _tokens(
         raise ModelUnavailableError(
             tier, model, Unavailability.usage_not_reported, "the response counted no tokens"
         )
-    # `thoughts_token_count` is absent, not zero, without thinking: https://googleapis.github.io/python-genai/
-    thoughts = metadata.thoughts_token_count or 0
-    return metadata.prompt_token_count, metadata.candidates_token_count + thoughts
+    # `thoughts_token_count` and `cached_content_token_count` are absent, not zero, when there were
+    # none: https://googleapis.github.io/python-genai/
+    return _Tokens(
+        input=metadata.prompt_token_count,
+        cached=metadata.cached_content_token_count or 0,
+        output=metadata.candidates_token_count + (metadata.thoughts_token_count or 0),
+    )
 
 
 def _retrying(retries: Retries | None) -> types.HttpOptions | None:

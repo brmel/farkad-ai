@@ -5,6 +5,22 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking**: a typed log is routed without a transcript: pass one's answer no longer carries
+  one, the `Router` hands back the words it was given, and only a log with a clip or a photo is
+  answered as `TranscribedPassOne`. `routing_instructions` takes `transcribing`.
+- **Breaking**: `Usage` and `Recording` carry `cached_input_tokens`, the prompt tokens Gemini
+  served from its implicit cache; `Usage.answering` takes it.
+- The extraction and recompute prompts put what changes per request last (the briefing, then the
+  log), so the fixed words in front of them can be cached. Re-record the fixtures.
+- `evaluate` takes a `briefing`.
+
+### Removed
+
+- **Breaking**: `TimeHint.phrase` and `StatedTime.phrase`, which nothing read.
+- **Breaking**: `Superseded.replaced` and `ExtractedEntry.stale_fields`.
+
 ## [0.27.0] - 2026-11-06
 
 ### Changed

@@ -24,7 +24,7 @@ from farkad_ai.models.port import (
     Unavailability,
     Usage,
 )
-from farkad_ai.prompts import PromptAsset, briefed, prompt, version_of
+from farkad_ai.prompts import PromptAsset, prompt, version_of
 
 INSTRUCTIONS = prompt("extraction")
 
@@ -101,10 +101,13 @@ async def ask_for_entries(
 
 
 def fill(asset: PromptAsset, pillar: TrackedPillar, *, briefing: str = "", **values: object) -> str:
-    rendered = asset.format(
-        title=pillar.title, guidance=pillar.guidance, examples=pillar.examples, **values
+    return asset.format(
+        title=pillar.title,
+        guidance=pillar.guidance,
+        examples=pillar.examples,
+        briefing=f"{briefing}\n\n" if briefing else "",
+        **values,
     )
-    return briefed(rendered, briefing)
 
 
 @lru_cache(maxsize=512)

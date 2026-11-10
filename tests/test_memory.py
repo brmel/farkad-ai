@@ -88,9 +88,7 @@ class TestANewerWordOnATopicReplacesTheOlder:
     def test_vegan_then_meat_leaves_one_fact_saying_meat(self) -> None:
         learned = learn(known(VEGAN), EATS_MEAT, at=FRIDAY)
 
-        assert learned == Superseded(
-            Fact(EATS_MEAT, FactSource.spoken, enabled=True, since=FRIDAY), replaced=known(VEGAN)
-        )
+        assert learned == Superseded(Fact(EATS_MEAT, FactSource.spoken, enabled=True, since=FRIDAY))
 
     def test_saying_the_same_thing_again_only_moves_its_date(self) -> None:
         again = Disclosure("diet", MemoryCategory.dietary, "  vegan ")
