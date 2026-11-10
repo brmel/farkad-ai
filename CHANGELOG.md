@@ -5,6 +5,8 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 
 ## [Unreleased]
 
+## [0.28.0] - 2026-11-09
+
 ### Changed
 
 - **Breaking**: a typed log is routed without a transcript: pass one's answer no longer carries
@@ -325,7 +327,8 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 - Gemini on Vertex AI, Claude and OpenAI behind one interface; long-term memory; an offline eval
   on recorded answers; the `farkad-ai` command.
 
-[Unreleased]: https://github.com/brmel/farkad-ai/compare/v0.27.0...HEAD
+[Unreleased]: https://github.com/brmel/farkad-ai/compare/v0.28.0...HEAD
+[0.28.0]: https://github.com/brmel/farkad-ai/compare/v0.27.0...v0.28.0
 [0.27.0]: https://github.com/brmel/farkad-ai/compare/v0.26.0...v0.27.0
 [0.26.0]: https://github.com/brmel/farkad-ai/compare/v0.25.0...v0.26.0
 [0.25.0]: https://github.com/brmel/farkad-ai/compare/v0.24.0...v0.25.0
