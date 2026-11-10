@@ -42,7 +42,7 @@ class UnrecordedModelError(Exception):
         self.recorded = recorded
 
 
-class RecordedUsage(BaseModel):
+class _RecordedUsage(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     model: str
@@ -60,7 +60,7 @@ class Recording(BaseModel):
     instructions: str
     utterance: str
     value: dict[str, object]
-    usage: RecordedUsage
+    usage: _RecordedUsage
 
     @classmethod
     def read(cls, path: Path) -> Recording:
@@ -131,7 +131,7 @@ class RecordingModel(Model):
             instructions=prompt.instructions,
             utterance=prompt.utterance,
             value=completion.value.model_dump(mode="json"),
-            usage=RecordedUsage.model_validate(completion.usage, from_attributes=True),
+            usage=_RecordedUsage.model_validate(completion.usage, from_attributes=True),
         )
         self._pending[key] = recording.written()
         return completion

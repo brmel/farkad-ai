@@ -30,7 +30,7 @@ from farkad_ai.models.port import (
 PLACEHOLDER_INPUT = "Input."
 
 # Gemini's thinking budget in tokens: https://ai.google.dev/gemini-api/docs/thinking
-THINKING_BUDGET: Mapping[Reasoning, int] = {
+_THINKING_BUDGET: Mapping[Reasoning, int] = {
     Reasoning.none: 0,
     Reasoning.brief: 512,
     Reasoning.thorough: 2048,
@@ -116,7 +116,7 @@ def _asking(
         automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
         response_mime_type="application/json",
         response_schema=schema,
-        thinking_config=types.ThinkingConfig(thinking_budget=THINKING_BUDGET[choice.reasoning]),
+        thinking_config=types.ThinkingConfig(thinking_budget=_THINKING_BUDGET[choice.reasoning]),
     )
 
 

@@ -11,21 +11,21 @@ from farkad_ai.prompts import prompt
 from farkad_ai.routing.port import PartOfDay, PillarSpec, StatedTime
 
 INSTRUCTIONS = prompt("pass_one")
-RULES = prompt("pass_one_rules")
-TRANSCRIBING = prompt("pass_one_transcribed")
-TYPED = prompt("pass_one_typed")
+_RULES = prompt("pass_one_rules")
+_TRANSCRIBING = prompt("pass_one_transcribed")
+_TYPED = prompt("pass_one_typed")
 
 
 def routing_instructions(
     catalogue: Iterable[PillarSpec], *, rules: tuple[str, ...] = (), transcribing: bool = False
 ) -> str:
     instructions = INSTRUCTIONS.format(
-        opening=(TRANSCRIBING if transcribing else TYPED).text,
+        opening=(_TRANSCRIBING if transcribing else _TYPED).text,
         pillars=_listed(f"{spec.pillar}: {spec.intent}" for spec in catalogue),
     )
     if not rules:
         return instructions
-    return f"{instructions}\n\n{RULES.format(rules=_listed(rules))}"
+    return f"{instructions}\n\n{_RULES.format(rules=_listed(rules))}"
 
 
 def _listed(lines: Iterable[str]) -> str:
@@ -98,11 +98,11 @@ class PassOne(BaseModel):
         return typed
 
 
-class Transcript(BaseModel):
+class _Transcript(BaseModel):
     transcript: str = Field(description="Exactly what was said, in its own language")
 
 
-class TranscribedPassOne(PassOne, Transcript):
+class TranscribedPassOne(PassOne, _Transcript):
     """Your answer about one log that you hear or see, and so write down first."""
 
     def transcript_of(self, typed: str) -> str:

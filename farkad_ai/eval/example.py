@@ -22,7 +22,7 @@ class Language(StrEnum):
     code_switched = "code-switched"
 
 
-class ExampleCase(GoldCase):
+class _ExampleCase(GoldCase):
     language: Language
 
 
@@ -30,10 +30,10 @@ class ExampleGold(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     why: str
-    cases: tuple[ExampleCase, ...]
+    cases: tuple[_ExampleCase, ...]
 
 
-type ExampleRun = tuple[Scored[ExampleCase], ...]
+type ExampleRun = tuple[Scored[_ExampleCase], ...]
 
 
 async def evaluate_examples(model: Model) -> ExampleRun:
@@ -65,7 +65,7 @@ def report(run: ExampleRun) -> str:
     )
 
 
-def _row(label: str, scored: list[Scored[ExampleCase]]) -> str:
+def _row(label: str, scored: list[Scored[_ExampleCase]]) -> str:
     score = RunScore(tuple(each.score for each in scored))
     mean_in = score.mean(lambda capture: capture.input_tokens)
     mean_out = score.mean(lambda capture: capture.output_tokens)

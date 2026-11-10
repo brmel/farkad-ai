@@ -11,7 +11,7 @@ HABIT_WINDOW = timedelta(days=28)
 TIMES_TO_BE_A_HABIT = 3
 MAX_HABITS = 6
 
-HOURS_A_DAY = 24
+_HOURS_A_DAY = 24
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,12 +67,12 @@ def _habit(pillar: str, what: str | None, group: list[Occurrence]) -> HabitBasel
 
 
 def _usual_hour(hours: list[int]) -> int:
-    return min(range(HOURS_A_DAY), key=lambda hour: (sum(_apart(hour, h) for h in hours), hour))
+    return min(range(_HOURS_A_DAY), key=lambda hour: (sum(_apart(hour, h) for h in hours), hour))
 
 
 def _apart(one: int, other: int) -> int:
     gap = abs(one - other)
-    return min(gap, HOURS_A_DAY - gap)
+    return min(gap, _HOURS_A_DAY - gap)
 
 
 def _usual(amounts: Iterable[UsualAmount | None]) -> UsualAmount | None:

@@ -8,16 +8,16 @@ from dataclasses import dataclass
 
 from farkad_ai.models.port import Usage
 
-NUMERIC_TOLERANCE = 0.01
+_NUMERIC_TOLERANCE = 0.01
 
 
-class EmptyRunError(ValueError):
+class _EmptyRunError(ValueError):
     def __init__(self) -> None:
         super().__init__("an eval run with no cases would score 100% and mean nothing")
 
 
 @dataclass(frozen=True, slots=True)
-class FieldScore:
+class _FieldScore:
     pillar: str
     field: str
     expected: object
@@ -34,7 +34,7 @@ class CaptureScore:
     heard: str
     expected_routes: frozenset[str]
     routed: frozenset[str]
-    fields: tuple[FieldScore, ...]
+    fields: tuple[_FieldScore, ...]
     usages: tuple[Usage, ...]
     flagged: frozenset[str]
     expected_flags: frozenset[str]
@@ -53,7 +53,7 @@ class CaptureScore:
         return sum(usage.output_tokens for usage in self.usages)
 
     @property
-    def wrong_fields(self) -> tuple[FieldScore, ...]:
+    def wrong_fields(self) -> tuple[_FieldScore, ...]:
         return tuple(score for score in self.fields if not score.is_match)
 
     @property
@@ -100,7 +100,7 @@ def matches(expected: object, found: object) -> bool:
             magnitude = _magnitude(found)
             return magnitude is not None and low <= magnitude <= high
         case float() | int() if (magnitude := _magnitude(found)) is not None:
-            return abs(float(expected) - magnitude) <= NUMERIC_TOLERANCE
+            return abs(float(expected) - magnitude) <= _NUMERIC_TOLERANCE
         case _:
             return expected == found
 
@@ -128,13 +128,13 @@ def score_capture(
     expected_flags: Sequence[str] = (),
     unparsed_response_from: str | None = None,
 ) -> CaptureScore:
-    fields: list[FieldScore] = []
+    fields: list[_FieldScore] = []
     for pillar, wanted_entries in expected.items():
         found_entries = extracted.get(pillar, ())
         for index, wanted in enumerate(wanted_entries):
             found = found_entries[index] if index < len(found_entries) else {}
             fields += [
-                FieldScore(pillar=pillar, field=name, expected=value, found=found.get(name))
+                _FieldScore(pillar=pillar, field=name, expected=value, found=found.get(name))
                 for name, value in wanted.items()
             ]
     return CaptureScore(
@@ -196,13 +196,13 @@ class RunScore:
 
 def _share(total: float, count: int) -> float:
     if count == 0:
-        raise EmptyRunError
+        raise _EmptyRunError
     return total / count
 
 
 def _nearest_rank_percentile(values: list[float], share: float) -> float:
     if not values:
-        raise EmptyRunError
+        raise _EmptyRunError
     ranked = sorted(values)
     index = math.ceil(share * len(ranked)) - 1
     return ranked[max(index, 0)]
