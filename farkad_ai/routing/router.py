@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from dataclasses import dataclass
 
 from farkad_ai.models.port import (
     Completion,
@@ -29,16 +28,6 @@ from farkad_ai.routing.port import (
 )
 
 
-@dataclass(frozen=True, slots=True)
-class _Pass:
-    instructions: str
-    schema: type[PassOne]
-
-    @property
-    def version(self) -> str:
-        return version_of(self.instructions)
-
-
 class Router:
     def __init__(
         self, model: Model, catalogue: Iterable[PillarSpec], *, rules: tuple[str, ...] = ()
@@ -46,9 +35,10 @@ class Router:
         specs = tuple(catalogue)
         self._model = model
         self._known = frozenset(spec.pillar for spec in specs)
-        self._typed = _Pass(routing_instructions(specs, rules=rules), PassOne)
-        self._transcribing = _Pass(
-            routing_instructions(specs, rules=rules, transcribing=True), TranscribedPassOne
+        self._typed = (routing_instructions(specs, rules=rules), PassOne)
+        self._transcribing = (
+            routing_instructions(specs, rules=rules, transcribing=True),
+            TranscribedPassOne,
         )
 
     async def route(
@@ -59,16 +49,16 @@ class Router:
         media: tuple[MediaBlob, ...] = (),
         briefing: str = "",
     ) -> RoutingOutcome:
-        asking = self._transcribing if media else self._typed
+        instructions, schema = self._transcribing if media else self._typed
         prompt = Prompt(
             step=PipelineStep.routing,
-            instructions=briefed(asking.instructions, briefing),
-            instructions_version=asking.version,
+            instructions=briefed(instructions, briefing),
+            instructions_version=version_of(instructions),
             utterance=text,
             media=media,
         )
         completion: Completion[PassOne] = await self._model.complete(
-            prompt, schema=asking.schema, tier=ModelTier.fast
+            prompt, schema=schema, tier=ModelTier.fast
         )
         heard = completion.value
         return self._decide(heard, heard.transcript_of(text), tracked, completion.usage)
