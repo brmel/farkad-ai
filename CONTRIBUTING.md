@@ -33,7 +33,7 @@ ruff check . && ruff format --check . && mypy farkad_ai tests && pytest
 They run offline on scripted and recorded answers; no API key is needed. CI runs them twice:
 with `.[dev]` alone, where the core must import no provider SDK and the adapter tests are
 skipped, and with `.[dev,google]`, where the adapter is type-checked and tested against the real
-SDK. CodeQL scans every pull request as well.
+SDK.
 
 ## The eval and its recordings
 
