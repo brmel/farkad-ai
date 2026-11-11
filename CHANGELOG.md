@@ -5,6 +5,14 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 
 ## [Unreleased]
 
+## [0.29.1] - 2026-11-10
+
+### Fixed
+
+- The memory inference answer schema is named `InferredFacts`, `InferredFact` and `InferredEnd`
+  again. 0.29.0 sent the model the same schema under underscore-prefixed names, which re-keyed
+  every recording of that call.
+
 ## [0.29.0] - 2026-11-10
 
 ### Removed
@@ -334,7 +342,8 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 - Gemini on Vertex AI, Claude and OpenAI behind one interface; long-term memory; an offline eval
   on recorded answers; the `farkad-ai` command.
 
-[Unreleased]: https://github.com/brmel/farkad-ai/compare/v0.29.0...HEAD
+[Unreleased]: https://github.com/brmel/farkad-ai/compare/v0.29.1...HEAD
+[0.29.1]: https://github.com/brmel/farkad-ai/compare/v0.29.0...v0.29.1
 [0.29.0]: https://github.com/brmel/farkad-ai/compare/v0.28.0...v0.29.0
 [0.28.0]: https://github.com/brmel/farkad-ai/compare/v0.27.0...v0.28.0
 [0.27.0]: https://github.com/brmel/farkad-ai/compare/v0.26.0...v0.27.0
