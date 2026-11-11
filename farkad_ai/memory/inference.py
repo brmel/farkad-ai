@@ -29,7 +29,7 @@ class StatedDay:
     day_offset: int
 
 
-class _InferredEnd(BaseModel):
+class InferredEnd(BaseModel):
     """When the person said the fact stops applying."""
 
     model_config = ConfigDict(extra="forbid")
@@ -41,7 +41,7 @@ class _InferredEnd(BaseModel):
         return StatedDay(phrase=self.phrase, day_offset=self.day_offset)
 
 
-class _InferredFact(BaseModel):
+class InferredFact(BaseModel):
     """One lasting fact about the person."""
 
     model_config = ConfigDict(extra="forbid")
@@ -49,7 +49,7 @@ class _InferredFact(BaseModel):
     subject: str = Field(description="snake_case topic in English; reuse a known one")
     category: str
     content: str = Field(description=_CONTENT_DESCRIPTION)
-    until: _InferredEnd | None = Field(
+    until: InferredEnd | None = Field(
         default=None, description="Only when the person bounded the fact in time; null otherwise"
     )
     asked_to_remember: bool = Field(
@@ -57,12 +57,12 @@ class _InferredFact(BaseModel):
     )
 
 
-class _InferredFacts(BaseModel):
+class InferredFacts(BaseModel):
     """Every lasting fact the sentence revealed; none for a one-off log."""
 
     model_config = ConfigDict(extra="forbid")
 
-    facts: list[_InferredFact]
+    facts: list[InferredFact]
 
 
 @dataclass(frozen=True, slots=True)
@@ -119,7 +119,7 @@ class MemoryInferrer[Category: StrEnum]:
         )
 
     def _stated(
-        self, inferred: _InferredFact, known: Mapping[str, str]
+        self, inferred: InferredFact, known: Mapping[str, str]
     ) -> Statement[Category] | None:
         subject = known.get(inferred.subject.casefold()) or subject_named(inferred.subject)
         if not subject or not inferred.content.strip():
@@ -140,19 +140,19 @@ def subject_named(said: str) -> str:
     return "_".join(words)[:MAX_SUBJECT_CHARACTERS].strip("_")
 
 
-def _answer_schema(categories: type[StrEnum], max_content_characters: int) -> type[_InferredFacts]:
+def _answer_schema(categories: type[StrEnum], max_content_characters: int) -> type[InferredFacts]:
     fact = create_model(
-        _InferredFact.__name__,
-        __base__=_InferredFact,
-        __doc__=_InferredFact.__doc__,
+        InferredFact.__name__,
+        __base__=InferredFact,
+        __doc__=InferredFact.__doc__,
         category=(categories, ...),
         content=(str, Field(max_length=max_content_characters, description=_CONTENT_DESCRIPTION)),
     )
     each: Any = fact
     return create_model(
-        _InferredFacts.__name__,
-        __base__=_InferredFacts,
-        __doc__=_InferredFacts.__doc__,
+        InferredFacts.__name__,
+        __base__=InferredFacts,
+        __doc__=InferredFacts.__doc__,
         facts=(list[each], ...),
     )
 

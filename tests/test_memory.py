@@ -245,6 +245,17 @@ class TestAKnownSubjectIsReusedAsWritten:
 
 class TestTheModelIsToldWhatIsKnown:
     @pytest.mark.anyio
+    async def test_the_answer_is_asked_for_under_the_names_a_recording_is_keyed_by(self) -> None:
+        model = ScriptedModel({"facts": []})
+
+        await inferrer(model).infer("I eat meat again", (), switched_off=())
+
+        (schema,) = model.schemas
+        described = schema.model_json_schema()
+        assert described["title"] == "InferredFacts"
+        assert {"InferredFact", "InferredEnd"} <= set(described["$defs"])
+
+    @pytest.mark.anyio
     async def test_known_facts_are_listed_so_a_subject_can_be_reused(self) -> None:
         model = ScriptedModel({"facts": []})
 

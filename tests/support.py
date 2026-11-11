@@ -36,11 +36,13 @@ class ScriptedModel(Model):
     def __init__(self, answer: BaseModel | Mapping[str, object]) -> None:
         self._answer = answer
         self.asked: list[Prompt] = []
+        self.schemas: list[type[BaseModel]] = []
 
     async def complete[T: BaseModel](
         self, prompt: Prompt, *, schema: type[T], tier: ModelTier
     ) -> Completion[T]:
         self.asked.append(prompt)
+        self.schemas.append(schema)
         return Completion(value=schema.model_validate(self._answer), usage=a_usage(prompt.step))
 
 
