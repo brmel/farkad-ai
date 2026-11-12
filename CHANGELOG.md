@@ -5,6 +5,11 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 
 ## [Unreleased]
 
+### Changed
+
+- The README says what the engine does today and which AI features it does not have yet: the
+  Decisions API, tool calling, video input, audio output, food recommendations and more.
+
 ## [0.29.1] - 2026-11-10
 
 ### Fixed
