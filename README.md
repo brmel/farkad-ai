@@ -19,17 +19,17 @@ applied AI on a real product.
 ## How it works
 
 ```mermaid
-flowchart LR
+flowchart TD
     input["Text · voice · photo"] --> route["① Route<br/>topics, and a transcript for voice or photo"]
+    memory[("Memory<br/>facts · habits")] -. briefing .-> route
     route --> extract["② Extract<br/>one call per topic, in parallel"]
+    memory -. briefing .-> extract
     extract --> valid{"Valid?"}
     valid -- no --> stronger["Ask the stronger model"] --> valid
     valid -- yes --> entries["Structured entries"]
-    memory[("Memory<br/>facts · habits")] -. briefing .-> route
-    memory -. briefing .-> extract
+    edit["An edited entry"] --> recompute["Recompute"] --> entries
     route -. lasting fact .-> memory
     entries -. habits .-> memory
-    edit["An edited entry"] --> recompute["Recompute"] --> entries
 ```
 
 The vendor sits behind the `Model` interface and the pipeline behind `CaptureEngine`, so either
