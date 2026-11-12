@@ -4,39 +4,42 @@
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 
 The AI engine behind [Farkad](https://farkad.web.app). You say what you ate and did, in your own
-words and languages, and it turns that into structured health entries. I build it in the open to
-learn applied AI on a real product. This page shows what it does today and what it does not do
-yet.
+words and languages, and it becomes structured health entries. I build it in the open to learn
+applied AI on a real product.
 
-| You say | It notes |
-| --- | --- |
-| شربت كأسين ماء et j'ai couru 5 kilometres | **water** 2 glasses, 500 ml · **exercise** run, 5,000 m |
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/demo/dark.gif">
+    <img src="docs/demo/light.gif" width="420" alt="Typing “Two eggs, un grand verre d'eau, slept badly” into the Farkad demo, which answers with a water, a food and a sleep entry">
+  </picture>
+  <br>
+  <sub>Recorded from the <a href="https://farkad.web.app/try">live demo</a>, which runs this engine.</sub>
+</p>
 
 ## How it works
 
-Typed text, a voice recording or a photo goes through two passes:
+```mermaid
+flowchart LR
+    input["Text · voice · photo"] --> route["① Route<br/>topics, and a transcript for voice or photo"]
+    route --> extract["② Extract<br/>one call per topic, in parallel"]
+    extract --> valid{"Valid?"}
+    valid -- no --> stronger["Ask the stronger model"] --> valid
+    valid -- yes --> entries["Structured entries"]
+    memory[("Memory<br/>facts · habits")] -. briefing .-> route
+    memory -. briefing .-> extract
+    route -. lasting fact .-> memory
+    entries -. habits .-> memory
+    edit["An edited entry"] --> recompute["Recompute"] --> entries
+```
 
-1. **Route.** One call names the topics the input mentions: water, food, sleep and so on. For a
-   recording or a photo, the same call also writes down what was said, each part in the language
-   it was spoken in.
-2. **Extract.** Each topic gets its own call, run in parallel, which answers in that topic's
-   schema.
-
-Beside the two passes:
-
-- **Memory** learns lasting facts ("I'm vegetarian") and counts habits, then hands both to every
-  later call as data, never as instructions.
-- **Recompute** works the derived values out again when a person edits an entry.
-
-The vendor sits behind the `Model` interface and the pipeline behind `CaptureEngine`. Either one
+The vendor sits behind the `Model` interface and the pipeline behind `CaptureEngine`, so either
 can be replaced without touching the other.
 
 ## How well it works
 
-Fifteen examples, three per language, on seven example topics. The answers were recorded on
-`gemini-3.5-flash-lite` on 2026-11-09 and are replayed for this table:
+Fifteen examples, three per language, recorded on `gemini-3.5-flash-lite` on 2026-11-09:
 
-| Language | Routing | Fields | Validators | Tokens per example (in / out) |
+| Language | Routing | Fields | Validators | Tokens (in / out) |
 | --- | --: | --: | --: | --: |
 | English | 100% | 100% | 100% | 2,628 / 193 |
 | French | 100% | 100% | 100% | 2,466 / 173 |
@@ -44,50 +47,39 @@ Fifteen examples, three per language, on seven example topics. The answers were 
 | Spanish | 100% | 100% | 100% | 2,288 / 150 |
 | Mixed languages | 100% | 100% | 100% | 2,689 / 170 |
 
-Fifteen examples is a small set: read the table as a regression check, not as a benchmark.
+A small set: read it as a regression check, not a benchmark.
 
 ## Done
 
-| | Feature | How |
-| :-: | --- | --- |
-| ✅ | Text, voice and photo input | A recording or a photo is transcribed and routed in one call |
-| ✅ | Four languages, mixed in one breath | English, French, Arabic (Darija too) and Spanish |
-| ✅ | [Structured output](https://ai.google.dev/gemini-api/docs/structured-output) | Every answer is validated against a Pydantic schema |
-| ✅ | [Model cascade](https://arxiv.org/abs/2305.05176) | An answer that fails validation is asked again on the stronger tier |
-| ✅ | [Reasoning budget](https://ai.google.dev/gemini-api/docs/thinking) | Chosen per tier: none, brief or thorough |
-| ✅ | [Few-shot examples](https://arxiv.org/abs/2005.14165) | Per topic, in the person's own units |
-| ✅ | Long-term memory | Facts a person types in or says, plus habits from the last four weeks |
-| ✅ | Recompute on edit | Changing an amount works the derived values out again |
-| ✅ | [Implicit caching](https://ai.google.dev/gemini-api/docs/caching) | Prompts put the fixed words first, so Gemini can reuse them |
-| ✅ | Evaluation with a gold set | Recorded real answers, replayed in CI with no API key |
+- [x] Text, [voice](https://ai.google.dev/gemini-api/docs/audio) and [photo](https://ai.google.dev/gemini-api/docs/image-understanding) input
+- [x] English, French, Arabic with Darija, and Spanish, mixed in one breath
+- [x] [Structured output](https://ai.google.dev/gemini-api/docs/structured-output), validated with [Pydantic](https://docs.pydantic.dev)
+- [x] [Model cascade](https://arxiv.org/abs/2305.05176)
+- [x] [Reasoning budget](https://ai.google.dev/gemini-api/docs/thinking) per tier
+- [x] [Few-shot examples](https://arxiv.org/abs/2005.14165) per topic
+- [x] Long-term memory: facts and habits
+- [x] Recompute on edit
+- [x] [Implicit caching](https://ai.google.dev/gemini-api/docs/caching)
+- [x] Evaluation on a gold set of recorded answers
 
 ## Not done yet
 
-These are AI features the engine does not have. Each row says what the feature would add and
-where it stands.
+- [ ] [Decisions API](https://blog.google/innovation-and-ai/technology/developers-tools/gemini-decisions-api/), once it reaches Vertex AI
+- [ ] [Tool calling](https://ai.google.dev/gemini-api/docs/function-calling)
+- [ ] Nutrition values from a food database, such as [Open Food Facts](https://world.openfoodfacts.org)
+- [ ] [Video input](https://ai.google.dev/gemini-api/docs/video-understanding)
+- [ ] [Audio output](https://ai.google.dev/gemini-api/docs/speech-generation)
+- [ ] [Live voice](https://ai.google.dev/gemini-api/docs/live)
+- [ ] Food recommendations
+- [ ] Weekly summaries in plain words
+- [ ] Diary search by meaning, with [embeddings](https://ai.google.dev/gemini-api/docs/embeddings)
+- [ ] On-device models
+- [ ] [Batch](https://ai.google.dev/gemini-api/docs/batch-api) evaluation runs
 
-| Feature | What it would add | Where it stands |
-| --- | --- | --- |
-| [Decisions API](https://blog.google/innovation-and-ai/technology/developers-tools/gemini-decisions-api/) (`gemini-decision-1`) | Fast, cheap yes/no and scored answers, for example grading the gold set by meaning | Watching: launched 2026-11-11 on the Gemini Developer API only, not yet on Vertex AI |
-| [Tool calling](https://ai.google.dev/gemini-api/docs/function-calling) | The model looks a food up in a nutrition database instead of estimating it | Not started: the fixed two-pass pipeline is cheaper and reproducible |
-| Grounding in a food database | Calories and macros from a published source, not the model's estimate | Not started: today every value is an editable estimate |
-| [Video input](https://ai.google.dev/gemini-api/docs/video-understanding) | A short clip of a meal or a workout becomes entries | Not started: Gemini reads video, but a clip costs far more tokens than a photo |
-| [Audio output](https://ai.google.dev/gemini-api/docs/speech-generation) | Farkad says back what it noted, hands-free | Not started |
-| [Live voice](https://ai.google.dev/gemini-api/docs/live) | A spoken conversation, answered as you talk | Not started: today a recording is sent once it ends |
-| Food recommendations | Meal ideas that fit your goals, memory and history | Not started: it must stay a suggestion, never medical advice |
-| Written summaries and coaching | A weekly recap of your patterns, in plain words | Not started: trends are computed, not written |
-| [Embeddings](https://ai.google.dev/gemini-api/docs/embeddings) | Search your diary by meaning ("when did I last eat fish?") | Not started |
-| On-device models | Routing on the phone, offline and private | Not started |
-| [Batch API](https://ai.google.dev/gemini-api/docs/batch-api) | Half-price evaluation runs | Not started: entries are answered in real time |
-
-Left out on purpose, until a measurement says otherwise:
-
-| Technique | Why not |
-| --- | --- |
-| [RAG](https://arxiv.org/abs/2005.11401) | A person's memory fits in the prompt |
-| Fine-tuning | Prompts and the gold set iterate faster |
-| [Agents](https://www.anthropic.com/research/building-effective-agents) and agent frameworks | A fixed two-pass pipeline is cheaper and reproducible |
-| [Explicit context caching](https://ai.google.dev/gemini-api/docs/caching) | Implicit caching already reuses the fixed words, with no cache to manage |
+Left out on purpose: [RAG](https://arxiv.org/abs/2005.11401), because a person's memory fits in
+the prompt; fine-tuning, because prompts and the gold set iterate faster; and
+[agents](https://www.anthropic.com/research/building-effective-agents), because a fixed pipeline
+is cheaper and reproducible.
 
 ## Try it
 
