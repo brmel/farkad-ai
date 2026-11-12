@@ -74,6 +74,13 @@ mypy override in `pyproject.toml` and a place in CI's matrix; no other module im
 - A comment states only a constraint the code cannot, citing its source, as in
   `farkad_ai/models/vertex.py`.
 
+## The README
+
+- A change to how input becomes entries updates the README's diagram in the same pull request.
+- The demo GIFs are recorded from the live site, in light and dark, with one call to its model:
+  `uv run --no-project --with playwright==1.64.0 python docs/demo/record.py`. Run
+  `python -m playwright install chromium` the first time.
+
 ## Pull requests
 
 A pull request holds one change and a test that fails without it. A change a consumer would
