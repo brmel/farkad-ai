@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from collections.abc import Iterable
 from dataclasses import dataclass, replace
 from functools import partial
@@ -55,18 +56,27 @@ async def _scored(
         expected=case.expected,
         expected_flags=case.flags,
     )
+    started = time.perf_counter()
     try:
         outcome = await engine.capture(replace(case.request(tracked), briefing=briefing))
     except ModelUnavailableError as unavailable:
         if unavailable.because is not Unavailability.output_did_not_parse:
             raise
-        return scored(heard="", routed=(), extracted={}, unparsed_response_from=unavailable.model)
+        return scored(
+            elapsed_ms=_milliseconds_since(started),
+            heard="",
+            routed=(),
+            extracted={},
+            unparsed_response_from=unavailable.model,
+        )
+    elapsed_ms = _milliseconds_since(started)
     match outcome:
         case Logged(routes=routes, extracted=extracted):
             pass
         case NothingToLog():
             routes, extracted = frozenset(), ()
     return scored(
+        elapsed_ms=elapsed_ms,
         heard=outcome.transcript,
         routed=sorted(routes),
         extracted={each.pillar: [entry.values for entry in each.entries] for each in extracted},
@@ -78,3 +88,7 @@ async def _scored(
             for finding in entry.findings
         ],
     )
+
+
+def _milliseconds_since(started: float) -> int:
+    return round((time.perf_counter() - started) * 1000)

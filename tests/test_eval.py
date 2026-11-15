@@ -1,9 +1,19 @@
+import anyio
 import pytest
+from pydantic import BaseModel
 
 from farkad_ai.eval.example import evaluate_examples, report
 from farkad_ai.eval.run import GoldCase, evaluate
 from farkad_ai.extraction.port import Finding, TrackedPillar
-from farkad_ai.models.port import MediaBlob, MediaType, ModelUnavailableError, Unavailability
+from farkad_ai.models.port import (
+    Completion,
+    MediaBlob,
+    MediaType,
+    ModelTier,
+    ModelUnavailableError,
+    Prompt,
+    Unavailability,
+)
 from farkad_ai.pipeline.port import CaptureRequest
 from farkad_ai.routing.pass_one import Mention, TranscribedPassOne
 from tests.support import AnswersByStep, Spec, Tracked
@@ -88,6 +98,29 @@ async def test_an_answer_that_does_not_parse_scores_zero_and_stays_in_the_run() 
     assert not scored.score.routing_is_exact
     assert scored.score.unparsed_response_from == "model-fast"
     assert scored.score.usages == ()
+
+
+class AnswersAfterAPause(AnswersByStep):
+    async def complete[T: BaseModel](
+        self, prompt: Prompt, *, schema: type[T], tier: ModelTier
+    ) -> Completion[T]:
+        await anyio.sleep(PAUSE_SECONDS)
+        return await super().complete(prompt, schema=schema, tier=tier)
+
+
+PAUSE_SECONDS = 0.05
+
+
+async def test_a_capture_is_timed_across_every_call_it_waited_for_answered_or_not() -> None:
+    case = GoldCase(utterance="a glass", routes=("water",))
+    answered = AnswersAfterAPause(routing=A_GLASS, extraction={"entries": []})
+    unparsed = AnswersAfterAPause(routing=Unavailability.output_did_not_parse)
+
+    (logged,) = await evaluate(answered, CATALOGUE, (Tracked("water"),), [case])
+    (refused,) = await evaluate(unparsed, CATALOGUE, (Tracked("water"),), [case])
+
+    assert logged.score.elapsed_ms >= 2 * PAUSE_SECONDS * 1000
+    assert PAUSE_SECONDS * 1000 <= refused.score.elapsed_ms < logged.score.elapsed_ms
 
 
 async def test_a_refusal_other_than_an_unparsed_answer_is_raised() -> None:

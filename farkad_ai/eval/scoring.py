@@ -39,6 +39,7 @@ class CaptureScore:
     flagged: frozenset[str]
     expected_flags: frozenset[str]
     unparsed_response_from: str | None
+    elapsed_ms: int
 
     @property
     def routing_is_exact(self) -> bool:
@@ -123,6 +124,7 @@ def score_capture(
     expected: Mapping[str, Sequence[Mapping[str, object]]],
     routed: Sequence[str],
     extracted: Mapping[str, Sequence[Mapping[str, object]]],
+    elapsed_ms: int,
     usages: Sequence[Usage] = (),
     flagged: Sequence[str] = (),
     expected_flags: Sequence[str] = (),
@@ -147,6 +149,7 @@ def score_capture(
         flagged=frozenset(flagged),
         expected_flags=frozenset(expected_flags),
         unparsed_response_from=unparsed_response_from,
+        elapsed_ms=elapsed_ms,
     )
 
 

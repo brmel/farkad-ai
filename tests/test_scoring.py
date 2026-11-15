@@ -22,6 +22,7 @@ def test_each_wrong_field_counts_against_field_accuracy(
         expected={"nutrition": [{"name": "Apple", "calories": 95}]},
         routed=["nutrition"],
         extracted={"nutrition": [eaten]},
+        elapsed_ms=0,
     )
 
     assert score.routing_is_exact
@@ -54,6 +55,7 @@ def test_a_run_reports_the_mean_and_p95_of_the_tokens_its_captures_spent() -> No
             expected={},
             routed=[],
             extracted={},
+            elapsed_ms=0,
             usages=[a_usage(PipelineStep.routing)] * calls,
         )
         for calls in range(1, 21)
@@ -74,6 +76,7 @@ def test_word_errors_are_counted_against_the_words_said_not_their_marks_or_case(
             expected={},
             routed=[],
             extracted={},
+            elapsed_ms=0,
         )
 
     exact = heard("J'ai bu un litre d'eau.", "j'ai bu un litre d'eau")
