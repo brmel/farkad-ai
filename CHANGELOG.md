@@ -5,6 +5,14 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 
 ## [Unreleased]
 
+## [0.30.0] - 2026-11-15
+
+### Added
+
+- A scored capture carries `elapsed_ms`, the time the engine took to answer it, including the
+  calls of an answer that did not parse, so an eval run reports speed beside accuracy and cost.
+  **Breaking:** `score_capture` takes `elapsed_ms`.
+
 ### Changed
 
 - The README says what the engine does today and which AI features it does not have yet: the
@@ -349,7 +357,8 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 - Gemini on Vertex AI, Claude and OpenAI behind one interface; long-term memory; an offline eval
   on recorded answers; the `farkad-ai` command.
 
-[Unreleased]: https://github.com/brmel/farkad-ai/compare/v0.29.1...HEAD
+[Unreleased]: https://github.com/brmel/farkad-ai/compare/v0.30.0...HEAD
+[0.30.0]: https://github.com/brmel/farkad-ai/compare/v0.29.1...v0.30.0
 [0.29.1]: https://github.com/brmel/farkad-ai/compare/v0.29.0...v0.29.1
 [0.29.0]: https://github.com/brmel/farkad-ai/compare/v0.28.0...v0.29.0
 [0.28.0]: https://github.com/brmel/farkad-ai/compare/v0.27.0...v0.28.0
