@@ -7,7 +7,6 @@
       "Bash(pytest:*)",
       "Bash(python -m pytest:*)",
       "Bash(farkad-ai eval)",
-      "Bash(farkad-ai prompts)",
       "Bash(rg:*)",
       "Bash(gh issue view:*)",
       "Bash(gh pr view:*)",
