@@ -16,7 +16,40 @@ applied AI on a real product.
   <sub>Recorded from the <a href="https://farkad.web.app/try">live demo</a>, which runs this engine.</sub>
 </p>
 
+## Try it
+
+No API key: the engine below answers from recorded Gemini responses.
+
+```python
+import asyncio
+
+from farkad_ai.eval.example import RECORDINGS
+from farkad_ai.eval.pillars import EXAMPLE_PILLARS
+from farkad_ai.models.recorded import RecordedModel
+from farkad_ai.pipeline.engine import TwoPassCaptureEngine
+from farkad_ai.pipeline.port import CaptureRequest
+
+engine = TwoPassCaptureEngine(RecordedModel(RECORDINGS), EXAMPLE_PILLARS)
+request = CaptureRequest(tracked=EXAMPLE_PILLARS, text="I drank 500 ml of water")
+print(asyncio.run(engine.capture(request)))
+```
+
+It prints a `Logged` holding one water entry, `{'category': 'water', 'volume_ml': 500.0}`, and
+the token usage of the two calls. Install, then reproduce the table below or route a sentence
+from the command line:
+
+```bash
+pip install "farkad-ai @ git+https://github.com/brmel/farkad-ai"
+farkad-ai eval
+farkad-ai route --text "I drank 500 ml of water"
+```
+
+Your own input needs a live model: install `farkad-ai[google]` and pass `--provider vertex`.
+
 ## How it works
+
+A capture is a fixed pipeline of model calls, not an agent: the code decides every step. What the
+code calls a *pillar* is a topic the user tracks, such as food, water or sleep.
 
 ```mermaid
 flowchart TD
@@ -24,20 +57,41 @@ flowchart TD
     memory[("Memory<br/>facts · habits")] -. briefing .-> route
     route --> extract["② Extract<br/>one call per topic, in parallel"]
     memory -. briefing .-> extract
-    extract --> valid{"Valid?"}
-    valid -- no --> stronger["Ask the stronger model"] --> valid
-    valid -- yes --> entries["Structured entries"]
+    extract --> parsed{"Parses?"}
+    parsed -- no --> stronger["Ask the stronger model"] --> parsed
+    parsed -- yes --> entries["Structured entries"]
     edit["An edited entry"] --> recompute["Recompute"] --> entries
     route -. lasting fact .-> memory
     entries -. habits .-> memory
 ```
 
-The vendor sits behind the `Model` interface and the pipeline behind `CaptureEngine`, so either
-can be replaced without touching the other.
+1. **Route** (`routing/`): one fast-tier call returns the language, a transcript when the input
+   was a clip or a photo, and each thing said with the one topic that records it.
+2. **Extract** (`extraction/`): one call per routed topic, in parallel, each seeing only its own
+   mentions and answering in that topic's Pydantic schema. An answer that does not parse is asked
+   again of the standard tier; a topic that still fails is reported in `Logged.refused`, and the
+   others are kept.
+3. **Result** (`pipeline/port.py`): `Logged` or `NothingToLog`, both with the token usage of
+   every call.
+
+The vendor sits behind the `Model` port and the pipeline behind `CaptureEngine`, so either can
+be replaced without touching the other. Topics are supplied by the caller as `TrackedPillar`s:
+`eval/pillars.py` has seven examples.
+
+| Folder | Holds |
+| --- | --- |
+| `pipeline/` | `CaptureEngine` port, `TwoPassCaptureEngine`, the `Logged` result |
+| `routing/` | pass one: topics, language, transcript, stated time |
+| `extraction/` | per-topic extraction and its escalation; recompute after an edit |
+| `memory/` | lasting facts, habit baselines, and the briefing both passes receive |
+| `models/` | `Model` port; `vertex.py` (Gemini), `recorded.py` (replay and record) |
+| `prompts/` | the prompt texts, versioned by hash |
+| `eval/` | the gold set, scoring and the recordings it replays |
 
 ## How well it works
 
-Fifteen examples, three per language, recorded on `gemini-3.5-flash-lite` on 2026-11-09:
+Fifteen examples, three per language, recorded on `gemini-3.5-flash-lite` on 2026-11-09; run
+`farkad-ai eval` for the full table, with p95 tokens.
 
 | Language | Routing | Fields | Validators | Tokens (in / out) |
 | --- | --: | --: | --: | --: |
@@ -47,51 +101,26 @@ Fifteen examples, three per language, recorded on `gemini-3.5-flash-lite` on 202
 | Spanish | 100% | 100% | 100% | 2,288 / 150 |
 | Mixed languages | 100% | 100% | 100% | 2,689 / 170 |
 
-A small set: read it as a regression check, not a benchmark.
+Too small to be a benchmark: it catches a regression in a prompt or a schema.
 
-## Done
+## What it uses
 
-- [x] Text, [voice](https://ai.google.dev/gemini-api/docs/audio) and [photo](https://ai.google.dev/gemini-api/docs/image-understanding) input
-- [x] English, French, Arabic with Darija, and Spanish, mixed in one breath
-- [x] [Structured output](https://ai.google.dev/gemini-api/docs/structured-output), validated with [Pydantic](https://docs.pydantic.dev)
-- [x] [Model cascade](https://arxiv.org/abs/2305.05176)
-- [x] [Reasoning budget](https://ai.google.dev/gemini-api/docs/thinking) per tier
-- [x] [Few-shot examples](https://arxiv.org/abs/2005.14165) per topic
-- [x] Long-term memory: facts and habits
-- [x] Recompute on edit
-- [x] [Implicit caching](https://ai.google.dev/gemini-api/docs/caching)
-- [x] Evaluation on a gold set of recorded answers
+[Voice](https://ai.google.dev/gemini-api/docs/audio) and
+[photo](https://ai.google.dev/gemini-api/docs/image-understanding) input ·
+[structured output](https://ai.google.dev/gemini-api/docs/structured-output) validated with
+[Pydantic](https://docs.pydantic.dev) · a [model cascade](https://arxiv.org/abs/2305.05176) ·
+a [reasoning budget](https://ai.google.dev/gemini-api/docs/thinking) per tier ·
+[few-shot examples](https://arxiv.org/abs/2005.14165) per topic ·
+[implicit caching](https://ai.google.dev/gemini-api/docs/caching) · English, French, Arabic with
+Darija and Spanish in one sentence · long-term memory · recompute on edit · an evaluation on
+recorded answers.
 
-## Not done yet
-
-- [ ] [Decisions API](https://blog.google/innovation-and-ai/technology/developers-tools/gemini-decisions-api/), once it reaches Vertex AI
-- [ ] [Tool calling](https://ai.google.dev/gemini-api/docs/function-calling)
-- [ ] Nutrition values from a food database, such as [Open Food Facts](https://world.openfoodfacts.org)
-- [ ] [Video input](https://ai.google.dev/gemini-api/docs/video-understanding)
-- [ ] [Audio output](https://ai.google.dev/gemini-api/docs/speech-generation)
-- [ ] [Live voice](https://ai.google.dev/gemini-api/docs/live)
-- [ ] Food recommendations
-- [ ] Weekly summaries in plain words
-- [ ] Diary search by meaning, with [embeddings](https://ai.google.dev/gemini-api/docs/embeddings)
-- [ ] On-device models
-- [ ] [Batch](https://ai.google.dev/gemini-api/docs/batch-api) evaluation runs
-
-Left out on purpose: [RAG](https://arxiv.org/abs/2005.11401), because a person's memory fits in
-the prompt; fine-tuning, because prompts and the gold set iterate faster; and
+Not built: [tool calling](https://ai.google.dev/gemini-api/docs/function-calling), nutrition
+values from a food database, video input, audio output, live voice, embeddings and on-device
+models. Left out on purpose: [RAG](https://arxiv.org/abs/2005.11401), because a person's memory
+fits in the prompt; fine-tuning, because prompts and the gold set iterate faster; and
 [agents](https://www.anthropic.com/research/building-effective-agents), because a fixed pipeline
 is cheaper and reproducible.
-
-## Try it
-
-You can reproduce the table, or route one of its examples, with no API key:
-
-```bash
-pip install "farkad-ai @ git+https://github.com/brmel/farkad-ai"
-farkad-ai eval
-farkad-ai route --text "I drank 500 ml of water"
-```
-
-Your own input needs a live model: install `farkad-ai[google]` and pass `--provider vertex`.
 
 ## Extend it
 
