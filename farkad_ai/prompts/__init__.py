@@ -31,14 +31,5 @@ def prompt(name: str) -> PromptAsset:
     return PromptAsset(name=name, text=text)
 
 
-def list_prompts() -> tuple[PromptAsset, ...]:
-    names = sorted(
-        entry.name.removesuffix(_SUFFIX)
-        for entry in _ASSETS.iterdir()
-        if entry.name.endswith(_SUFFIX)
-    )
-    return tuple(prompt(name) for name in names)
-
-
 def briefed(instructions: str, briefing: str) -> str:
     return f"{instructions}\n\n{briefing}" if briefing else instructions

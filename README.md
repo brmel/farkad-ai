@@ -65,16 +65,9 @@ flowchart TD
     entries -. habits .-> memory
 ```
 
-1. **Route** (`routing/`): one fast-tier call returns the language, a transcript when the input
-   was a clip or a photo, and each thing said with the one topic that records it.
-2. **Extract** (`extraction/`): one call per routed topic, in parallel, each seeing only its own
-   mentions and answering in that topic's Pydantic schema. An answer that does not parse is asked
-   again of the standard tier; a topic that still fails is reported in `Logged.refused`, and the
-   others are kept.
-3. **Result** (`pipeline/port.py`): `Logged` or `NothingToLog`, both with the token usage of
-   every call.
-
-The vendor sits behind the `Model` port and the pipeline behind `CaptureEngine`, so either can
+The result is `Logged` or `NothingToLog`, both with the token usage of every call; a topic that
+still fails on the stronger model is reported in `Logged.refused`, and the others are kept. The
+vendor sits behind the `Model` port and the pipeline behind `CaptureEngine`, so either can
 be replaced without touching the other. Topics are supplied by the caller as `TrackedPillar`s:
 `eval/pillars.py` has seven examples.
 
@@ -84,7 +77,7 @@ be replaced without touching the other. Topics are supplied by the caller as `Tr
 | `routing/` | pass one: topics, language, transcript, stated time |
 | `extraction/` | per-topic extraction and its escalation; recompute after an edit |
 | `memory/` | lasting facts, habit baselines, and the briefing both passes receive |
-| `models/` | `Model` port; `vertex.py` (Gemini), `recorded.py` (replay and record) |
+| `models/` | `Model` port; `vertex.py` (Gemini), `recorded.py` (replay and record), `recording.py` (the recorded format) |
 | `prompts/` | the prompt texts, versioned by hash |
 | `eval/` | the gold set, scoring and the recordings it replays |
 
@@ -122,12 +115,5 @@ fits in the prompt; fine-tuning, because prompts and the gold set iterate faster
 [agents](https://www.anthropic.com/research/building-effective-agents), because a fixed pipeline
 is cheaper and reproducible.
 
-## Extend it
-
-- **A topic:** copy one of the seven in `farkad_ai/eval/pillars.py` and add examples to
-  `farkad_ai/eval/example_gold.json`.
-- **A model provider:** add one module beside `farkad_ai/models/vertex.py`.
-- **A prompt:** add a text file in `farkad_ai/prompts/assets/`.
-
-[Contributing](CONTRIBUTING.md) says what each one needs · [Changelog](CHANGELOG.md) ·
+[Contributing](CONTRIBUTING.md): adding a topic, a model provider or a prompt · [Changelog](CHANGELOG.md) ·
 [Security](SECURITY.md) · [Apache 2.0](LICENSE)

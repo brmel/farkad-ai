@@ -1,4 +1,5 @@
 import re
+from importlib.resources import files
 from string import Formatter
 
 import pytest
@@ -7,9 +8,16 @@ from farkad_ai.eval.example import GOLD, ExampleGold
 from farkad_ai.eval.pillars import EXAMPLE_PILLARS
 from farkad_ai.extraction.extractor import PillarExtractor
 from farkad_ai.extraction.port import ExtractionContext
-from farkad_ai.prompts import list_prompts
+from farkad_ai.prompts import PromptAsset, prompt
 from farkad_ai.routing.pass_one import routing_instructions
 from tests.support import ScriptedModel, Tracked
+
+
+def every_prompt() -> list[PromptAsset]:
+    shipped = files("farkad_ai.prompts.assets").iterdir()
+    return [
+        prompt(each.name.removesuffix(".txt")) for each in shipped if each.name.endswith(".txt")
+    ]
 
 
 @pytest.mark.anyio
@@ -28,7 +36,7 @@ async def test_a_pillar_s_extraction_version_moves_with_its_words_and_not_with_t
 
 
 def test_every_brace_in_a_prompt_is_a_placeholder() -> None:
-    for asset in list_prompts():
+    for asset in every_prompt():
         for _, field, _, _ in Formatter().parse(asset.text):
             if field is None:
                 continue
@@ -59,7 +67,7 @@ def test_no_prompt_or_worked_example_quotes_the_gold_set() -> None:
     gold = ExampleGold.model_validate_json(GOLD.read_text(encoding="utf-8"))
     said = [case.utterance.casefold() for case in gold.cases]
     illustrations = [
-        *(phrase for asset in list_prompts() for phrase in quoted(asset.text)),
+        *(phrase for asset in every_prompt() for phrase in quoted(asset.text)),
         *(quoted(pillar.examples)[0] for pillar in EXAMPLE_PILLARS),
     ]
 

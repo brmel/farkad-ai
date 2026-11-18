@@ -5,6 +5,15 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking:** `Recording` and `fingerprint` live in `farkad_ai.models.recording`, the format
+  of a recorded answer, apart from the models that replay and record it.
+
+### Removed
+
+- **Breaking:** `list_prompts()`, which only this library's tests read.
+
 ## [0.30.0] - 2026-11-15
 
 ### Added
@@ -12,13 +21,6 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 - A scored capture carries `elapsed_ms`, the time the engine took to answer it, including the
   calls of an answer that did not parse, so an eval run reports speed beside accuracy and cost.
   **Breaking:** `score_capture` takes `elapsed_ms`.
-
-### Changed
-
-- The README says what the engine does today and which AI features it does not have yet: the
-  Decisions API, tool calling, video input, audio output, food recommendations and more.
-- The README shows the live demo as a GIF and the flow as a diagram, both kept current by
-  CONTRIBUTING's "The README".
 
 ## [0.29.1] - 2026-11-10
 
@@ -163,9 +165,6 @@ format. Before 1.0 a minor version may break the interface; each break is marked
   training" and "estiramientos después de correr" log the stretching alone.
 - `farkad-ai route` requires `--text`, and stops with its usage before any model is created
   instead of routing an empty sentence.
-- CI passes again: the core-only leg type-checks the Vertex retry test.
-- The README's cascade row says a failed topic is asked again on the standard tier, a stronger
-  model or the same one given time to reason, and the measured table names its example topics.
 
 ## [0.21.0] - 2026-10-18
 
