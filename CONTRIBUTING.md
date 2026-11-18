@@ -40,7 +40,7 @@ SDK.
 `farkad-ai eval` scores the gold set, `farkad_ai/eval/example_gold.json`, on the example topics
 in `farkad_ai/eval/pillars.py`, replaying the answers in `farkad_ai/eval/recordings/`. Each
 recording is keyed by a hash of the tier, the answer schema, the instructions and the input
-(`farkad_ai/models/recorded.py`). Changing a prompt, a schema or an example topic therefore
+(`farkad_ai/models/recording.py`). Changing a prompt, a schema or an example topic therefore
 leaves sentences with no recorded answer, and `pytest` fails saying whether the prompt or the
 schema changed. Record new answers on a live model:
 
@@ -52,6 +52,12 @@ Recording asks the model about every gold sentence, which spends money on your a
 replaces every recording. The committed recordings, and the README's table, come from Vertex;
 update the table from the new output. If you cannot record on Vertex, say so in the pull request
 and the maintainer records them.
+
+## Adding a topic or a prompt
+
+A topic is a copy of one of the seven in `farkad_ai/eval/pillars.py`, with its examples added to
+`farkad_ai/eval/example_gold.json`; a prompt is a text file in `farkad_ai/prompts/assets/`. Both
+need new recordings.
 
 ## Adding a model provider
 

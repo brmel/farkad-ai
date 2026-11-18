@@ -24,8 +24,8 @@ from farkad_ai.models.recorded import (
     RecordingModel,
     Unreachable,
     UnrecordedModelError,
-    fingerprint,
 )
+from farkad_ai.models.recording import fingerprint
 from tests.support import a_usage
 
 pytestmark = pytest.mark.anyio

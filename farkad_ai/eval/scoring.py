@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import math
-import unicodedata
 from collections import Counter
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 
+from farkad_ai.eval.words import word_errors, words
 from farkad_ai.models.port import Usage
 
 _NUMERIC_TOLERANCE = 0.01
@@ -63,36 +63,11 @@ class CaptureScore:
 
     @property
     def reference_words(self) -> int:
-        return len(_words(self.utterance))
+        return len(words(self.utterance))
 
     @property
     def word_errors(self) -> int:
-        return _edit_distance(_words(self.utterance), _words(self.heard))
-
-
-def _words(said: str) -> list[str]:
-    kept = (
-        " " if unicodedata.category(c)[0] in "PSZ" else c
-        for c in unicodedata.normalize("NFKC", said).casefold()
-        if unicodedata.category(c) != "Mn"
-    )
-    return "".join(kept).split()
-
-
-def _edit_distance(reference: list[str], heard: list[str]) -> int:
-    previous = list(range(len(heard) + 1))
-    for row, wanted in enumerate(reference, start=1):
-        current = [row]
-        for column, found in enumerate(heard, start=1):
-            current.append(
-                min(
-                    previous[column] + 1,
-                    current[column - 1] + 1,
-                    previous[column - 1] + (wanted != found),
-                )
-            )
-        previous = current
-    return previous[-1]
+        return word_errors(self.utterance, self.heard)
 
 
 def matches(expected: object, found: object) -> bool:
