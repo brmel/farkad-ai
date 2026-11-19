@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from datetime import time
+from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, create_model, field_validator
 
 from farkad_ai.prompts import prompt
 from farkad_ai.routing.port import PartOfDay, PillarSpec, StatedTime
@@ -62,6 +63,13 @@ class TimeHint(BaseModel):
         )
 
 
+class Headline(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    def in_each_language(self) -> dict[str, str]:
+        return self.model_dump()
+
+
 class Mention(BaseModel):
     """One thing the user logged, and the one pillar that records it."""
 
@@ -93,6 +101,7 @@ class PassOne(BaseModel):
         default_factory=list,
         description="Every thing the user logged, each once, under the one pillar that records it",
     )
+    headline: Headline
 
     def transcript_of(self, typed: str) -> str:
         return typed
@@ -107,3 +116,23 @@ class TranscribedPassOne(PassOne, _Transcript):
 
     def transcript_of(self, typed: str) -> str:
         return self.transcript
+
+
+def answer_schemas(
+    headline_languages: Mapping[str, str],
+) -> tuple[type[PassOne], type[TranscribedPassOne]]:
+    written_in: dict[str, Any] = {
+        tag: (str, Field(description=f"The headline in {name}"))
+        for tag, name in headline_languages.items()
+    }
+    in_each_language = create_model("Headline", __base__=Headline, **written_in)
+    headline = (
+        in_each_language,
+        Field(
+            description="This log in a few words, as its person would title it, in each language"
+        ),
+    )
+    return (
+        create_model("PassOne", __base__=PassOne, headline=headline),
+        create_model("TranscribedPassOne", __base__=TranscribedPassOne, headline=headline),
+    )

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 
 from farkad_ai.extraction.extractor import PillarExtractor
 from farkad_ai.extraction.port import ExtractionContext, ExtractionResult, TrackedPillar
@@ -25,9 +25,16 @@ class TwoPassCaptureEngine(CaptureEngine):
     """Routes a capture once, then extracts each tracked pillar it names, side by side."""
 
     def __init__(
-        self, model: Model, catalogue: Iterable[PillarSpec], *, routing_rules: tuple[str, ...] = ()
+        self,
+        model: Model,
+        catalogue: Iterable[PillarSpec],
+        *,
+        headline_languages: Mapping[str, str],
+        routing_rules: tuple[str, ...] = (),
     ) -> None:
-        self._router = Router(model, catalogue, rules=routing_rules)
+        self._router = Router(
+            model, catalogue, headline_languages=headline_languages, rules=routing_rules
+        )
         self._extractor = PillarExtractor(model)
 
     async def capture(self, request: CaptureRequest) -> CaptureOutcome:
@@ -86,6 +93,7 @@ def _logged(routed: Routed, attempts: Iterable[ExtractionResult | PillarRefused]
         transcript=routed.transcript,
         language=routed.language,
         states_a_lasting_fact=routed.states_a_lasting_fact,
+        headline=routed.headline,
         routes=routed.routes,
         untracked=routed.untracked,
         extracted=tuple(extracted),

@@ -1,15 +1,10 @@
 from datetime import time
 
 import pytest
+from pydantic import ValidationError
 
 from farkad_ai.models.port import MediaBlob, MediaType
-from farkad_ai.routing.pass_one import (
-    Mention,
-    PassOne,
-    TimeHint,
-    TranscribedPassOne,
-    routing_instructions,
-)
+from farkad_ai.routing.pass_one import Mention, TimeHint, routing_instructions
 from farkad_ai.routing.port import (
     NothingToLog,
     NothingToLogReason,
@@ -19,27 +14,33 @@ from farkad_ai.routing.port import (
     StatedTime,
 )
 from farkad_ai.routing.router import Router
-from tests.support import ScriptedModel, Spec
+from tests.support import HEADLINE, HEADLINE_LANGUAGES, ScriptedModel, Spec, routing_answer
 
 pytestmark = pytest.mark.anyio
 
 CATALOGUE = (Spec("water", "tracks water intake"), Spec("food", "logs meals and snacks"))
 
 
+SAID = "I drank two glasses of water"
+CLIP = (MediaBlob(MediaType.audio_aac, b"clip"),)
+
+
 def heard(
     *pillars: str, is_health_related: bool = True, states_a_lasting_fact: bool = False
-) -> TranscribedPassOne:
-    return TranscribedPassOne(
-        transcript="I drank two glasses of water",
-        language="en",
+) -> dict[str, object]:
+    return routing_answer(
+        *(Mention(pillar=pillar, said=f"some {pillar}") for pillar in pillars),
         is_health_related=is_health_related,
         states_a_lasting_fact=states_a_lasting_fact,
-        mentions=[Mention(pillar=pillar, said=f"some {pillar}") for pillar in pillars],
     )
 
 
-async def routed(answer: TranscribedPassOne, tracked: frozenset[str]) -> RoutingOutcome:
-    return await Router(ScriptedModel(answer), CATALOGUE).route(tracked, text=answer.transcript)
+def router(model: ScriptedModel, rules: tuple[str, ...] = ()) -> Router:
+    return Router(model, CATALOGUE, headline_languages=HEADLINE_LANGUAGES, rules=rules)
+
+
+async def routed(answer: dict[str, object], tracked: frozenset[str]) -> RoutingOutcome:
+    return await router(ScriptedModel(answer)).route(tracked, text=SAID)
 
 
 class TestTheRouterDecidesRatherThanTheModel:
@@ -52,16 +53,10 @@ class TestTheRouterDecidesRatherThanTheModel:
         assert outcome.mentions == {"water": ("some water",)}
 
     async def test_each_tracked_pillar_is_handed_only_what_was_listed_under_it(self) -> None:
-        answer = TranscribedPassOne(
-            transcript="a smoothie, a scoop of whey and a dose of creatine",
-            language="en",
-            is_health_related=True,
-            states_a_lasting_fact=False,
-            mentions=[
-                Mention(pillar="food", said="a smoothie"),
-                Mention(pillar="water", said="a glass of water"),
-                Mention(pillar="food", said="a scoop of whey"),
-            ],
+        answer = routing_answer(
+            Mention(pillar="food", said="a smoothie"),
+            Mention(pillar="water", said="a glass of water"),
+            Mention(pillar="food", said="a scoop of whey"),
         )
 
         outcome = await routed(answer, frozenset({"water", "food"}))
@@ -86,19 +81,13 @@ class TestTheRouterDecidesRatherThanTheModel:
         assert outcome.reason is NothingToLogReason.not_a_health_log
 
     async def test_a_stated_time_dates_only_the_mention_it_was_said_about(self) -> None:
-        answer = TranscribedPassOne(
-            transcript="a coffee at eight, and two glasses of water",
-            language="en",
-            is_health_related=True,
-            states_a_lasting_fact=False,
-            mentions=[
-                Mention(
-                    pillar="food",
-                    said="a coffee at eight",
-                    occurred_at_hint=TimeHint(day_offset=0, clock=time(8, 0)),
-                ),
-                Mention(pillar="water", said="two glasses of water"),
-            ],
+        answer = routing_answer(
+            Mention(
+                pillar="food",
+                said="a coffee at eight",
+                occurred_at_hint=TimeHint(day_offset=0, clock=time(8, 0)),
+            ),
+            Mention(pillar="water", said="two glasses of water"),
         )
 
         outcome = await routed(answer, frozenset({"water", "food"}))
@@ -119,11 +108,35 @@ class TestTheRouterDecidesRatherThanTheModel:
     ],
 )
 async def test_a_lasting_fact_is_reported_whether_or_not_anything_is_logged(
-    answer: TranscribedPassOne,
+    answer: dict[str, object],
 ) -> None:
     outcome = await routed(answer, frozenset({"water"}))
 
     assert outcome.states_a_lasting_fact
+
+
+class TestTheHeadlineIsWrittenInEveryLanguageAsked:
+    @pytest.mark.parametrize("is_health_related", [True, False])
+    async def test_whether_or_not_anything_is_logged(self, is_health_related: bool) -> None:
+        outcome = await routed(
+            heard("water", is_health_related=is_health_related), frozenset({"water"})
+        )
+
+        assert outcome.headline == HEADLINE
+
+    async def test_an_answer_missing_a_language_is_refused(self) -> None:
+        answer = heard("water") | {"headline": {"en": "Two glasses of water"}}
+
+        with pytest.raises(ValidationError):
+            await routed(answer, frozenset({"water"}))
+
+    @pytest.mark.parametrize("media", [(), CLIP])
+    async def test_it_is_answered_after_everything_else(self, media: tuple[MediaBlob, ...]) -> None:
+        model = ScriptedModel(heard("water") | ({"transcript": SAID} if media else {}))
+
+        await router(model).route(frozenset({"water"}), text=SAID, media=media)
+
+        assert [*model.schemas[0].model_json_schema()["properties"]][-1] == "headline"
 
 
 CATALOGUE_LISTED = "- water: tracks water intake\n- food: logs meals and snacks"
@@ -132,7 +145,7 @@ CATALOGUE_LISTED = "- water: tracks water intake\n- food: logs meals and snacks"
 async def test_a_catalogue_without_rules_is_told_only_the_pillar_list() -> None:
     model = ScriptedModel(heard("water"))
 
-    await Router(model, CATALOGUE).route(frozenset({"water"}), text="water")
+    await router(model).route(frozenset({"water"}), text="water")
 
     assert model.asked[0].instructions == routing_instructions(CATALOGUE)
     assert CATALOGUE_LISTED in model.asked[0].instructions
@@ -142,7 +155,7 @@ async def test_routing_rules_are_told_once_in_order_under_their_heading_after_th
     rules = ("plain coffee is water", "coffee with milk is food")
     model = ScriptedModel(heard("water"))
 
-    await Router(model, CATALOGUE, rules=rules).route(frozenset({"water"}), text="water")
+    await router(model, rules).route(frozenset({"water"}), text="water")
 
     told = model.asked[0].instructions
     assert told == routing_instructions(CATALOGUE, rules=rules)
@@ -152,21 +165,20 @@ async def test_routing_rules_are_told_once_in_order_under_their_heading_after_th
 
 class TestOnlyWhatIsHeardIsTranscribed:
     async def test_a_typed_log_is_answered_without_a_transcript_and_keeps_its_words(self) -> None:
-        model = ScriptedModel(heard("water").model_dump(exclude={"transcript"}))
+        model = ScriptedModel(heard("water"))
 
-        outcome = await Router(model, CATALOGUE).route(frozenset({"water"}), text="two glasses")
+        outcome = await router(model).route(frozenset({"water"}), text="two glasses")
 
         assert outcome.transcript == "two glasses"
-        assert "transcript" not in PassOne.model_json_schema()["properties"]
+        assert "transcript" not in model.schemas[0].model_json_schema()["properties"]
         assert model.asked[0].instructions == routing_instructions(CATALOGUE)
 
     async def test_a_clip_is_answered_with_the_transcript_the_model_wrote(self) -> None:
-        model = ScriptedModel(heard("water"))
-        clip = (MediaBlob(MediaType.audio_aac, b"clip"),)
+        model = ScriptedModel(heard("water") | {"transcript": SAID})
 
-        outcome = await Router(model, CATALOGUE).route(frozenset({"water"}), media=clip)
+        outcome = await router(model).route(frozenset({"water"}), media=CLIP)
 
-        assert outcome.transcript == "I drank two glasses of water"
+        assert outcome.transcript == SAID
         assert model.asked[0].instructions == routing_instructions(CATALOGUE, transcribing=True)
 
 

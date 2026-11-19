@@ -5,6 +5,18 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 
 ## [Unreleased]
 
+## [0.31.0] - 2026-11-18
+
+### Added
+
+- The route call writes a `headline`, the capture as a short title, once in each language the
+  caller names, and `Routed`, `NothingToLog` and `Logged` carry it as a mapping from language
+  tag to text. Each language is a required field of the answer schema, placed last so the rest
+  of the answer is written first. **Breaking:** `TwoPassCaptureEngine`, `Router` and `evaluate`
+  take `headline_languages`, a mapping from each language tag to the language's name.
+- A scored capture carries its `headline`, and `farkad-ai eval` reports each language's
+  headline length and whether it is written in that language's script.
+
 ### Changed
 
 - **Breaking:** `Recording` and `fingerprint` live in `farkad_ai.models.recording`, the format
@@ -356,7 +368,8 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 - Gemini on Vertex AI, Claude and OpenAI behind one interface; long-term memory; an offline eval
   on recorded answers; the `farkad-ai` command.
 
-[Unreleased]: https://github.com/brmel/farkad-ai/compare/v0.30.0...HEAD
+[Unreleased]: https://github.com/brmel/farkad-ai/compare/v0.31.0...HEAD
+[0.31.0]: https://github.com/brmel/farkad-ai/compare/v0.30.0...v0.31.0
 [0.30.0]: https://github.com/brmel/farkad-ai/compare/v0.29.1...v0.30.0
 [0.29.1]: https://github.com/brmel/farkad-ai/compare/v0.29.0...v0.29.1
 [0.29.0]: https://github.com/brmel/farkad-ai/compare/v0.28.0...v0.29.0

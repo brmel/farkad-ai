@@ -3,7 +3,7 @@ import pytest
 from pydantic import BaseModel
 
 from farkad_ai.eval.example import evaluate_examples, report
-from farkad_ai.eval.run import GoldCase, evaluate
+from farkad_ai.eval.run import GoldCase, Scored, evaluate
 from farkad_ai.extraction.port import Finding, TrackedPillar
 from farkad_ai.models.port import (
     Completion,
@@ -15,19 +15,19 @@ from farkad_ai.models.port import (
     Unavailability,
 )
 from farkad_ai.pipeline.port import CaptureRequest
-from farkad_ai.routing.pass_one import Mention, TranscribedPassOne
-from tests.support import AnswersByStep, Spec, Tracked
+from farkad_ai.routing.pass_one import Mention
+from tests.support import HEADLINE, HEADLINE_LANGUAGES, AnswersByStep, Spec, Tracked, routing_answer
 
 pytestmark = pytest.mark.anyio
 
 CATALOGUE = (Spec("water", "drinks"),)
-A_GLASS = TranscribedPassOne(
-    transcript="a glass",
-    language="en",
-    is_health_related=True,
-    states_a_lasting_fact=False,
-    mentions=[Mention(pillar="water", said="a glass")],
-)
+A_GLASS = routing_answer(Mention(pillar="water", said="a glass"))
+
+
+async def evaluated[Case: GoldCase](
+    model: AnswersByStep, tracked: tuple[TrackedPillar, ...], case: Case
+) -> tuple[Scored[Case], ...]:
+    return await evaluate(model, CATALOGUE, tracked, [case], headline_languages=HEADLINE_LANGUAGES)
 
 
 class NotedCase(GoldCase):
@@ -47,9 +47,10 @@ async def test_a_case_is_scored_with_its_findings_and_returned_as_the_consumers_
         routing=A_GLASS, extraction={"entries": [{"pillar": "water", "item": "glass"}]}
     )
 
-    (scored,) = await evaluate(model, CATALOGUE, (flagged,), [case])
+    (scored,) = await evaluated(model, (flagged,), case)
 
     assert scored.case is case
+    assert scored.score.headline == HEADLINE
     assert scored.score.routing_is_exact and not scored.score.wrong_fields
     assert scored.score.validators_agree
     assert len(scored.score.usages) == 2
@@ -61,12 +62,10 @@ class SpokenCase(GoldCase):
 
 
 async def test_a_case_that_asks_with_a_clip_is_scored_on_the_words_heard_from_it() -> None:
-    model = AnswersByStep(
-        routing=A_GLASS.model_copy(update={"transcript": "a gas"}), extraction={"entries": []}
-    )
+    model = AnswersByStep(routing=A_GLASS | {"transcript": "a gas"}, extraction={"entries": []})
 
-    (scored,) = await evaluate(
-        model, CATALOGUE, (Tracked("water"),), [SpokenCase(utterance="a glass", routes=("water",))]
+    (scored,) = await evaluated(
+        model, (Tracked("water"),), SpokenCase(utterance="a glass", routes=("water",))
     )
 
     (routing, _tier), _extraction = model.asked
@@ -82,6 +81,7 @@ async def test_the_consumers_routing_rules_reach_the_routing_call() -> None:
         CATALOGUE,
         (Tracked("water"),),
         [GoldCase(utterance="a glass", routes=("water",))],
+        headline_languages=HEADLINE_LANGUAGES,
         routing_rules=("a glass is water",),
     )
 
@@ -93,7 +93,7 @@ async def test_an_answer_that_does_not_parse_scores_zero_and_stays_in_the_run() 
     case = GoldCase(utterance="a glass", routes=("water",))
     model = AnswersByStep(routing=Unavailability.output_did_not_parse)
 
-    (scored,) = await evaluate(model, CATALOGUE, (Tracked("water"),), [case])
+    (scored,) = await evaluated(model, (Tracked("water"),), case)
 
     assert not scored.score.routing_is_exact
     assert scored.score.unparsed_response_from == "model-fast"
@@ -116,8 +116,8 @@ async def test_a_capture_is_timed_across_every_call_it_waited_for_answered_or_no
     answered = AnswersAfterAPause(routing=A_GLASS, extraction={"entries": []})
     unparsed = AnswersAfterAPause(routing=Unavailability.output_did_not_parse)
 
-    (logged,) = await evaluate(answered, CATALOGUE, (Tracked("water"),), [case])
-    (refused,) = await evaluate(unparsed, CATALOGUE, (Tracked("water"),), [case])
+    (logged,) = await evaluated(answered, (Tracked("water"),), case)
+    (refused,) = await evaluated(unparsed, (Tracked("water"),), case)
 
     assert logged.score.elapsed_ms >= 2 * PAUSE_SECONDS * 1000
     assert PAUSE_SECONDS * 1000 <= refused.score.elapsed_ms < logged.score.elapsed_ms
@@ -128,24 +128,31 @@ async def test_a_refusal_other_than_an_unparsed_answer_is_raised() -> None:
     model = AnswersByStep(routing=Unavailability.provider_refused)
 
     with pytest.raises(ModelUnavailableError):
-        await evaluate(model, CATALOGUE, (Tracked("water"),), [case])
+        await evaluated(model, (Tracked("water"),), case)
+
+
+NOT_A_LOG = routing_answer(is_health_related=False) | {
+    "headline": {"en": "Rain today", "fr": "Pluie ce matin", "ar": "مطر اليوم", "es": "مطر اليوم"}
+}
 
 
 async def test_the_example_eval_reports_tokens_for_a_model_of_any_provider() -> None:
-    model = AnswersByStep(
-        routing=TranscribedPassOne(
-            transcript="",
-            language="en",
-            is_health_related=False,
-            states_a_lasting_fact=False,
-            mentions=[],
-        )
-    )
+    model = AnswersByStep(routing=NOT_A_LOG)
 
     table = report(await evaluate_examples(model))
 
     assert "| all | 15 | 7% | 0% | 100% | 10 / 5 | 10 / 5 |" in table
     assert "Model: gemini-2.5-flash-lite" in table
+
+
+async def test_the_example_report_counts_each_languages_headline_words_and_its_script() -> None:
+    model = AnswersByStep(routing=NOT_A_LOG)
+
+    table = report(await evaluate_examples(model))
+
+    assert "| fr | 3.0 | 3 | 100% |" in table
+    assert "| ar | 2.0 | 2 | 100% |" in table
+    assert "| es | 2.0 | 2 | 0% |" in table
 
 
 async def test_the_example_report_counts_the_answers_that_did_not_parse_per_model() -> None:

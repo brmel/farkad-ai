@@ -4,11 +4,13 @@ import math
 from collections import Counter
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
+from types import MappingProxyType
 
 from farkad_ai.eval.words import word_errors, words
 from farkad_ai.models.port import Usage
 
 _NUMERIC_TOLERANCE = 0.01
+_NO_HEADLINE: Mapping[str, str] = MappingProxyType({})
 
 
 class _EmptyRunError(ValueError):
@@ -32,6 +34,7 @@ class _FieldScore:
 class CaptureScore:
     utterance: str
     heard: str
+    headline: Mapping[str, str]
     expected_routes: frozenset[str]
     routed: frozenset[str]
     fields: tuple[_FieldScore, ...]
@@ -100,6 +103,7 @@ def score_capture(
     routed: Sequence[str],
     extracted: Mapping[str, Sequence[Mapping[str, object]]],
     elapsed_ms: int,
+    headline: Mapping[str, str] = _NO_HEADLINE,
     usages: Sequence[Usage] = (),
     flagged: Sequence[str] = (),
     expected_flags: Sequence[str] = (),
@@ -117,6 +121,7 @@ def score_capture(
     return CaptureScore(
         utterance=utterance,
         heard=heard,
+        headline=headline,
         expected_routes=frozenset(expected_routes),
         routed=frozenset(routed),
         fields=tuple(fields),

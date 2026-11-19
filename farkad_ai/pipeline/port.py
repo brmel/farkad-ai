@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -34,6 +35,7 @@ class Logged:
     transcript: str
     language: str
     states_a_lasting_fact: bool
+    headline: Mapping[str, str]
     routes: frozenset[str]
     untracked: frozenset[str]
     extracted: tuple[PillarEntries, ...]

@@ -17,6 +17,7 @@ from farkad_ai.models.port import (
     Unavailability,
     Usage,
 )
+from farkad_ai.routing.pass_one import Mention
 
 
 def a_usage(step: StrEnum) -> Usage:
@@ -32,8 +33,24 @@ def a_usage(step: StrEnum) -> Usage:
     )
 
 
+HEADLINE_LANGUAGES = {"en": "English", "fr": "French"}
+HEADLINE = {"en": "Two glasses of water", "fr": "Deux verres d'eau"}
+
+
+def routing_answer(
+    *mentions: Mention, is_health_related: bool = True, states_a_lasting_fact: bool = False
+) -> dict[str, object]:
+    return {
+        "language": "en",
+        "is_health_related": is_health_related,
+        "states_a_lasting_fact": states_a_lasting_fact,
+        "mentions": [mention.model_dump() for mention in mentions],
+        "headline": HEADLINE,
+    }
+
+
 class ScriptedModel(Model):
-    def __init__(self, answer: BaseModel | Mapping[str, object]) -> None:
+    def __init__(self, answer: Mapping[str, object]) -> None:
         self._answer = answer
         self.asked: list[Prompt] = []
         self.schemas: list[type[BaseModel]] = []
@@ -74,7 +91,7 @@ class Tracked:
 class AnswersByStep(Model):
     """Answers each step with its own script; an `Unavailability` refuses that step."""
 
-    def __init__(self, **answers: BaseModel | Mapping[str, object] | Unavailability) -> None:
+    def __init__(self, **answers: Mapping[str, object] | Unavailability) -> None:
         self._answers = answers
         self.asked: list[tuple[Prompt, ModelTier]] = []
 

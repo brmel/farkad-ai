@@ -8,7 +8,7 @@
       {
         "category": "water",
         "count": 1.0,
-        "volume_ml": 375.0
+        "volume_ml": 350.0
       }
     ]
   },
@@ -16,7 +16,7 @@
     "model": "gemini-3.5-flash-lite",
     "input_tokens": 564,
     "cached_input_tokens": 0,
-    "output_tokens": 25,
-    "latency_ms": 716
+    "output_tokens": 45,
+    "latency_ms": 1082
   }
 }

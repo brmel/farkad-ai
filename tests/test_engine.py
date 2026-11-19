@@ -15,9 +15,9 @@ from farkad_ai.models.port import (
 )
 from farkad_ai.pipeline.engine import TwoPassCaptureEngine
 from farkad_ai.pipeline.port import CaptureRequest, Logged
-from farkad_ai.routing.pass_one import Mention, TranscribedPassOne
+from farkad_ai.routing.pass_one import Mention
 from farkad_ai.routing.port import NothingToLog, NothingToLogReason
-from tests.support import AnswersByStep, Spec, Tracked
+from tests.support import HEADLINE, HEADLINE_LANGUAGES, AnswersByStep, Spec, Tracked, routing_answer
 
 pytestmark = pytest.mark.anyio
 
@@ -25,13 +25,11 @@ CATALOGUE = (Spec("water", "tracks water intake"), Spec("food", "logs meals"))
 WATER = Tracked("water", title="Water", guidance="Count the glasses.", examples='"a glass" → 1')
 
 
-def heard(*said: tuple[str, str], states_a_lasting_fact: bool = False) -> TranscribedPassOne:
-    return TranscribedPassOne(
-        transcript=" and ".join(words for _, words in said),
-        language="en",
+def heard(*said: tuple[str, str], states_a_lasting_fact: bool = False) -> dict[str, object]:
+    return routing_answer(
+        *(Mention(pillar=pillar, said=words) for pillar, words in said),
         is_health_related=bool(said),
         states_a_lasting_fact=states_a_lasting_fact,
-        mentions=[Mention(pillar=pillar, said=words) for pillar, words in said],
     )
 
 
@@ -40,7 +38,7 @@ def entries(*items: str | None) -> dict[str, object]:
 
 
 class RefusesToHear(AnswersByStep):
-    def __init__(self, refused: str, **answers: BaseModel | dict[str, object]) -> None:
+    def __init__(self, refused: str, **answers: dict[str, object]) -> None:
         super().__init__(**answers)
         self._refused = refused
 
@@ -62,7 +60,7 @@ class BreaksOnExtraction(AnswersByStep):
 
 
 class Overlapping(AnswersByStep):
-    def __init__(self, **answers: BaseModel | Mapping[str, object] | Unavailability) -> None:
+    def __init__(self, **answers: Mapping[str, object] | Unavailability) -> None:
         super().__init__(**answers)
         self._in_flight = 0
         self.most_at_once = 0
@@ -80,9 +78,9 @@ class Overlapping(AnswersByStep):
 
 
 async def captured(model: AnswersByStep, *tracked: Tracked) -> Logged | NothingToLog:
-    return await TwoPassCaptureEngine(model, CATALOGUE).capture(
-        CaptureRequest(tracked=tracked, text="said")
-    )
+    return await TwoPassCaptureEngine(
+        model, CATALOGUE, headline_languages=HEADLINE_LANGUAGES
+    ).capture(CaptureRequest(tracked=tracked, text="said"))
 
 
 async def test_each_tracked_pillar_named_comes_back_with_its_entries() -> None:
@@ -96,6 +94,7 @@ async def test_each_tracked_pillar_named_comes_back_with_its_entries() -> None:
         {"pillar": "water", "item": "glass"}
     ]
     assert outcome.refused == ()
+    assert outcome.headline == HEADLINE
     assert [usage.step for usage in outcome.usages] == ["routing", "extraction"]
 
 

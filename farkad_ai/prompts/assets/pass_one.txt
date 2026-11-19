@@ -50,5 +50,13 @@ Never return a date, a month or a year, and never work out today's date. You are
 what day it is, so any date you produce is a guess; the offset and the clock are resolved
 against the user's own timezone afterwards.
 
+Last, write the `headline`: the whole sentence as a short title, in the fewest words that
+keep every thing, amount and time they said, and nothing they did not: "Two cups of mint
+tea", "5 km run, then eggs", "40 min nap". Build it on nouns, not verbs, so that no
+language needs a person; write numbers in digits with short units: 5 km, 15 min, 250 mg. No
+full sentence and no full stop. Write it once in each language asked, each as a native
+speaker would put it and in that language's own script, never a word-for-word copy of
+another. A sentence that is not a log still gets one, saying plainly what it was.
+
 The pillars, and what each covers:
 {pillars}

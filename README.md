@@ -23,13 +23,15 @@ No API key: the engine below answers from recorded Gemini responses.
 ```python
 import asyncio
 
-from farkad_ai.eval.example import RECORDINGS
+from farkad_ai.eval.example import HEADLINE_LANGUAGES, RECORDINGS
 from farkad_ai.eval.pillars import EXAMPLE_PILLARS
 from farkad_ai.models.recorded import RecordedModel
 from farkad_ai.pipeline.engine import TwoPassCaptureEngine
 from farkad_ai.pipeline.port import CaptureRequest
 
-engine = TwoPassCaptureEngine(RecordedModel(RECORDINGS), EXAMPLE_PILLARS)
+engine = TwoPassCaptureEngine(
+    RecordedModel(RECORDINGS), EXAMPLE_PILLARS, headline_languages=HEADLINE_LANGUAGES
+)
 request = CaptureRequest(tracked=EXAMPLE_PILLARS, text="I drank 500 ml of water")
 print(asyncio.run(engine.capture(request)))
 ```
@@ -53,7 +55,7 @@ code calls a *pillar* is a topic the user tracks, such as food, water or sleep.
 
 ```mermaid
 flowchart TD
-    input["Text · voice · photo"] --> route["① Route<br/>topics, and a transcript for voice or photo"]
+    input["Text · voice · photo"] --> route["① Route<br/>topics, a headline in each language,<br/>and a transcript for voice or photo"]
     memory[("Memory<br/>facts · habits")] -. briefing .-> route
     route --> extract["② Extract<br/>one call per topic, in parallel"]
     memory -. briefing .-> extract
@@ -71,10 +73,17 @@ vendor sits behind the `Model` port and the pipeline behind `CaptureEngine`, so 
 be replaced without touching the other. Topics are supplied by the caller as `TrackedPillar`s:
 `eval/pillars.py` has seven examples.
 
+Both results also carry a `headline`: the capture as a short title, "2 eggs, glass of water,
+20 min walk", written once in each language the caller names in `headline_languages`. An app
+shows it in the reader's language instead of the words as they were said, whatever language
+they were said in. The route call writes it as the last field of its answer, so no extra call
+is made; each language is a required field of that answer's schema, so an answer that leaves
+one out does not parse.
+
 | Folder | Holds |
 | --- | --- |
 | `pipeline/` | `CaptureEngine` port, `TwoPassCaptureEngine`, the `Logged` result |
-| `routing/` | pass one: topics, language, transcript, stated time |
+| `routing/` | pass one: topics, language, transcript, stated time, headline |
 | `extraction/` | per-topic extraction and its escalation; recompute after an edit |
 | `memory/` | lasting facts, habit baselines, and the briefing both passes receive |
 | `models/` | `Model` port; `vertex.py` (Gemini), `recorded.py` (replay and record), `recording.py` (the recorded format) |
@@ -83,16 +92,21 @@ be replaced without touching the other. Topics are supplied by the caller as `Tr
 
 ## How well it works
 
-Fifteen examples, three per language, recorded on `gemini-3.5-flash-lite` on 2026-11-09; run
+Fifteen examples, three per language, recorded on `gemini-3.5-flash-lite` on 2026-11-18; run
 `farkad-ai eval` for the full table, with p95 tokens.
 
 | Language | Routing | Fields | Validators | Tokens (in / out) |
 | --- | --: | --: | --: | --: |
-| English | 100% | 100% | 100% | 2,628 / 193 |
-| French | 100% | 100% | 100% | 2,466 / 173 |
-| Arabic | 100% | 100% | 100% | 1,927 / 94 |
-| Spanish | 100% | 100% | 100% | 2,288 / 150 |
-| Mixed languages | 100% | 100% | 100% | 2,689 / 170 |
+| English | 100% | 100% | 100% | 2,938 / 274 |
+| French | 100% | 100% | 100% | 2,776 / 239 |
+| Arabic | 100% | 100% | 100% | 2,237 / 155 |
+| Spanish | 100% | 100% | 100% | 2,596 / 228 |
+| Mixed languages | 100% | 100% | 100% | 3,002 / 280 |
+
+Every headline came back in its language's own script, at 5 words on average in English, 6 in
+French and Spanish, and 5 in Arabic. Writing headlines in four languages added 310 input and 76
+output tokens to the route call, and its median time went from 1.02 s to 1.16 s, over the same
+15 sentences on the same day.
 
 Too small to be a benchmark: it catches a regression in a prompt or a schema.
 
@@ -105,7 +119,8 @@ Too small to be a benchmark: it catches a regression in a prompt or a schema.
 a [reasoning budget](https://ai.google.dev/gemini-api/docs/thinking) per tier ·
 [few-shot examples](https://arxiv.org/abs/2005.14165) per topic ·
 [implicit caching](https://ai.google.dev/gemini-api/docs/caching) · English, French, Arabic with
-Darija and Spanish in one sentence · long-term memory · recompute on edit · an evaluation on
+Darija and Spanish in one sentence · a headline in each language from the same call ·
+long-term memory · recompute on edit · an evaluation on
 recorded answers.
 
 Not built: [tool calling](https://ai.google.dev/gemini-api/docs/function-calling), nutrition

@@ -6,7 +6,7 @@ import json
 import sys
 from enum import StrEnum
 
-from farkad_ai.eval.example import RECORDINGS, evaluate_examples, report
+from farkad_ai.eval.example import HEADLINE_LANGUAGES, RECORDINGS, evaluate_examples, report
 from farkad_ai.eval.pillars import EXAMPLE_PILLARS
 from farkad_ai.models.port import MissingCredentialsError, Model
 from farkad_ai.models.recorded import NoRecordedResponseError, RecordedModel, RecordingModel
@@ -72,7 +72,8 @@ def _add_provider(command: argparse.ArgumentParser) -> None:
 
 def _print_routing(model: Model, text: str) -> int:
     try:
-        outcome = asyncio.run(Router(model, EXAMPLE_PILLARS).route(_CLI_PILLARS, text=text))
+        router = Router(model, EXAMPLE_PILLARS, headline_languages=HEADLINE_LANGUAGES)
+        outcome = asyncio.run(router.route(_CLI_PILLARS, text=text))
     except NoRecordedResponseError:
         sys.stderr.write(
             "Only the gold set's sentences are recorded: route another with --provider vertex\n"
@@ -84,6 +85,7 @@ def _print_routing(model: Model, text: str) -> int:
                 "applicable": True,
                 "transcript": outcome.transcript,
                 "language": outcome.language,
+                "headline": dict(outcome.headline),
                 "pillars": sorted(outcome.routes),
                 "mentions": {pillar: list(said) for pillar, said in outcome.mentions.items()},
             }
@@ -92,6 +94,7 @@ def _print_routing(model: Model, text: str) -> int:
                 "applicable": False,
                 "transcript": outcome.transcript,
                 "language": outcome.language,
+                "headline": dict(outcome.headline),
                 "reason": outcome.reason.value,
             }
     sys.stdout.write(f"{json.dumps(answer, indent=2)}\n")
