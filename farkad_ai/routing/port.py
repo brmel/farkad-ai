@@ -45,6 +45,7 @@ class Routed:
     transcript: str
     language: str
     states_a_lasting_fact: bool
+    headline: Mapping[str, str]
     routes: frozenset[str]
     untracked: frozenset[str]
     mentions: Mapping[str, tuple[str, ...]]
@@ -57,6 +58,7 @@ class NothingToLog:
     transcript: str
     language: str
     states_a_lasting_fact: bool
+    headline: Mapping[str, str]
     reason: NothingToLogReason
     usages: tuple[Usage, ...]
 

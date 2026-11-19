@@ -8,7 +8,7 @@
       {
         "category": "coffee",
         "count": 1.0,
-        "volume_ml": 200.0
+        "volume_ml": null
       }
     ]
   },
@@ -16,7 +16,7 @@
     "model": "gemini-3.5-flash-lite",
     "input_tokens": 548,
     "cached_input_tokens": 0,
-    "output_tokens": 45,
-    "latency_ms": 758
+    "output_tokens": 33,
+    "latency_ms": 740
   }
 }

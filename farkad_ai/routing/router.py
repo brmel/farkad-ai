@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 
 from farkad_ai.models.port import (
     Completion,
@@ -15,7 +15,7 @@ from farkad_ai.prompts import briefed, version_of
 from farkad_ai.routing.pass_one import (
     Mention,
     PassOne,
-    TranscribedPassOne,
+    answer_schemas,
     routing_instructions,
 )
 from farkad_ai.routing.port import (
@@ -30,15 +30,21 @@ from farkad_ai.routing.port import (
 
 class Router:
     def __init__(
-        self, model: Model, catalogue: Iterable[PillarSpec], *, rules: tuple[str, ...] = ()
+        self,
+        model: Model,
+        catalogue: Iterable[PillarSpec],
+        *,
+        headline_languages: Mapping[str, str],
+        rules: tuple[str, ...] = (),
     ) -> None:
         specs = tuple(catalogue)
+        typed, transcribed = answer_schemas(headline_languages)
         self._model = model
         self._known = frozenset(spec.pillar for spec in specs)
-        self._typed = (routing_instructions(specs, rules=rules), PassOne)
+        self._typed = (routing_instructions(specs, rules=rules), typed)
         self._transcribing = (
             routing_instructions(specs, rules=rules, transcribing=True),
-            TranscribedPassOne,
+            transcribed,
         )
 
     async def route(
@@ -79,6 +85,7 @@ class Router:
             transcript=transcript,
             language=heard.language,
             states_a_lasting_fact=heard.states_a_lasting_fact,
+            headline=heard.headline.in_each_language(),
             routes=routes,
             untracked=named - routes,
             mentions={
@@ -97,6 +104,7 @@ def _nothing_to_log(
         transcript=transcript,
         language=heard.language,
         states_a_lasting_fact=heard.states_a_lasting_fact,
+        headline=heard.headline.in_each_language(),
         reason=reason,
         usages=(usage,),
     )

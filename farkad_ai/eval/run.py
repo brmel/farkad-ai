@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import time
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, replace
 from functools import partial
 
@@ -39,10 +39,13 @@ async def evaluate[Case: GoldCase](
     tracked: tuple[TrackedPillar, ...],
     cases: Iterable[Case],
     *,
+    headline_languages: Mapping[str, str],
     routing_rules: tuple[str, ...] = (),
     briefing: str = "",
 ) -> tuple[Scored[Case], ...]:
-    engine = TwoPassCaptureEngine(model, catalogue, routing_rules=routing_rules)
+    engine = TwoPassCaptureEngine(
+        model, catalogue, headline_languages=headline_languages, routing_rules=routing_rules
+    )
     return tuple([Scored(case, await _scored(engine, tracked, case, briefing)) for case in cases])
 
 
@@ -78,6 +81,7 @@ async def _scored(
     return scored(
         elapsed_ms=elapsed_ms,
         heard=outcome.transcript,
+        headline=outcome.headline,
         routed=sorted(routes),
         extracted={each.pillar: [entry.values for entry in each.entries] for each in extracted},
         usages=outcome.usages,

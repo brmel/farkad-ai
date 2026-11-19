@@ -1,13 +1,16 @@
 from __future__ import annotations
 
+import unicodedata
 from enum import StrEnum
 from pathlib import Path
+from statistics import mean
 
 from pydantic import BaseModel, ConfigDict
 
 from farkad_ai.eval.pillars import EXAMPLE_PILLARS
 from farkad_ai.eval.run import GoldCase, Scored, evaluate
 from farkad_ai.eval.scoring import RunScore
+from farkad_ai.eval.words import words
 from farkad_ai.models.port import Model
 
 RECORDINGS = Path(__file__).parent / "recordings"
@@ -20,6 +23,9 @@ class Language(StrEnum):
     ar = "ar"
     es = "es"
     code_switched = "code-switched"
+
+
+HEADLINE_LANGUAGES = {"en": "English", "fr": "French", "ar": "Arabic", "es": "Spanish"}
 
 
 class _ExampleCase(GoldCase):
@@ -38,7 +44,13 @@ type ExampleRun = tuple[Scored[_ExampleCase], ...]
 
 async def evaluate_examples(model: Model) -> ExampleRun:
     gold = ExampleGold.model_validate_json(GOLD.read_text(encoding="utf-8"))
-    return await evaluate(model, EXAMPLE_PILLARS, EXAMPLE_PILLARS, gold.cases)
+    return await evaluate(
+        model,
+        EXAMPLE_PILLARS,
+        EXAMPLE_PILLARS,
+        gold.cases,
+        headline_languages=HEADLINE_LANGUAGES,
+    )
 
 
 def report(run: ExampleRun) -> str:
@@ -56,6 +68,7 @@ def report(run: ExampleRun) -> str:
             [
                 *rows,
                 "",
+                *_headlines(run),
                 f"Model: {', '.join(models)}",
                 *(f"Unparsed: {model} x{count}" for model, count in sorted(unparsed.items())),
                 *(f"Miss: {miss}" for miss in _misses(run)),
@@ -77,6 +90,29 @@ def _row(label: str, scored: list[Scored[_ExampleCase]]) -> str:
         f"{mean_in:.0f} / {mean_out:.0f} | "
         f"{p95_in:.0f} / {p95_out:.0f} |"
     )
+
+
+def _headlines(run: ExampleRun) -> list[str]:
+    written = [each.score.headline for each in run if each.score.headline]
+    if not written:
+        return []
+    rows = [
+        "| Headline in | Words, mean | Words, most | In its own script |",
+        "| --- | --: | --: | --: |",
+    ]
+    for tag in HEADLINE_LANGUAGES:
+        lengths = [len(words(headline[tag])) for headline in written]
+        in_script = [_is_in_its_own_script(tag, headline[tag]) for headline in written]
+        rows.append(
+            f"| {tag} | {mean(lengths):.1f} | {max(lengths)} | "
+            f"{sum(in_script) / len(in_script):.0%} |"
+        )
+    return [*rows, ""]
+
+
+def _is_in_its_own_script(tag: str, headline: str) -> bool:
+    is_arabic = any("ARABIC" in unicodedata.name(letter, "") for letter in headline)
+    return is_arabic is (tag == Language.ar)
 
 
 def _misses(run: ExampleRun) -> list[str]:
