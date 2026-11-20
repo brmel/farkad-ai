@@ -1,5 +1,5 @@
 {
-  "why": "Three sentences per language, scored against the example pillars in farkad_ai/eval/pillars.py. Only what the sentence states or the example pillar declares is scored, such as a glass's 250 ml: a name or a big glass's volume the model must guess is left out. The code-switched sentences mix Arabic or Moroccan Darija with French, as they are spoken.",
+  "why": "Three sentences per language, and a fourth in Darija whose number word is shortened, scored against the example pillars in farkad_ai/eval/pillars.py. Only what the sentence states or the example pillar declares is scored, such as a glass's 250 ml: a name or a big glass's volume the model must guess is left out. The code-switched sentences mix Arabic or Moroccan Darija with French, as they are spoken.",
   "cases": [
     {
       "language": "en",
@@ -63,6 +63,12 @@
       "language": "ar",
       "utterance": "ما هو الطقس",
       "routes": []
+    },
+    {
+      "language": "ar",
+      "utterance": "مشيت ربعين دقيقة للسوق",
+      "routes": ["exercise"],
+      "expected": {"exercise": [{"category": "walk", "duration_minutes": 40}]}
     },
     {
       "language": "es",

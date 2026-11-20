@@ -26,7 +26,7 @@
     ],
     "headline": {
       "en": "2 eggs, glass of water, 20 min walk",
-      "fr": "2 \u0153ufs, verre d'eau, marche de 20 min",
+      "fr": "2 oeufs, verre d'eau, marche de 20 min",
       "ar": "\u0628\u064a\u0636\u062a\u0627\u0646\u060c \u0643\u0648\u0628 \u0645\u0627\u0621\u060c \u0645\u0634\u064a 20 \u062f\u0642\u064a\u0642\u0629",
       "es": "2 huevos, vaso de agua, caminata de 20 min"
     }
@@ -36,6 +36,6 @@
     "input_tokens": 1917,
     "cached_input_tokens": 0,
     "output_tokens": 243,
-    "latency_ms": 1374
+    "latency_ms": 1369
   }
 }

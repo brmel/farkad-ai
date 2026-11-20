@@ -19,17 +19,17 @@
       }
     ],
     "headline": {
-      "en": "2 glasses of water",
-      "fr": "2 verres d'eau",
+      "en": "Two glasses of water",
+      "fr": "Deux verres d'eau",
       "ar": "\u0643\u0648\u0628\u0627\u0646 \u0645\u0646 \u0627\u0644\u0645\u0627\u0621",
-      "es": "2 vasos de agua"
+      "es": "Dos vasos de agua"
     }
   },
   "usage": {
     "model": "gemini-3.5-flash-lite",
     "input_tokens": 1911,
     "cached_input_tokens": 0,
-    "output_tokens": 167,
-    "latency_ms": 1133
+    "output_tokens": 149,
+    "latency_ms": 1010
   }
 }

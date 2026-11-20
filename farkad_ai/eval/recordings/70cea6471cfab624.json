@@ -31,6 +31,6 @@
     "input_tokens": 1922,
     "cached_input_tokens": 0,
     "output_tokens": 201,
-    "latency_ms": 1220
+    "latency_ms": 1158
   }
 }

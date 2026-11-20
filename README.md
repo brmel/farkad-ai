@@ -92,16 +92,16 @@ one out does not parse.
 
 ## How well it works
 
-Fifteen examples, three per language, recorded on `gemini-3.5-flash-lite` on 2026-11-18; run
-`farkad-ai eval` for the full table, with p95 tokens.
+Sixteen examples, three per language and a fourth in Darija, recorded on
+`gemini-3.5-flash-lite` on 2026-11-20; run `farkad-ai eval` for the full table, with p95 tokens.
 
 | Language | Routing | Fields | Validators | Tokens (in / out) |
 | --- | --: | --: | --: | --: |
-| English | 100% | 100% | 100% | 2,938 / 274 |
-| French | 100% | 100% | 100% | 2,776 / 239 |
-| Arabic | 100% | 100% | 100% | 2,237 / 155 |
-| Spanish | 100% | 100% | 100% | 2,596 / 228 |
-| Mixed languages | 100% | 100% | 100% | 3,002 / 280 |
+| English | 100% | 100% | 100% | 3,022 / 268 |
+| French | 100% | 100% | 100% | 2,846 / 240 |
+| Arabic | 100% | 100% | 100% | 2,319 / 154 |
+| Spanish | 100% | 100% | 100% | 2,652 / 213 |
+| Mixed languages | 100% | 100% | 100% | 3,083 / 312 |
 
 Every headline came back in its language's own script, at 5 words on average in English, 6 in
 French and Spanish, and 5 in Arabic. Writing headlines in four languages added 310 input and 76

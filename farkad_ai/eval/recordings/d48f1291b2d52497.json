@@ -22,7 +22,7 @@
     "headline": {
       "en": "500 mg paracetamol, 7 h sleep",
       "fr": "500 mg de parac\u00e9tamol, 7 h de sommeil",
-      "ar": "\u0628\u0627\u0631\u0627\u0633\u064a\u062a\u0627\u0645\u0648\u0644 500 \u0645\u063a\u060c 7 \u0633\u0627\u0639\u0627\u062a \u0646\u0648\u0645",
+      "ar": "\u0628\u0627\u0631\u0627\u0633\u064a\u062a\u0627\u0645\u0648\u0644 \u0665\u0660\u0660 \u0645\u063a\u060c \u0667 \u0633\u0627\u0639\u0627\u062a \u0646\u0648\u0645",
       "es": "500 mg de paracetamol, 7 h de sue\u00f1o"
     }
   },
@@ -31,6 +31,6 @@
     "input_tokens": 1918,
     "cached_input_tokens": 0,
     "output_tokens": 208,
-    "latency_ms": 1093
+    "latency_ms": 1415
   }
 }

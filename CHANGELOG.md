@@ -5,6 +5,13 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 
 ## [Unreleased]
 
+### Fixed
+
+- A number word that a dialect shortens keeps its value: the extraction prompt says that in
+  Darija ربعة is four and ربعين forty. «مشيت ربعين دقيقة» was read as 30 or 50 minutes in
+  every run on `gemini-3.5-flash-lite`, and as 40 after the change. The gold set holds that
+  sentence.
+
 ## [0.31.0] - 2026-11-18
 
 ### Added
