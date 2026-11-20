@@ -1,0 +1,1 @@
+"levothyroxine, 50 micrograms" → {"name": "levothyroxine", "dose_mg": 0.05}

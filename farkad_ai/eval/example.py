@@ -70,12 +70,18 @@ def report(run: ExampleRun) -> str:
                 "",
                 *_headlines(run),
                 f"Model: {', '.join(models)}",
+                f"Prompts: {', '.join(_prompt_versions(run))}",
                 *(f"Unparsed: {model} x{count}" for model, count in sorted(unparsed.items())),
                 *(f"Miss: {miss}" for miss in _misses(run)),
             ]
         )
         + "\n"
     )
+
+
+def _prompt_versions(run: ExampleRun) -> list[str]:
+    used = {(usage.step, usage.prompt_version) for each in run for usage in each.score.usages}
+    return [f"{step} {version}" for step, version in sorted(used)]
 
 
 def _row(label: str, scored: list[Scored[_ExampleCase]]) -> str:
