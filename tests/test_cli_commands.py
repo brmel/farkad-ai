@@ -22,8 +22,9 @@ def test_the_example_eval_replays_each_language_the_same_way_every_time() -> Non
     assert first == second
     code, table = first
     assert code == 0
-    for language in Language:
-        assert f"| {language} | 3 |" in table
+    cases = {language: 3 for language in Language} | {Language.ar: 4}
+    for language, count in cases.items():
+        assert f"| {language} | {count} |" in table
 
 
 @pytest.mark.parametrize(

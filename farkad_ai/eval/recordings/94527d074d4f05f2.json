@@ -20,17 +20,17 @@
       }
     ],
     "headline": {
-      "en": "30 min walk, big glass of water",
-      "fr": "Marche de 30 min, grand verre d'eau",
-      "ar": "\u0645\u0634\u064a\u0629 30 \u062f\u0642\u064a\u0642\u0629\u060c \u0643\u0648\u0628 \u0643\u0628\u064a\u0631 \u0645\u0646 \u0627\u0644\u0645\u0627\u0621",
-      "es": "Caminata de 30 min, vaso grande de agua"
+      "en": "30 min walk and a large glass of water",
+      "fr": "30 min de marche et un grand verre d'eau",
+      "ar": "\u0645\u0634\u0633 30 \u062f\u0642\u064a\u0642\u0629 \u0648\u0643\u0648\u0628 \u0643\u0628\u064a\u0631 \u0645\u0646 \u0627\u0644\u0645\u0627\u0621",
+      "es": "Caminata de 30 min y un vaso grande de agua"
     }
   },
   "usage": {
     "model": "gemini-3.5-flash-lite",
     "input_tokens": 1922,
     "cached_input_tokens": 0,
-    "output_tokens": 183,
-    "latency_ms": 1326
+    "output_tokens": 206,
+    "latency_ms": 1749
   }
 }

@@ -15,6 +15,8 @@ intensity changes the amount you would otherwise have assumed — "a large slice
 than a slice. A count of servings is a stated amount too: "one sachet", "a spoonful", "three
 gummies" is that many of the product's usual serving, so estimate the amount from it.
 Omitting is for what the user left unsaid, not for what they said without a number.
+A number said in words keeps its value in a dialect that shortens it: in Darija, ربعة is
+four and ربعين is forty, as أربعة and أربعين are.
 
 Worked examples:
 {examples}

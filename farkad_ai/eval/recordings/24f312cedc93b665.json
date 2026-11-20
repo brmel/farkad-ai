@@ -10,8 +10,8 @@
     "mentions": [],
     "headline": {
       "en": "Weather inquiry",
-      "fr": "Demande concernant la m\u00e9t\u00e9o",
-      "ar": "\u0627\u0644\u0633\u0624\u0627\u0644 \u0639\u0646 \u0627\u0644\u0637\u0642\u0633",
+      "fr": "Demande m\u00e9t\u00e9o",
+      "ar": "\u0627\u0633\u062a\u0639\u0644\u0627\u0645 \u0639\u0646 \u0627\u0644\u0637\u0642\u0633",
       "es": "Consulta sobre el clima"
     }
   },
@@ -19,7 +19,7 @@
     "model": "gemini-3.5-flash-lite",
     "input_tokens": 1910,
     "cached_input_tokens": 0,
-    "output_tokens": 90,
-    "latency_ms": 911
+    "output_tokens": 53,
+    "latency_ms": 931
   }
 }

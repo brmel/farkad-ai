@@ -10,7 +10,7 @@
     "mentions": [
       {
         "pillar": "exercise",
-        "said": "cinco kil\u00f3metros",
+        "said": "corr\u00ed cinco kil\u00f3metros",
         "occurred_at_hint": null
       }
     ],
@@ -18,14 +18,14 @@
       "en": "5 km run",
       "fr": "Course de 5 km",
       "ar": "\u062c\u0631\u064a 5 \u0643\u0645",
-      "es": "5 km de carrera"
+      "es": "Carrera de 5 km"
     }
   },
   "usage": {
     "model": "gemini-3.5-flash-lite",
     "input_tokens": 1909,
     "cached_input_tokens": 0,
-    "output_tokens": 133,
-    "latency_ms": 1012
+    "output_tokens": 125,
+    "latency_ms": 1176
   }
 }
