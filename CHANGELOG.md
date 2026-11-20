@@ -5,6 +5,8 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 
 ## [Unreleased]
 
+## [0.32.0] - 2026-11-20
+
 ### Fixed
 
 - A number word that a dialect shortens keeps its value: the extraction prompt says that in
@@ -375,7 +377,8 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 - Gemini on Vertex AI, Claude and OpenAI behind one interface; long-term memory; an offline eval
   on recorded answers; the `farkad-ai` command.
 
-[Unreleased]: https://github.com/brmel/farkad-ai/compare/v0.31.0...HEAD
+[Unreleased]: https://github.com/brmel/farkad-ai/compare/v0.32.0...HEAD
+[0.32.0]: https://github.com/brmel/farkad-ai/compare/v0.31.0...v0.32.0
 [0.31.0]: https://github.com/brmel/farkad-ai/compare/v0.30.0...v0.31.0
 [0.30.0]: https://github.com/brmel/farkad-ai/compare/v0.29.1...v0.30.0
 [0.29.1]: https://github.com/brmel/farkad-ai/compare/v0.29.0...v0.29.1
