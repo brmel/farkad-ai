@@ -5,6 +5,21 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 
 ## [Unreleased]
 
+### Added
+
+- `ProviderName` and `connect` in `farkad_ai.models.registry` choose a provider in one `match`,
+  and `tests/test_adapter_contract.py` is the contract every adapter passes.
+- `pytest` runs every gold case on its own, on recordings by default; `--live <provider>` asks
+  the provider and replaces the recordings.
+- The eval report lists the prompt version of every step it ran.
+
+### Changed
+
+- **Breaking:** the gold cases moved to `farkad_ai/eval/datasets/`, loaded by `gold_cases()`, and
+  `evaluate_cases` replaces `GOLD`. `farkad-ai eval --record` is `pytest --live`.
+- Each example topic's worked example is a file in `farkad_ai/prompts/assets/examples/`.
+- `RecordedModel` raises `ModelUnavailableError` for a recording that does not fit the schema.
+
 ## [0.32.0] - 2026-11-20
 
 ### Fixed

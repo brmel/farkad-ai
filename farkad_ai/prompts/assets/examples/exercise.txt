@@ -1,0 +1,1 @@
+"swam 1.5 km" → {"category": "swim", "distance_m": 1500}

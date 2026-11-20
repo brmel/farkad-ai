@@ -1,0 +1,1 @@
+"a two-hour nap" → {"category": "nap", "duration_minutes": 120}

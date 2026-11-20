@@ -7,6 +7,7 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field
 
 from farkad_ai.extraction.port import Finding
+from farkad_ai.prompts import worked_example
 
 
 class Drink(StrEnum):
@@ -107,7 +108,7 @@ EXAMPLE_PILLARS: tuple[ExamplePillar, ...] = (
         "meals, snacks, drinks that carry energy, and protein shakes",
         "food",
         "One entry per thing eaten.",
-        '"half a pizza" → {"name": "pizza", "count": 0.5}',
+        worked_example("food"),
         FoodEntry,
     ),
     ExamplePillar(
@@ -116,7 +117,7 @@ EXAMPLE_PILLARS: tuple[ExamplePillar, ...] = (
         "drink",
         "A glass is 250 ml and a cup 200 ml unless the user said otherwise. A container word "
         "in any language is the container it names.",
-        '"a cup of mint tea" → {"category": "tea", "count": 1, "volume_ml": 200}',
+        worked_example("water"),
         WaterEntry,
     ),
     ExamplePillar(
@@ -124,7 +125,7 @@ EXAMPLE_PILLARS: tuple[ExamplePillar, ...] = (
         "workouts, sport, movement",
         "exercise",
         "Distances in metres, durations in minutes.",
-        '"swam 1.5 km" → {"category": "swim", "distance_m": 1500}',
+        worked_example("exercise"),
         ExerciseEntry,
     ),
     ExamplePillar(
@@ -132,7 +133,7 @@ EXAMPLE_PILLARS: tuple[ExamplePillar, ...] = (
         "nights, naps and sleep quality",
         "sleep",
         "A night is the main sleep; anything shorter during the day is a nap.",
-        '"a two-hour nap" → {"category": "nap", "duration_minutes": 120}',
+        worked_example("sleep"),
         SleepEntry,
     ),
     ExamplePillar(
@@ -140,7 +141,7 @@ EXAMPLE_PILLARS: tuple[ExamplePillar, ...] = (
         "vitamins, minerals, creatine and the rest",
         "supplement",
         "One entry per product taken.",
-        '"beta-alanine before my workout" → {"category": "performance", "name": "beta-alanine"}',
+        worked_example("supplements"),
         SupplementEntry,
     ),
     ExamplePillar(
@@ -148,7 +149,7 @@ EXAMPLE_PILLARS: tuple[ExamplePillar, ...] = (
         "medications and pharmaceuticals",
         "medication",
         "One entry per medication taken.",
-        '"levothyroxine, 50 micrograms" → {"name": "levothyroxine", "dose_mg": 0.05}',
+        worked_example("drugs"),
         DrugEntry,
     ),
     ExamplePillar(
@@ -156,7 +157,7 @@ EXAMPLE_PILLARS: tuple[ExamplePillar, ...] = (
         "sauna, cold plunge, breathwork and other deliberate recovery",
         "recovery session",
         "Durations in minutes.",
-        '"a quarter of an hour of foam rolling" → {"category": "other", "duration_minutes": 15}',
+        worked_example("recovery"),
         RecoveryEntry,
     ),
 )

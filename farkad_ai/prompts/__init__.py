@@ -31,5 +31,9 @@ def prompt(name: str) -> PromptAsset:
     return PromptAsset(name=name, text=text)
 
 
+def worked_example(pillar: str) -> str:
+    return _ASSETS.joinpath("examples", f"{pillar}{_SUFFIX}").read_text(encoding="utf-8").strip()
+
+
 def briefed(instructions: str, briefing: str) -> str:
     return f"{instructions}\n\n{briefing}" if briefing else instructions
