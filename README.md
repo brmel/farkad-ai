@@ -86,9 +86,15 @@ one out does not parse.
 | `routing/` | pass one: topics, language, transcript, stated time, headline |
 | `extraction/` | per-topic extraction and its escalation; recompute after an edit |
 | `memory/` | lasting facts, habit baselines, and the briefing both passes receive |
-| `models/` | `Model` port; `vertex.py` (Gemini), `recorded.py` (replay and record), `recording.py` (the recorded format) |
-| `prompts/` | the prompt texts, versioned by hash |
-| `eval/` | the gold set, scoring and the recordings it replays |
+| `models/` | `Model` port; `registry.py` (`ProviderName`, one `match`), `vertex.py` (Gemini), `recorded.py` (replay and record), `recording.py` (the recorded format) |
+| `prompts/` | the prompt texts and each example topic's worked example, versioned by hash |
+| `eval/` | the gold datasets, scoring and the recordings they replay |
+
+A new vendor is one file implementing `Model` and one case in `ProviderName`'s `match`;
+`tests/test_adapter_contract.py` holds what every adapter must pass. Three seams are left
+unbuilt on purpose: tools (a typed `Tool` with a pydantic input model, which maps onto MCP's
+`inputSchema`, built with the first real tool), a memory store port (when the engine writes
+memory itself, not before) and an agent loop (when a step must choose its tools).
 
 ## How well it works
 

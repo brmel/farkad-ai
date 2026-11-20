@@ -4,7 +4,7 @@ from string import Formatter
 
 import pytest
 
-from farkad_ai.eval.example import GOLD, ExampleGold
+from farkad_ai.eval.example import gold_cases
 from farkad_ai.eval.pillars import EXAMPLE_PILLARS
 from farkad_ai.extraction.extractor import PillarExtractor
 from farkad_ai.extraction.port import ExtractionContext
@@ -64,8 +64,7 @@ def quoted(text: str) -> list[str]:
 
 
 def test_no_prompt_or_worked_example_quotes_the_gold_set() -> None:
-    gold = ExampleGold.model_validate_json(GOLD.read_text(encoding="utf-8"))
-    said = [case.utterance.casefold() for case in gold.cases]
+    said = [case.utterance.casefold() for case in gold_cases()]
     illustrations = [
         *(phrase for asset in every_prompt() for phrase in quoted(asset.text)),
         *(quoted(pillar.examples)[0] for pillar in EXAMPLE_PILLARS),

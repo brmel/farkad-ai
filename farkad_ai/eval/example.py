@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unicodedata
+from collections.abc import Iterable
 from enum import StrEnum
 from pathlib import Path
 from statistics import mean
@@ -14,7 +15,7 @@ from farkad_ai.eval.words import words
 from farkad_ai.models.port import Model
 
 RECORDINGS = Path(__file__).parent / "recordings"
-GOLD = Path(__file__).parent / "example_gold.json"
+DATASETS = Path(__file__).parent / "datasets"
 
 
 class Language(StrEnum):
@@ -28,7 +29,7 @@ class Language(StrEnum):
 HEADLINE_LANGUAGES = {"en": "English", "fr": "French", "ar": "Arabic", "es": "Spanish"}
 
 
-class _ExampleCase(GoldCase):
+class ExampleCase(GoldCase):
     language: Language
 
 
@@ -36,21 +37,28 @@ class ExampleGold(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     why: str
-    cases: tuple[_ExampleCase, ...]
+    cases: tuple[ExampleCase, ...]
 
 
-type ExampleRun = tuple[Scored[_ExampleCase], ...]
+type ExampleRun = tuple[Scored[ExampleCase], ...]
+
+
+def gold_cases() -> tuple[ExampleCase, ...]:
+    return tuple(
+        case
+        for dataset in sorted(DATASETS.glob("*.json"))
+        for case in ExampleGold.model_validate_json(dataset.read_text(encoding="utf-8")).cases
+    )
+
+
+async def evaluate_cases(model: Model, cases: Iterable[ExampleCase]) -> ExampleRun:
+    return await evaluate(
+        model, EXAMPLE_PILLARS, EXAMPLE_PILLARS, cases, headline_languages=HEADLINE_LANGUAGES
+    )
 
 
 async def evaluate_examples(model: Model) -> ExampleRun:
-    gold = ExampleGold.model_validate_json(GOLD.read_text(encoding="utf-8"))
-    return await evaluate(
-        model,
-        EXAMPLE_PILLARS,
-        EXAMPLE_PILLARS,
-        gold.cases,
-        headline_languages=HEADLINE_LANGUAGES,
-    )
+    return await evaluate_cases(model, gold_cases())
 
 
 def report(run: ExampleRun) -> str:
@@ -84,7 +92,7 @@ def _prompt_versions(run: ExampleRun) -> list[str]:
     return [f"{step} {version}" for step, version in sorted(used)]
 
 
-def _row(label: str, scored: list[Scored[_ExampleCase]]) -> str:
+def _row(label: str, scored: list[Scored[ExampleCase]]) -> str:
     score = RunScore(tuple(each.score for each in scored))
     mean_in = score.mean(lambda capture: capture.input_tokens)
     mean_out = score.mean(lambda capture: capture.output_tokens)

@@ -5,10 +5,10 @@ import asyncio
 import json
 import sys
 
-from farkad_ai.eval.example import HEADLINE_LANGUAGES, RECORDINGS, evaluate_examples, report
+from farkad_ai.eval.example import HEADLINE_LANGUAGES, evaluate_examples, report
 from farkad_ai.eval.pillars import EXAMPLE_PILLARS
 from farkad_ai.models.port import MissingCredentialsError, Model
-from farkad_ai.models.recorded import NoRecordedResponseError, RecordingModel
+from farkad_ai.models.recorded import NoRecordedResponseError
 from farkad_ai.models.registry import ProviderName, connect
 from farkad_ai.routing.port import NothingToLog, Routed
 from farkad_ai.routing.router import Router
@@ -25,7 +25,8 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     if args.command == "route":
         return _print_routing(model, args.text)
-    return _print_eval(model, record=args.record)
+    sys.stdout.write(report(asyncio.run(evaluate_examples(model))))
+    return 0
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -40,9 +41,6 @@ def _build_parser() -> argparse.ArgumentParser:
         "eval", help="Score the example gold set: routing, fields and tokens per language"
     )
     _add_provider(scored)
-    scored.add_argument(
-        "--record", action="store_true", help="Replace the committed answers with this run's"
-    )
     return parser
 
 
@@ -83,14 +81,4 @@ def _print_routing(model: Model, text: str) -> int:
                 "reason": outcome.reason.value,
             }
     sys.stdout.write(f"{json.dumps(answer, indent=2)}\n")
-    return 0
-
-
-def _print_eval(model: Model, *, record: bool) -> int:
-    if not record:
-        sys.stdout.write(report(asyncio.run(evaluate_examples(model))))
-        return 0
-    recorder = RecordingModel(model, RECORDINGS)
-    run = asyncio.run(evaluate_examples(recorder))
-    sys.stdout.write(f"{report(run)}Recorded {recorder.commit()} answers\n")
     return 0
