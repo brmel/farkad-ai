@@ -3,9 +3,18 @@ from __future__ import annotations
 from enum import StrEnum
 from pathlib import Path
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
-from farkad_ai.models.port import Completion, Model, ModelTier, Prompt, TierChoices, Usage
+from farkad_ai.models.port import (
+    Completion,
+    Model,
+    ModelTier,
+    ModelUnavailableError,
+    Prompt,
+    TierChoices,
+    Unavailability,
+    Usage,
+)
 from farkad_ai.models.recording import RecordedUsage, Recording, fingerprint
 
 
@@ -61,7 +70,13 @@ class RecordedModel(Model):
             pinned = (await self._pinned(tier)).model
             if counted.model != pinned:
                 raise UnrecordedModelError(key, tier, pinned=pinned, recorded=counted.model)
-        return Completion(value=schema.model_validate(recording.value), usage=counted)
+        try:
+            value = schema.model_validate(recording.value)
+        except ValidationError as error:
+            raise ModelUnavailableError(
+                tier, counted.model, Unavailability.output_did_not_parse, schema.__name__
+            ) from error
+        return Completion(value=value, usage=counted)
 
     def _diagnose(self, prompt: Prompt, schema: type[BaseModel], tier: ModelTier) -> Unreachable:
         for path in sorted(self._directory.glob("*.json")):

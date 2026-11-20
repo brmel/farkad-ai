@@ -4,37 +4,22 @@ import argparse
 import asyncio
 import json
 import sys
-from enum import StrEnum
 
 from farkad_ai.eval.example import HEADLINE_LANGUAGES, RECORDINGS, evaluate_examples, report
 from farkad_ai.eval.pillars import EXAMPLE_PILLARS
 from farkad_ai.models.port import MissingCredentialsError, Model
-from farkad_ai.models.recorded import NoRecordedResponseError, RecordedModel, RecordingModel
+from farkad_ai.models.recorded import NoRecordedResponseError, RecordingModel
+from farkad_ai.models.registry import ProviderName, connect
 from farkad_ai.routing.port import NothingToLog, Routed
 from farkad_ai.routing.router import Router
 
 _CLI_PILLARS = frozenset(pillar.pillar for pillar in EXAMPLE_PILLARS)
 
 
-class _ProviderName(StrEnum):
-    vertex = "vertex"
-    recorded = "recorded"
-
-
-def _model_of(provider: _ProviderName) -> Model:
-    match provider:
-        case _ProviderName.vertex:
-            from farkad_ai.models.vertex import VertexModel
-
-            return VertexModel.connected()
-        case _ProviderName.recorded:
-            return RecordedModel(RECORDINGS)
-
-
 def main(argv: list[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
     try:
-        model = _model_of(args.provider)
+        model = connect(args.provider)
     except (MissingCredentialsError, ImportError) as error:
         sys.stderr.write(f"Error initializing model: {error}\n")
         return 1
@@ -64,9 +49,9 @@ def _build_parser() -> argparse.ArgumentParser:
 def _add_provider(command: argparse.ArgumentParser) -> None:
     command.add_argument(
         "--provider",
-        type=_ProviderName,
-        choices=list(_ProviderName),
-        default=_ProviderName.recorded,
+        type=ProviderName,
+        choices=list(ProviderName),
+        default=ProviderName.recorded,
     )
 
 
