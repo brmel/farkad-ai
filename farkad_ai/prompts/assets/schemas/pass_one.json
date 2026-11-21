@@ -1,0 +1,19 @@
+{
+  "TimeHint": "A time the user stated: which day relative to today, and the hour or the part of the\nday they named. Never a date, and never a clock the user did not say.",
+  "TimeHint.day_offset": "0 for today, -1 for yesterday, -7 for this day last week",
+  "TimeHint.clock": "Local time of day as HH:MM, only from an hour the user said; null otherwise",
+  "TimeHint.part_of_day": "The part of the day the user named, or the one a meal they named is eaten in, when they said no hour; null otherwise",
+  "Mention": "One thing the user logged, and the one pillar that records it.",
+  "Mention.pillar": "Id of the one pillar that records this thing",
+  "Mention.said": "Every word the user said about this one thing: what, how much, how, when",
+  "Mention.occurred_at_hint": "When the user said this one thing happened, or null if unstated",
+  "PassOne": "Your answer about one log.",
+  "PassOne.language": "BCP-47 tag the sentence begins in; the sentence may mix languages",
+  "PassOne.is_health_related": "False for anything that is not a log",
+  "PassOne.states_a_lasting_fact": "True when the person states something about themselves that stays true beyond this one log; false for a log of what happened",
+  "PassOne.mentions": "Every thing the user logged, each once, under the one pillar that records it",
+  "PassOne.headline": "This log in a few words, as its person would title it, in each language",
+  "Headline.language": "The headline in {language}",
+  "TranscribedPassOne": "Your answer about one log that you hear or see, and so write down first.",
+  "TranscribedPassOne.transcript": "Exactly what was said, in its own language"
+}

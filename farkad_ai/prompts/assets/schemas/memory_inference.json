@@ -1,0 +1,13 @@
+{
+  "InferredEnd": "When the person said the fact stops applying.",
+  "InferredEnd.phrase": "Their words for the end, exactly as said",
+  "InferredEnd.day_offset": "Days from today to the last day it applies",
+  "InferredFact": "One lasting fact about the person.",
+  "InferredFact.subject": "snake_case topic in English; reuse a known one",
+  "InferredFact.content": "The fact as one short sentence, in the language it was said",
+  "InferredFact.until": "Only when the person bounded the fact in time; null otherwise",
+  "InferredFact.asked_to_remember": "True only when the person explicitly asked for this to be remembered",
+  "InferredFacts": "Every lasting fact the sentence revealed; none for a one-off log.",
+  "nothing_known": "(nothing yet)",
+  "nothing_switched_off": "(none)"
+}

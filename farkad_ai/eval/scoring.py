@@ -109,6 +109,25 @@ def score_capture(
     expected_flags: Sequence[str] = (),
     unparsed_response_from: str | None = None,
 ) -> CaptureScore:
+    return CaptureScore(
+        utterance=utterance,
+        heard=heard,
+        headline=headline,
+        expected_routes=frozenset(expected_routes),
+        routed=frozenset(routed),
+        fields=_field_scores(expected, extracted),
+        usages=tuple(usages),
+        flagged=frozenset(flagged),
+        expected_flags=frozenset(expected_flags),
+        unparsed_response_from=unparsed_response_from,
+        elapsed_ms=elapsed_ms,
+    )
+
+
+def _field_scores(
+    expected: Mapping[str, Sequence[Mapping[str, object]]],
+    extracted: Mapping[str, Sequence[Mapping[str, object]]],
+) -> tuple[_FieldScore, ...]:
     fields: list[_FieldScore] = []
     for pillar, wanted_entries in expected.items():
         found_entries = extracted.get(pillar, ())
@@ -118,19 +137,7 @@ def score_capture(
                 _FieldScore(pillar=pillar, field=name, expected=value, found=found.get(name))
                 for name, value in wanted.items()
             ]
-    return CaptureScore(
-        utterance=utterance,
-        heard=heard,
-        headline=headline,
-        expected_routes=frozenset(expected_routes),
-        routed=frozenset(routed),
-        fields=tuple(fields),
-        usages=tuple(usages),
-        flagged=frozenset(flagged),
-        expected_flags=frozenset(expected_flags),
-        unparsed_response_from=unparsed_response_from,
-        elapsed_ms=elapsed_ms,
-    )
+    return tuple(fields)
 
 
 @dataclass(frozen=True, slots=True)

@@ -58,8 +58,9 @@ and the maintainer records them.
 
 A topic is a copy of one of the seven in `farkad_ai/eval/pillars.py`, with its examples added to
 `farkad_ai/eval/datasets/example.json`, and its worked example in
-`farkad_ai/prompts/assets/examples/`; a prompt is a text file in `farkad_ai/prompts/assets/`. Both
-need new recordings.
+`farkad_ai/prompts/assets/examples/`; a prompt is a text file in `farkad_ai/prompts/assets/`, and
+the words an answer's schema says about each field are in `farkad_ai/prompts/assets/schemas/`.
+All need new recordings.
 
 ## Adding a model provider
 
@@ -68,7 +69,7 @@ Implement the `Model` port (`farkad_ai/models/port.py`) in a new module beside
 structured answer, accept audio and images or refuse them with `provider_refused`, honour every
 `Reasoning` level, turn the SDK's refusal into `provider_refused`, an answer that fails the schema
 into `output_did_not_parse` and missing token counts into `usage_not_reported`, and build its
-client in `connected()`. Name it in `farkad_ai/cli.py`, and give its SDK an extra and a
+client in `connected()`. Name it in `farkad_ai/eval/providers.py`, and give its SDK an extra and a
 mypy override in `pyproject.toml` and a place in CI's matrix; no other module imports it.
 
 ## Tests and names

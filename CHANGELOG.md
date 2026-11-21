@@ -5,9 +5,11 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 
 ## [Unreleased]
 
+## [0.33.0] - 2026-11-20
+
 ### Added
 
-- `ProviderName` and `connect` in `farkad_ai.models.registry` choose a provider in one `match`,
+- `ProviderName` and `connect` in `farkad_ai.eval.providers` choose a provider in one `match`,
   and `tests/test_adapter_contract.py` is the contract every adapter passes.
 - `pytest` runs every gold case on its own, on recordings by default; `--live <provider>` asks
   the provider and replaces the recordings.
@@ -19,6 +21,15 @@ format. Before 1.0 a minor version may break the interface; each break is marked
   `evaluate_cases` replaces `GOLD`. `farkad-ai eval --record` is `pytest --live`.
 - Each example topic's worked example is a file in `farkad_ai/prompts/assets/examples/`.
 - `RecordedModel` raises `ModelUnavailableError` for a recording that does not fit the schema.
+- Every word the model reads is in `farkad_ai/prompts/assets/`: what the answer schemas say about
+  their fields in `schemas/*.json`, and the sheet about the person in `about_this_person.txt`
+  and `usual_habit.txt`. The schemas and the prompts are byte for byte what they were, so the
+  recordings still answer.
+
+### Removed
+
+- **Breaking:** `HEADING`, `OPENING` and `CLOSING` in `farkad_ai.memory.sheet`; `core_sheet`
+  writes the whole sheet.
 
 ## [0.32.0] - 2026-11-20
 
@@ -392,7 +403,8 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 - Gemini on Vertex AI, Claude and OpenAI behind one interface; long-term memory; an offline eval
   on recorded answers; the `farkad-ai` command.
 
-[Unreleased]: https://github.com/brmel/farkad-ai/compare/v0.32.0...HEAD
+[Unreleased]: https://github.com/brmel/farkad-ai/compare/v0.33.0...HEAD
+[0.33.0]: https://github.com/brmel/farkad-ai/compare/v0.32.0...v0.33.0
 [0.32.0]: https://github.com/brmel/farkad-ai/compare/v0.31.0...v0.32.0
 [0.31.0]: https://github.com/brmel/farkad-ai/compare/v0.30.0...v0.31.0
 [0.30.0]: https://github.com/brmel/farkad-ai/compare/v0.29.1...v0.30.0

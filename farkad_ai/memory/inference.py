@@ -1,5 +1,3 @@
-"""Docstrings and descriptions here reach the model in its answer schema: they are prompt text."""
-
 from __future__ import annotations
 
 import logging
@@ -12,13 +10,13 @@ from pydantic import BaseModel, ConfigDict, Field, create_model
 
 from farkad_ai.memory.facts import Disclosure, Fact
 from farkad_ai.models.port import Model, ModelTier, PipelineStep, Prompt, Usage
-from farkad_ai.prompts import prompt
+from farkad_ai.prompts import prompt, schema_words
 
 INSTRUCTIONS = prompt("memory_inference")
 MAX_SUBJECT_CHARACTERS = 40
-NOTHING_KNOWN = "(nothing yet)"
-NOTHING_SWITCHED_OFF = "(none)"
-_CONTENT_DESCRIPTION = "The fact as one short sentence, in the language it was said"
+_WORDS = schema_words("memory_inference")
+NOTHING_KNOWN = _WORDS["nothing_known"]
+NOTHING_SWITCHED_OFF = _WORDS["nothing_switched_off"]
 
 _log = logging.getLogger(__name__)
 
@@ -30,36 +28,29 @@ class StatedDay:
 
 
 class InferredEnd(BaseModel):
-    """When the person said the fact stops applying."""
-
+    __doc__ = _WORDS["InferredEnd"]
     model_config = ConfigDict(extra="forbid")
 
-    phrase: str = Field(description="Their words for the end, exactly as said")
-    day_offset: int = Field(description="Days from today to the last day it applies")
+    phrase: str = Field(description=_WORDS["InferredEnd.phrase"])
+    day_offset: int = Field(description=_WORDS["InferredEnd.day_offset"])
 
     def stated(self) -> StatedDay:
         return StatedDay(phrase=self.phrase, day_offset=self.day_offset)
 
 
 class InferredFact(BaseModel):
-    """One lasting fact about the person."""
-
+    __doc__ = _WORDS["InferredFact"]
     model_config = ConfigDict(extra="forbid")
 
-    subject: str = Field(description="snake_case topic in English; reuse a known one")
+    subject: str = Field(description=_WORDS["InferredFact.subject"])
     category: str
-    content: str = Field(description=_CONTENT_DESCRIPTION)
-    until: InferredEnd | None = Field(
-        default=None, description="Only when the person bounded the fact in time; null otherwise"
-    )
-    asked_to_remember: bool = Field(
-        description="True only when the person explicitly asked for this to be remembered"
-    )
+    content: str = Field(description=_WORDS["InferredFact.content"])
+    until: InferredEnd | None = Field(default=None, description=_WORDS["InferredFact.until"])
+    asked_to_remember: bool = Field(description=_WORDS["InferredFact.asked_to_remember"])
 
 
 class InferredFacts(BaseModel):
-    """Every lasting fact the sentence revealed; none for a one-off log."""
-
+    __doc__ = _WORDS["InferredFacts"]
     model_config = ConfigDict(extra="forbid")
 
     facts: list[InferredFact]
@@ -146,7 +137,10 @@ def _answer_schema(categories: type[StrEnum], max_content_characters: int) -> ty
         __base__=InferredFact,
         __doc__=InferredFact.__doc__,
         category=(categories, ...),
-        content=(str, Field(max_length=max_content_characters, description=_CONTENT_DESCRIPTION)),
+        content=(
+            str,
+            Field(max_length=max_content_characters, description=_WORDS["InferredFact.content"]),
+        ),
     )
     each: Any = fact
     return create_model(

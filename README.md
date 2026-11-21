@@ -86,9 +86,9 @@ one out does not parse.
 | `routing/` | pass one: topics, language, transcript, stated time, headline |
 | `extraction/` | per-topic extraction and its escalation; recompute after an edit |
 | `memory/` | lasting facts, habit baselines, and the briefing both passes receive |
-| `models/` | `Model` port; `registry.py` (`ProviderName`, one `match`), `vertex.py` (Gemini), `recorded.py` (replay and record), `recording.py` (the recorded format) |
-| `prompts/` | the prompt texts and each example topic's worked example, versioned by hash |
-| `eval/` | the gold datasets, scoring and the recordings they replay |
+| `models/` | `Model` port; `vertex.py` (Gemini), `recorded.py` (replay and record), `recording.py` (the recorded format) |
+| `prompts/` | every word the model reads: the prompt texts, what each answer's schema says about its fields, and each example topic's worked example, versioned by hash |
+| `eval/` | the gold datasets, scoring, the recordings they replay and `providers.py` (`ProviderName`, one `match`) |
 
 A new vendor is one file implementing `Model` and one case in `ProviderName`'s `match`;
 `tests/test_adapter_contract.py` holds what every adapter must pass. Three seams are left

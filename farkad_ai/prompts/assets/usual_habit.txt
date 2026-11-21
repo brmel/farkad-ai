@@ -1,0 +1,1 @@
+logs {what}{amount} around {hour:02d}:00 ({times}x in {days} days)

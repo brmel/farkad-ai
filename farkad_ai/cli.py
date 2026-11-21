@@ -7,9 +7,9 @@ import sys
 
 from farkad_ai.eval.example import HEADLINE_LANGUAGES, evaluate_examples, report
 from farkad_ai.eval.pillars import EXAMPLE_PILLARS
+from farkad_ai.eval.providers import ProviderName, connect
 from farkad_ai.models.port import MissingCredentialsError, Model
 from farkad_ai.models.recorded import NoRecordedResponseError
-from farkad_ai.models.registry import ProviderName, connect
 from farkad_ai.routing.port import NothingToLog, Routed
 from farkad_ai.routing.router import Router
 
