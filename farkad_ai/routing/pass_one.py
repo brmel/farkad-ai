@@ -1,5 +1,3 @@
-"""Docstrings and descriptions here reach the model in its answer schema: they are prompt text."""
-
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
@@ -8,9 +6,10 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, create_model, field_validator
 
-from farkad_ai.prompts import prompt
+from farkad_ai.prompts import prompt, schema_words
 from farkad_ai.routing.port import PartOfDay, PillarSpec, StatedTime
 
+_WORDS = schema_words("pass_one")
 INSTRUCTIONS = prompt("pass_one")
 _RULES = prompt("pass_one_rules")
 _TRANSCRIBING = prompt("pass_one_transcribed")
@@ -34,21 +33,12 @@ def _listed(lines: Iterable[str]) -> str:
 
 
 class TimeHint(BaseModel):
-    """A time the user stated: which day relative to today, and the hour or the part of the
-    day they named. Never a date, and never a clock the user did not say."""
-
+    __doc__ = _WORDS["TimeHint"]
     model_config = ConfigDict(extra="forbid")
 
-    day_offset: int = Field(description="0 for today, -1 for yesterday, -7 for this day last week")
-    clock: time | None = Field(
-        default=None,
-        description="Local time of day as HH:MM, only from an hour the user said; null otherwise",
-    )
-    part_of_day: PartOfDay | None = Field(
-        default=None,
-        description="The part of the day the user named, or the one a meal they named is eaten "
-        "in, when they said no hour; null otherwise",
-    )
+    day_offset: int = Field(description=_WORDS["TimeHint.day_offset"])
+    clock: time | None = Field(default=None, description=_WORDS["TimeHint.clock"])
+    part_of_day: PartOfDay | None = Field(default=None, description=_WORDS["TimeHint.part_of_day"])
 
     @field_validator("clock")
     @classmethod
@@ -71,36 +61,24 @@ class Headline(BaseModel):
 
 
 class Mention(BaseModel):
-    """One thing the user logged, and the one pillar that records it."""
-
+    __doc__ = _WORDS["Mention"]
     model_config = ConfigDict(extra="forbid")
 
-    pillar: str = Field(description="Id of the one pillar that records this thing")
-    said: str = Field(
-        description="Every word the user said about this one thing: what, how much, how, when"
-    )
+    pillar: str = Field(description=_WORDS["Mention.pillar"])
+    said: str = Field(description=_WORDS["Mention.said"])
     occurred_at_hint: TimeHint | None = Field(
-        default=None, description="When the user said this one thing happened, or null if unstated"
+        default=None, description=_WORDS["Mention.occurred_at_hint"]
     )
 
 
 class PassOne(BaseModel):
-    """Your answer about one log."""
-
+    __doc__ = _WORDS["PassOne"]
     model_config = ConfigDict(extra="forbid")
 
-    language: str = Field(
-        description="BCP-47 tag the sentence begins in; the sentence may mix languages"
-    )
-    is_health_related: bool = Field(description="False for anything that is not a log")
-    states_a_lasting_fact: bool = Field(
-        description="True when the person states something about themselves that stays true "
-        "beyond this one log; false for a log of what happened"
-    )
-    mentions: list[Mention] = Field(
-        default_factory=list,
-        description="Every thing the user logged, each once, under the one pillar that records it",
-    )
+    language: str = Field(description=_WORDS["PassOne.language"])
+    is_health_related: bool = Field(description=_WORDS["PassOne.is_health_related"])
+    states_a_lasting_fact: bool = Field(description=_WORDS["PassOne.states_a_lasting_fact"])
+    mentions: list[Mention] = Field(default_factory=list, description=_WORDS["PassOne.mentions"])
     headline: Headline
 
     def transcript_of(self, typed: str) -> str:
@@ -108,11 +86,11 @@ class PassOne(BaseModel):
 
 
 class _Transcript(BaseModel):
-    transcript: str = Field(description="Exactly what was said, in its own language")
+    transcript: str = Field(description=_WORDS["TranscribedPassOne.transcript"])
 
 
 class TranscribedPassOne(PassOne, _Transcript):
-    """Your answer about one log that you hear or see, and so write down first."""
+    __doc__ = _WORDS["TranscribedPassOne"]
 
     def transcript_of(self, typed: str) -> str:
         return self.transcript
@@ -122,16 +100,11 @@ def answer_schemas(
     headline_languages: Mapping[str, str],
 ) -> tuple[type[PassOne], type[TranscribedPassOne]]:
     written_in: dict[str, Any] = {
-        tag: (str, Field(description=f"The headline in {name}"))
+        tag: (str, Field(description=_WORDS["Headline.language"].format(language=name)))
         for tag, name in headline_languages.items()
     }
     in_each_language = create_model("Headline", __base__=Headline, **written_in)
-    headline = (
-        in_each_language,
-        Field(
-            description="This log in a few words, as its person would title it, in each language"
-        ),
-    )
+    headline = (in_each_language, Field(description=_WORDS["PassOne.headline"]))
     return (
         create_model("PassOne", __base__=PassOne, headline=headline),
         create_model("TranscribedPassOne", __base__=TranscribedPassOne, headline=headline),

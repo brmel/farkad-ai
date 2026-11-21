@@ -5,9 +5,9 @@ from collections.abc import Iterator
 import pytest
 
 from farkad_ai.eval.example import RECORDINGS
+from farkad_ai.eval.providers import ProviderName, connect
 from farkad_ai.models.port import Model
 from farkad_ai.models.recorded import RecordingModel
-from farkad_ai.models.registry import ProviderName, connect
 
 
 @pytest.fixture

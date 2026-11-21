@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import json
+from collections.abc import Mapping
 from dataclasses import dataclass
 from hashlib import sha256
 from importlib.resources import files
+from types import MappingProxyType
 
 _ASSETS = files("farkad_ai.prompts.assets")
 _SUFFIX = ".txt"
@@ -29,6 +32,11 @@ def version_of(*parts: str) -> str:
 def prompt(name: str) -> PromptAsset:
     text = _ASSETS.joinpath(f"{name}{_SUFFIX}").read_text(encoding="utf-8").strip()
     return PromptAsset(name=name, text=text)
+
+
+def schema_words(answer: str) -> Mapping[str, str]:
+    text = _ASSETS.joinpath("schemas", f"{answer}.json").read_text(encoding="utf-8")
+    return MappingProxyType(json.loads(text))
 
 
 def worked_example(pillar: str) -> str:

@@ -24,9 +24,10 @@ from farkad_ai.models.port import (
     Unavailability,
     Usage,
 )
-from farkad_ai.prompts import PromptAsset, prompt, version_of
+from farkad_ai.prompts import PromptAsset, prompt, schema_words, version_of
 
 INSTRUCTIONS = prompt("extraction")
+_WORDS = schema_words("extraction")
 
 _log = logging.getLogger(__name__)
 
@@ -116,7 +117,7 @@ def answer_schema(entry: type[BaseModel]) -> type[BaseModel]:
     return create_model(
         "LogBatch",
         __config__=ConfigDict(extra="forbid"),
-        entries=(list[one], Field(description="Every entry this utterance produced")),
+        entries=(list[one], Field(description=_WORDS["LogBatch.entries"])),
     )
 
 
