@@ -63,8 +63,9 @@ async def evaluate_examples(model: Model) -> ExampleRun:
 
 def report(run: ExampleRun) -> str:
     rows = [
-        "| Language | Captures | Routing | Fields | Validators | Tokens in / out | p95 in / out |",
-        "| --- | --: | --: | --: | --: | --: | --: |",
+        "| Language | Captures | Routing | Fields | Validators | Tokens in / out | p95 in / out "
+        "| Seconds p50 / p95 | Cached |",
+        "| --- | --: | --: | --: | --: | --: | --: | --: | --: |",
     ]
     for language in Language:
         rows.append(_row(language.value, [each for each in run if each.case.language is language]))
@@ -98,11 +99,14 @@ def _row(label: str, scored: list[Scored[ExampleCase]]) -> str:
     mean_out = score.mean(lambda capture: capture.output_tokens)
     p95_in = score.p95(lambda capture: capture.input_tokens)
     p95_out = score.p95(lambda capture: capture.output_tokens)
+    seconds_p50 = score.p50(lambda capture: capture.elapsed_seconds)
+    seconds_p95 = score.p95(lambda capture: capture.elapsed_seconds)
     return (
         f"| {label} | {len(scored)} | {score.routing_accuracy:.0%} | "
         f"{score.field_accuracy:.0%} | {score.validator_agreement:.0%} | "
         f"{mean_in:.0f} / {mean_out:.0f} | "
-        f"{p95_in:.0f} / {p95_out:.0f} |"
+        f"{p95_in:.0f} / {p95_out:.0f} | "
+        f"{seconds_p50:.1f} / {seconds_p95:.1f} | {score.cached_input_share:.0%} |"
     )
 
 
