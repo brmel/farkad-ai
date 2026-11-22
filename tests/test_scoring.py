@@ -67,6 +67,27 @@ def test_a_run_reports_the_mean_and_p95_of_the_tokens_its_captures_spent() -> No
     assert run.p95(lambda capture: capture.output_tokens) == 95
 
 
+def test_a_run_reports_the_latency_percentiles_and_the_share_of_input_served_from_cache() -> None:
+    captures = tuple(
+        score_capture(
+            utterance=f"capture {seconds}",
+            heard=f"capture {seconds}",
+            expected_routes=[],
+            expected={},
+            routed=[],
+            extracted={},
+            elapsed_ms=seconds * 1000,
+            usages=[a_usage(PipelineStep.routing)],
+        )
+        for seconds in range(1, 21)
+    )
+    run = RunScore(captures)
+
+    assert run.p50(lambda capture: capture.elapsed_seconds) == 10
+    assert run.p95(lambda capture: capture.elapsed_seconds) == 19
+    assert run.cached_input_share == 0.4
+
+
 def test_word_errors_are_counted_against_the_words_said_not_their_marks_or_case() -> None:
     def heard(said: str, transcribed: str) -> CaptureScore:
         return score_capture(

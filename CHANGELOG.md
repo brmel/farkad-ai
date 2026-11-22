@@ -5,6 +5,21 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 
 ## [Unreleased]
 
+## [0.34.0] - 2026-11-22
+
+### Added
+
+- The eval report prints the p50 and p95 seconds per capture and the share of input tokens
+  served from cache. `RunScore.p50`, `RunScore.cached_input_share` and
+  `CaptureScore.elapsed_seconds` back it. Replayed recordings answer instantly, so the seconds are
+  meaningful on a live run only.
+
+### Changed
+
+- The `google` extra takes `google-genai` 3 (`>=3.0.0,<4`). Its transport is `httpx2`, which
+  replaces `httpx`; `VertexModel` needed no change, and the adapter tests drive `httpx2`, now a
+  `dev` dependency.
+
 ## [0.33.0] - 2026-11-20
 
 ### Added
@@ -403,7 +418,8 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 - Gemini on Vertex AI, Claude and OpenAI behind one interface; long-term memory; an offline eval
   on recorded answers; the `farkad-ai` command.
 
-[Unreleased]: https://github.com/brmel/farkad-ai/compare/v0.33.0...HEAD
+[Unreleased]: https://github.com/brmel/farkad-ai/compare/v0.34.0...HEAD
+[0.34.0]: https://github.com/brmel/farkad-ai/compare/v0.33.0...v0.34.0
 [0.33.0]: https://github.com/brmel/farkad-ai/compare/v0.32.0...v0.33.0
 [0.32.0]: https://github.com/brmel/farkad-ai/compare/v0.31.0...v0.32.0
 [0.31.0]: https://github.com/brmel/farkad-ai/compare/v0.30.0...v0.31.0

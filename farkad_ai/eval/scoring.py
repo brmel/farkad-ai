@@ -53,8 +53,16 @@ class CaptureScore:
         return sum(usage.input_tokens for usage in self.usages)
 
     @property
+    def cached_input_tokens(self) -> int:
+        return sum(usage.cached_input_tokens for usage in self.usages)
+
+    @property
     def output_tokens(self) -> int:
         return sum(usage.output_tokens for usage in self.usages)
+
+    @property
+    def elapsed_seconds(self) -> float:
+        return self.elapsed_ms / 1000
 
     @property
     def wrong_fields(self) -> tuple[_FieldScore, ...]:
@@ -177,8 +185,18 @@ class RunScore:
             if capture.unparsed_response_from is not None
         )
 
+    @property
+    def cached_input_share(self) -> float:
+        input_tokens = sum(capture.input_tokens for capture in self.captures)
+        if input_tokens == 0:
+            return 0.0
+        return sum(capture.cached_input_tokens for capture in self.captures) / input_tokens
+
     def mean(self, measure: Callable[[CaptureScore], float]) -> float:
         return _share(sum(measure(capture) for capture in self.captures), len(self.captures))
+
+    def p50(self, measure: Callable[[CaptureScore], float]) -> float:
+        return _nearest_rank_percentile([measure(capture) for capture in self.captures], 0.5)
 
     def p95(self, measure: Callable[[CaptureScore], float]) -> float:
         return _nearest_rank_percentile([measure(capture) for capture in self.captures], 0.95)
