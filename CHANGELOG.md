@@ -418,7 +418,8 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 - Gemini on Vertex AI, Claude and OpenAI behind one interface; long-term memory; an offline eval
   on recorded answers; the `farkad-ai` command.
 
-[Unreleased]: https://github.com/brmel/farkad-ai/compare/v0.33.0...HEAD
+[Unreleased]: https://github.com/brmel/farkad-ai/compare/v0.34.0...HEAD
+[0.34.0]: https://github.com/brmel/farkad-ai/compare/v0.33.0...v0.34.0
 [0.33.0]: https://github.com/brmel/farkad-ai/compare/v0.32.0...v0.33.0
 [0.32.0]: https://github.com/brmel/farkad-ai/compare/v0.31.0...v0.32.0
 [0.31.0]: https://github.com/brmel/farkad-ai/compare/v0.30.0...v0.31.0
