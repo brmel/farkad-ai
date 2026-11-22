@@ -9,7 +9,7 @@ from pydantic import BaseModel
 pytest.importorskip("google.genai")
 
 import google.auth
-import httpx
+import httpx2
 from google.genai import types
 from google.oauth2.credentials import Credentials
 
@@ -97,12 +97,12 @@ class Vertex:
         self.asked = 0
         self.paths: list[str] = []
 
-    async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
+    async def handle_async_request(self, request: httpx2.Request) -> httpx2.Response:
         status = self._statuses[min(self.asked, len(self._statuses) - 1)]
         self.asked += 1
         self.paths.append(request.url.path)
-        body = ANSWER if status == httpx.codes.OK else {"error": {"code": status}}
-        return httpx.Response(status, json=body, request=request)
+        body = ANSWER if status == httpx2.codes.OK else {"error": {"code": status}}
+        return httpx2.Response(status, json=body, request=request)
 
 
 @pytest.fixture
@@ -117,7 +117,7 @@ def vertex_answering(monkeypatch: pytest.MonkeyPatch) -> Callable[..., Vertex]:
     def answering(*statuses: int) -> Vertex:
         vertex = Vertex(list(statuses))
         monkeypatch.setattr(
-            httpx.AsyncHTTPTransport, "handle_async_request", vertex.handle_async_request
+            httpx2.AsyncHTTPTransport, "handle_async_request", vertex.handle_async_request
         )
         return vertex
 
