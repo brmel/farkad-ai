@@ -17,7 +17,8 @@
       "Bash(git fetch:*)"
     ],
     "ask": [
-      "Bash(farkad-ai eval *--record*)",
+      "Bash(pytest *--live*)",
+      "Bash(python -m pytest *--live*)",
       "Bash(gh release create:*)"
     ],
     "deny": [
