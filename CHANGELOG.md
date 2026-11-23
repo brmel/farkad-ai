@@ -5,6 +5,12 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking:** `farkad_ai.models.vertex.PLACEHOLDER_INPUT` is private; only `VertexModel` used it.
+- The package metadata names its changelog, needs `hatchling>=1.27` to build, and says it runs on
+  any operating system with Python 3 only.
+
 ## [0.34.0] - 2026-11-22
 
 ### Added
@@ -96,17 +102,17 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 
 ### Removed
 
-- **Breaking**: the `photo` prompt, which no code in this library read. A caller that briefs a
+- **Breaking:** the `photo` prompt, which no code in this library read. A caller that briefs a
   photographed log keeps those words itself and hands them to `briefing`.
 
 ## [0.28.0] - 2026-11-09
 
 ### Changed
 
-- **Breaking**: a typed log is routed without a transcript: pass one's answer no longer carries
+- **Breaking:** a typed log is routed without a transcript: pass one's answer no longer carries
   one, the `Router` hands back the words it was given, and only a log with a clip or a photo is
   answered as `TranscribedPassOne`. `routing_instructions` takes `transcribing`.
-- **Breaking**: `Usage` and `Recording` carry `cached_input_tokens`, the prompt tokens Gemini
+- **Breaking:** `Usage` and `Recording` carry `cached_input_tokens`, the prompt tokens Gemini
   served from its implicit cache; `Usage.answering` takes it.
 - The extraction and recompute prompts put what changes per request last (the briefing, then the
   log), so the fixed words in front of them can be cached. Re-record the fixtures.
@@ -114,23 +120,23 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 
 ### Removed
 
-- **Breaking**: `TimeHint.phrase` and `StatedTime.phrase`, which nothing read.
-- **Breaking**: `Superseded.replaced` and `ExtractedEntry.stale_fields`.
+- **Breaking:** `TimeHint.phrase` and `StatedTime.phrase`, which nothing read.
+- **Breaking:** `Superseded.replaced` and `ExtractedEntry.stale_fields`.
 
 ## [0.27.0] - 2026-11-06
 
 ### Changed
 
-- **Breaking**: `PillarExtractor.extract` now starts on the fast tier and escalates;
+- **Breaking:** `PillarExtractor.extract` now starts on the fast tier and escalates;
   `extract_escalating` and its `tier` argument are gone.
 
 ### Removed
 
-- **Breaking**: `farkad_ai.models.factory`: `MissingCredentialsError` moved to
+- **Breaking:** `farkad_ai.models.factory`: `MissingCredentialsError` moved to
   `farkad_ai.models.port`, and the rest to the CLI, its only caller.
-- **Breaking**: `farkad_ai.pipeline.photo`: use `prompt("photo").format(language=...)`.
-- **Breaking**: `pillar_version` and `entries_answered`, now inside `ask_for_entries`.
-- **Breaking**: the `farkad-ai prompts` command.
+- **Breaking:** `farkad_ai.pipeline.photo`: use `prompt("photo").format(language=...)`.
+- **Breaking:** `pillar_version` and `entries_answered`, now inside `ask_for_entries`.
+- **Breaking:** the `farkad-ai prompts` command.
 
 ### Fixed
 

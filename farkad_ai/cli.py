@@ -21,7 +21,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         model = connect(args.provider)
     except (MissingCredentialsError, ImportError) as error:
-        sys.stderr.write(f"Error initializing model: {error}\n")
+        sys.stderr.write(f"The model could not be connected: {error}\n")
         return 1
     if args.command == "route":
         return _print_routing(model, args.text)
