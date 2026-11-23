@@ -4,5 +4,5 @@ contact_links:
     url: https://github.com/brmel/farkad-ai/security/advisories/new
     about: Report it privately, never in a public issue.
   - name: Try it live
-    url: https://farkad.web.app
-    about: The engine running in production.
+    url: https://farkad.web.app/try
+    about: The live demo, which runs this engine.

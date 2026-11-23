@@ -92,6 +92,18 @@ mypy override in `pyproject.toml` and a place in CI's matrix; no other module im
 
 ## Pull requests
 
-A pull request holds one change and a test that fails without it. A change a consumer would
+A pull request holds one change and a test that fails without it. A change a caller would
 notice adds a line under Unreleased in [CHANGELOG.md](CHANGELOG.md). The maintainer reviews it
 against this file and the issue it answers, and merges it with a merge commit once CI passes.
+
+## Releasing
+
+Maintainers release; a release is immutable, so a wrong wheel is fixed by a new version.
+
+1. Bump `version` in `pyproject.toml`, move `CHANGELOG.md`'s Unreleased entries under
+   `## [X.Y.Z] - YYYY-MM-DD` with its compare link, merge to `main`, and wait for CI to pass.
+2. Tag the merge `vX.Y.Z` and push the tag.
+3. `git archive vX.Y.Z | tar -x -C <dir>`, then `uv build` in `<dir>`.
+4. `gh release create vX.Y.Z <dir>/dist/*`, with that version's changelog entries as its notes.
+5. Check that `curl -sL <wheel url> | shasum -a 256` matches the local wheel: projects that
+   depend on a release pin its URL and digest.

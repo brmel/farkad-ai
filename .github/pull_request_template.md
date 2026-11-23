@@ -5,4 +5,4 @@ Closes #
 - [ ] One change, with a test that fails without it
 - [ ] The checks in `CONTRIBUTING.md` pass
 - [ ] A changed prompt, schema or example topic comes with new recordings
-- [ ] A change a consumer would notice has a line under Unreleased in `CHANGELOG.md`
+- [ ] A change a caller would notice has a line under Unreleased in `CHANGELOG.md`

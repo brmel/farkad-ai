@@ -27,7 +27,7 @@ from farkad_ai.models.port import (
     fixed,
 )
 
-PLACEHOLDER_INPUT = "Input."
+_PLACEHOLDER_INPUT = "Input."
 
 # Gemini's thinking budget in tokens: https://ai.google.dev/gemini-api/docs/thinking
 _THINKING_BUDGET: Mapping[Reasoning, int] = {
@@ -168,5 +168,5 @@ def _parts(prompt: Prompt) -> types.ContentListUnion:
         ),
     ]
     if not sent:
-        sent.append(types.Part.from_text(text=PLACEHOLDER_INPUT))
+        sent.append(types.Part.from_text(text=_PLACEHOLDER_INPUT))
     return sent

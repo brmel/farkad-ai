@@ -4,8 +4,8 @@
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 
 The AI engine behind [Farkad](https://farkad.web.app). You say what you ate and did, in your own
-words and languages, and it becomes structured health entries. I build it in the open to learn
-applied AI on a real product.
+words and languages, and it becomes structured health entries. It is developed in the open, and
+is pre-1.0: a minor version may break the API, as the [changelog](CHANGELOG.md) marks.
 
 <p align="center">
   <picture>
@@ -37,8 +37,8 @@ print(asyncio.run(engine.capture(request)))
 ```
 
 It prints a `Logged` holding one water entry, `{'category': 'water', 'volume_ml': 500.0}`, and
-the token usage of the two calls. Install, then reproduce the table below or route a sentence
-from the command line:
+the token usage of the two calls. It needs Python 3.13 or later and is not on PyPI: install it
+from GitHub, then reproduce the figures below or route a sentence from the command line:
 
 ```bash
 pip install "farkad-ai @ git+https://github.com/brmel/farkad-ai"
@@ -46,7 +46,8 @@ farkad-ai eval
 farkad-ai route --text "I drank 500 ml of water"
 ```
 
-Your own input needs a live model: install `farkad-ai[google]` and pass `--provider vertex`.
+A sentence outside the gold set needs a live model: install `farkad-ai[google]` and pass
+`--provider vertex`.
 
 ## How it works
 
@@ -107,7 +108,7 @@ Sixteen examples, three per language and a fourth in Darija, recorded on
 | French | 100% | 100% | 100% | 2,846 / 240 |
 | Arabic | 100% | 100% | 100% | 2,319 / 154 |
 | Spanish | 100% | 100% | 100% | 2,652 / 213 |
-| Mixed languages | 100% | 100% | 100% | 3,083 / 312 |
+| Code-switched | 100% | 100% | 100% | 3,083 / 312 |
 
 Every headline came back in its language's own script, at 5 words on average in English, 6 in
 French and Spanish, and 5 in Arabic. Writing headlines in four languages added 310 input and 76
