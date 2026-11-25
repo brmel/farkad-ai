@@ -5,8 +5,16 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 
 ## [Unreleased]
 
+## [0.35.0] - 2026-11-25
+
 ### Changed
 
+- **Breaking:** what makes a habit and what memory may learn are the caller's rules, not the
+  engine's. `farkad_ai.memory.habits` keeps `HabitBaseline` and `UsualAmount` and loses
+  `Occurrence`, `baselines_from`, `HABIT_WINDOW`, `TIMES_TO_BE_A_HABIT` and `MAX_HABITS`;
+  `farkad_ai.memory.facts` keeps `Disclosure`, `Fact` and `FactSource` and loses `learn`,
+  `learn_all`, `Learning`, `Remembered`, `Superseded`, `Confirmed`, `Declined` and `Refusal`.
+  `core_sheet` takes the habit window as `habit_window_days`.
 - **Breaking:** `farkad_ai.models.vertex.PLACEHOLDER_INPUT` is private; only `VertexModel` used it.
 - The package metadata names its changelog, needs `hatchling>=1.27` to build, and says it runs on
   any operating system with Python 3 only.
@@ -424,7 +432,8 @@ format. Before 1.0 a minor version may break the interface; each break is marked
 - Gemini on Vertex AI, Claude and OpenAI behind one interface; long-term memory; an offline eval
   on recorded answers; the `farkad-ai` command.
 
-[Unreleased]: https://github.com/brmel/farkad-ai/compare/v0.34.0...HEAD
+[Unreleased]: https://github.com/brmel/farkad-ai/compare/v0.35.0...HEAD
+[0.35.0]: https://github.com/brmel/farkad-ai/compare/v0.34.0...v0.35.0
 [0.34.0]: https://github.com/brmel/farkad-ai/compare/v0.33.0...v0.34.0
 [0.33.0]: https://github.com/brmel/farkad-ai/compare/v0.32.0...v0.33.0
 [0.32.0]: https://github.com/brmel/farkad-ai/compare/v0.31.0...v0.32.0
