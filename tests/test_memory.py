@@ -1,24 +1,12 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from enum import StrEnum
 
 import pytest
 from pydantic import ValidationError
 
-from farkad_ai.memory.facts import (
-    Confirmed,
-    Declined,
-    Disclosure,
-    EmptyFactError,
-    Fact,
-    FactSource,
-    Refusal,
-    Remembered,
-    Superseded,
-    learn,
-    learn_all,
-)
+from farkad_ai.memory.facts import Disclosure, EmptyFactError, Fact, FactSource
 from farkad_ai.memory.habits import HabitBaseline, UsualAmount
 from farkad_ai.memory.inference import (
     NOTHING_KNOWN,
@@ -54,7 +42,6 @@ FIRST_TOLD = (
 )
 
 MONDAY = datetime(2026, 9, 21, 8, tzinfo=UTC)
-FRIDAY = MONDAY + timedelta(days=4)
 
 VEGAN = Disclosure("diet", MemoryCategory.dietary, "Vegan")
 EATS_MEAT = Disclosure("diet", MemoryCategory.dietary, "Eats meat again since September")
@@ -76,48 +63,7 @@ def inferrer(model: Model, *, max_content_characters: int = 250) -> MemoryInferr
 
 
 def sheet(facts: list[Fact[MemoryCategory]], habits: list[HabitBaseline]) -> str:
-    return core_sheet(facts, habits, first_told=FIRST_TOLD)
-
-
-class TestANewerWordOnATopicReplacesTheOlder:
-    def test_a_first_word_on_a_topic_is_remembered(self) -> None:
-        assert learn(None, VEGAN, at=MONDAY) == Remembered(
-            Fact(VEGAN, FactSource.spoken, enabled=True, since=MONDAY)
-        )
-
-    def test_vegan_then_meat_leaves_one_fact_saying_meat(self) -> None:
-        learned = learn(known(VEGAN), EATS_MEAT, at=FRIDAY)
-
-        assert learned == Superseded(Fact(EATS_MEAT, FactSource.spoken, enabled=True, since=FRIDAY))
-
-    def test_saying_the_same_thing_again_only_moves_its_date(self) -> None:
-        again = Disclosure("diet", MemoryCategory.dietary, "  vegan ")
-
-        assert learn(known(VEGAN), again, at=FRIDAY) == Confirmed(
-            Fact(VEGAN, FactSource.spoken, enabled=True, since=FRIDAY)
-        )
-
-
-class TestWhatAModelReadingMayNotOverwrite:
-    def test_a_fact_the_user_switched_off_stays_off(self) -> None:
-        assert learn(known(VEGAN, enabled=False), EATS_MEAT, at=FRIDAY) == Declined(
-            EATS_MEAT, Refusal.switched_off
-        )
-
-    def test_a_fact_the_user_typed_is_theirs(self) -> None:
-        typed = known(VEGAN, source=FactSource.entered)
-
-        assert learn(typed, EATS_MEAT, at=FRIDAY) == Declined(EATS_MEAT, Refusal.written_by_user)
-
-    def test_a_full_memory_refuses_a_new_topic_but_still_updates_a_known_one(self) -> None:
-        sleep = Disclosure("sleep", MemoryCategory.routine, "Sleeps at eleven")
-        full = {"sleep": known(sleep), "diet": known(VEGAN)}
-        novel = Disclosure("coffee_order", MemoryCategory.preference, "Oat flat white")
-
-        learned = learn_all(full, (novel, EATS_MEAT), at=FRIDAY, max_facts=2)
-
-        assert learned[0] == Declined(novel, Refusal.memory_full)
-        assert isinstance(learned[1], Superseded)
+    return core_sheet(facts, habits, first_told=FIRST_TOLD, habit_window_days=28)
 
 
 def said(subject: str, content: str, category: str = "dietary") -> dict[str, object]:
@@ -240,7 +186,6 @@ class TestAKnownSubjectIsReusedAsWritten:
 
         (heard,) = (statement.disclosure for statement in inference.statements)
         assert heard.subject == "Xk3mPq9RtZ"
-        assert isinstance(learn(typed, heard, at=FRIDAY), Declined)
 
 
 class TestTheModelIsToldWhatIsKnown:

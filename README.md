@@ -86,7 +86,7 @@ one out does not parse.
 | `pipeline/` | `CaptureEngine` port, `TwoPassCaptureEngine`, the `Logged` result |
 | `routing/` | pass one: topics, language, transcript, stated time, headline |
 | `extraction/` | per-topic extraction and its escalation; recompute after an edit |
-| `memory/` | lasting facts, habit baselines, and the briefing both passes receive |
+| `memory/` | the types of lasting facts and habit baselines, the model call that reads facts from a sentence, and the briefing both passes receive; the rules for keeping them are the caller's |
 | `models/` | `Model` port; `vertex.py` (Gemini), `recorded.py` (replay and record), `recording.py` (the recorded format) |
 | `prompts/` | every word the model reads: the prompt texts, what each answer's schema says about its fields, and each example topic's worked example, versioned by hash |
 | `eval/` | the gold datasets, scoring, the recordings they replay and `providers.py` (`ProviderName`, one `match`) |
